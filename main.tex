@@ -1,0 +1,880 @@
+\documentclass[12pt,a4paper]{article}
+
+% Packages
+\usepackage[utf8]{inputenc}
+\usepackage[french]{babel}
+\usepackage[T1]{fontenc}
+\usepackage{geometry}
+\usepackage{graphicx}
+\usepackage{hyperref}
+\usepackage{enumitem}
+\usepackage{titlesec}
+\usepackage{fancyhdr}
+\usepackage{xcolor}
+\usepackage{listings}
+\usepackage{tikz}
+\usetikzlibrary{shapes.geometric, arrows, positioning}
+
+% Configuration de la page
+\geometry{margin=2.5cm}
+\pagestyle{fancy}
+\fancyhf{}
+\rhead{\thepage}
+\lhead{Cahier des Charges - ENSA-SHARE}
+
+% Couleurs
+\definecolor{primarycolor}{RGB}{0, 102, 204}
+\definecolor{secondarycolor}{RGB}{51, 51, 51}
+
+% Configuration des liens
+\hypersetup{
+    colorlinks=true,
+    linkcolor=primarycolor,
+    urlcolor=primarycolor,
+    citecolor=primarycolor
+}
+
+% Styles de titres
+\titleformat{\section}
+  {\normalfont\Large\bfseries\color{primarycolor}}{\thesection}{1em}{}
+\titleformat{\subsection}
+  {\normalfont\large\bfseries\color{secondarycolor}}{\thesubsection}{1em}{}
+
+\begin{document}
+
+% Page de garde
+\begin{titlepage}
+    \centering
+    \vspace*{2cm}
+    
+    {\Huge\bfseries Cahier des Charges\par}
+    \vspace{0.5cm}
+    {\LARGE Plateforme de Partage de Ressources Pédagogiques\par}
+    \vspace{0.3cm}
+    {\Large\textbf{ENSA-SHARE}\par}
+    
+    \vspace{2cm}
+    
+    {\large\textit{Application Web de Gestion et Partage de Documents Académiques}\par}
+    
+    \vspace{3cm}
+    
+    \begin{tabular}{ll}
+        \textbf{Version :} & 1.0 \\
+        \textbf{Date :} & \today \\
+        \textbf{Statut :} & Document de Spécification \\
+    \end{tabular}
+    
+    \vfill
+    
+    {\large École Nationale des Sciences Appliquées\par}
+    
+\end{titlepage}
+
+\tableofcontents
+\newpage
+
+\section{Présentation du Projet}
+
+\subsection{Contexte}
+
+Dans le cadre de l'amélioration de la communication et du partage d'informations au sein des établissements d'enseignement supérieur, il est nécessaire de mettre en place une solution centralisée permettant aux représentants des étudiants de diffuser efficacement les ressources pédagogiques (cours, travaux dirigés, travaux pratiques) auprès de l'ensemble de la communauté étudiante.
+
+Actuellement, le partage de documents s'effectue de manière dispersée via des canaux multiples (groupes de messagerie, emails, supports physiques), ce qui engendre des problèmes de traçabilité, d'accessibilité et de pérennité des ressources partagées.
+
+\subsection{Objectifs du Projet}
+
+Le projet \textbf{ENSA-SHARE} vise à développer une plateforme web moderne et sécurisée répondant aux objectifs suivants :
+
+\begin{itemize}[leftmargin=*]
+    \item \textbf{Centralisation} : Regrouper l'ensemble des ressources pédagogiques en un point d'accès unique et structuré
+    \item \textbf{Accessibilité} : Permettre aux étudiants d'accéder facilement aux documents pertinents via un système de filtrage avancé
+    \item \textbf{Organisation} : Structurer les contenus selon l'architecture académique (années, filières, modules)
+    \item \textbf{Sécurité} : Garantir un contrôle d'accès basé sur les rôles et une gestion sécurisée des données
+    \item \textbf{Autonomie} : Donner aux délégués les moyens de gérer les ressources de leur périmètre de manière autonome
+    \item \textbf{Supervision} : Offrir aux administrateurs une vision globale et des outils de modération efficaces
+\end{itemize}
+
+\subsection{Périmètre du Projet}
+
+Le projet couvre les fonctionnalités suivantes :
+\begin{itemize}[leftmargin=*]
+    \item Système d'authentification et de gestion des utilisateurs
+    \item Gestion hiérarchique de la structure académique (années, filières, modules)
+    \item Upload, stockage et téléchargement de fichiers pédagogiques
+    \item Système de recherche et filtrage multicritères
+    \item Interfaces d'administration différenciées selon les rôles
+    \item Tableau de bord de supervision pour le superadmin
+\end{itemize}
+
+\section{Description des Besoins Fonctionnels}
+
+\subsection{Acteurs du Système}
+
+Le système distingue trois catégories d'utilisateurs avec des privilèges distincts :
+
+\subsubsection{Étudiant (Utilisateur Final)}
+
+\textbf{Rôle :} Consulter et télécharger les ressources pédagogiques mises à disposition.
+
+\textbf{User Stories :}
+\begin{enumerate}[leftmargin=*]
+    \item \textbf{US-ETU-01} : En tant qu'étudiant, je souhaite accéder à la plateforme sans authentification obligatoire afin de consulter rapidement les ressources disponibles.
+    
+    \item \textbf{US-ETU-02} : En tant qu'étudiant, je veux filtrer les documents par année académique afin de visualiser uniquement les ressources correspondant à mon niveau d'études.
+    
+    \item \textbf{US-ETU-03} : En tant qu'étudiant, je veux filtrer les documents par filière afin d'accéder aux contenus spécifiques à ma spécialisation.
+    
+    \item \textbf{US-ETU-04} : En tant qu'étudiant, je veux filtrer les documents par module afin de trouver rapidement les ressources d'une matière précise.
+    
+    \item \textbf{US-ETU-05} : En tant qu'étudiant, je veux effectuer une recherche par mot-clé afin de localiser un document spécifique.
+    
+    \item \textbf{US-ETU-06} : En tant qu'étudiant, je veux télécharger un fichier en un clic afin de l'utiliser hors ligne.
+    
+    \item \textbf{US-ETU-07} : En tant qu'étudiant, je veux visualiser les métadonnées d'un fichier (nom, type, taille, date d'upload) avant de le télécharger.
+\end{enumerate}
+
+\subsubsection{Responsable / Délégué (Uploader)}
+
+\textbf{Rôle :} Gérer les ressources pédagogiques de son périmètre (filière et année assignées).
+
+\textbf{User Stories :}
+\begin{enumerate}[leftmargin=*]
+    \item \textbf{US-RESP-01} : En tant que responsable, je veux me connecter de manière sécurisée avec mes identifiants afin d'accéder à mon espace de gestion.
+    
+    \item \textbf{US-RESP-02} : En tant que responsable, je veux uploader un ou plusieurs fichiers simultanément (via glisser-déposer ou sélection) afin de partager rapidement des ressources.
+    
+    \item \textbf{US-RESP-03} : En tant que responsable, je veux associer chaque fichier uploadé à un module, sachant que l'année et la filière sont automatiquement héritées de mon profil afin de garantir une classification correcte et cohérente avec mon périmètre.
+    
+    \item \textbf{US-RESP-04} : En tant que responsable, je veux visualiser uniquement les fichiers de mon périmètre (année et filière assignées) afin de gérer mes ressources.
+    
+    \item \textbf{US-RESP-05} : En tant que responsable, je veux supprimer un fichier que j'ai uploadé afin de corriger une erreur ou retirer un contenu obsolète.
+    
+    \item \textbf{US-RESP-06} : En tant que responsable, je veux modifier les métadonnées d'un fichier (nom, module associé) afin de maintenir l'exactitude des informations.
+    
+    \item \textbf{US-RESP-07} : En tant que responsable, je veux recevoir une confirmation visuelle après chaque action (upload, suppression) afin de valider la réussite de l'opération.
+    
+    \item \textbf{US-RESP-08} : En tant que responsable, je ne peux pas accéder aux fichiers d'autres filières ou années afin de respecter le principe de séparation des responsabilités.
+\end{enumerate}
+
+\subsubsection{Superadmin (Administrateur Global)}
+
+\textbf{Rôle :} Superviser l'ensemble de la plateforme, gérer les utilisateurs et modérer les contenus.
+
+\textbf{User Stories :}
+\begin{enumerate}[leftmargin=*]
+    \item \textbf{US-ADMIN-01} : En tant que superadmin, je veux accéder à un tableau de bord global affichant des statistiques clés (nombre de fichiers, utilisateurs actifs, uploads récents).
+    
+    \item \textbf{US-ADMIN-02} : En tant que superadmin, je veux visualiser tous les fichiers de toutes les filières et années afin d'avoir une vue d'ensemble.
+    
+    \item \textbf{US-ADMIN-03} : En tant que superadmin, je veux créer un compte responsable en lui assignant une filière et une année spécifiques.
+    
+    \item \textbf{US-ADMIN-04} : En tant que superadmin, je veux modifier les informations d'un compte responsable (filière, année, statut actif/inactif).
+    
+    \item \textbf{US-ADMIN-05} : En tant que superadmin, je veux supprimer un compte responsable afin de révoquer ses accès.
+    
+    \item \textbf{US-ADMIN-06} : En tant que superadmin, je veux supprimer n'importe quel fichier afin de modérer les contenus inappropriés ou erronés.
+    
+    \item \textbf{US-ADMIN-07} : En tant que superadmin, je veux gérer la structure académique (ajouter/modifier des filières, années, modules).
+    
+    \item \textbf{US-ADMIN-08} : En tant que superadmin, je veux consulter l'historique des actions (logs) pour tracer les opérations effectuées sur la plateforme.
+\end{enumerate}
+
+\subsection{Fonctionnalités Détaillées}
+
+\subsubsection{Authentification et Gestion des Sessions}
+
+\begin{itemize}[leftmargin=*]
+    \item Système de login sécurisé avec email et mot de passe
+    \item Hashage des mots de passe (bcrypt ou équivalent)
+    \item Gestion des sessions via JWT (JSON Web Tokens)
+    \item Mécanisme de déconnexion sécurisée
+    \item Récupération de mot de passe par email (optionnel pour v1)
+\end{itemize}
+
+\subsubsection{Gestion de la Structure Académique}
+
+\begin{itemize}[leftmargin=*]
+    \item Définition des années académiques (1ère année, 2ème année, etc.)
+    \item Définition des filières par année
+    \item Définition des modules par filière et année
+    \item Interface d'administration pour gérer cette hiérarchie
+\end{itemize}
+
+\subsubsection{Gestion des Fichiers}
+
+\begin{itemize}[leftmargin=*]
+    \item Upload de fichiers avec support drag-and-drop
+    \item Types de fichiers acceptés : PDF, DOCX, PPTX, ZIP (configurable)
+    \item Taille maximale par fichier : 50 MB (configurable)
+    \item Stockage des métadonnées dans MongoDB
+    \item Stockage des fichiers physiques (cloud storage recommandé : AWS S3, Cloudinary, ou équivalent)
+    \item Génération d'URL de téléchargement sécurisées
+    \item Suppression de fichiers avec nettoyage du stockage
+\end{itemize}
+
+\subsubsection{Système de Filtrage et Recherche}
+
+\begin{itemize}[leftmargin=*]
+    \item Filtres combinables : Année + Filière + Module
+    \item Recherche textuelle sur le nom des fichiers
+    \item Tri des résultats (par date, nom, type)
+    \item Pagination des résultats
+    \item Interface responsive et intuitive
+\end{itemize}
+
+\subsubsection{Tableaux de Bord}
+
+\textbf{Dashboard Responsable :}
+\begin{itemize}[leftmargin=*]
+    \item Liste des fichiers uploadés (périmètre restreint)
+    \item Statistiques personnelles (nombre de fichiers, espace utilisé)
+    \item Interface d'upload rapide
+\end{itemize}
+
+\textbf{Dashboard Superadmin :}
+\begin{itemize}[leftmargin=*]
+    \item Statistiques globales (nombre total de fichiers, utilisateurs, répartition par filière)
+    \item Liste de tous les fichiers avec filtres avancés
+    \item Gestion des comptes responsables
+    \item Gestion de la structure académique
+    \item Logs d'activité
+\end{itemize}
+
+\section{Architecture Technique}
+
+\subsection{Vue d'Ensemble de l'Architecture}
+
+Le projet adopte une architecture moderne basée sur le modèle \textbf{Client-Serveur} avec une séparation claire entre le frontend et le backend, déployée en mode \textbf{Serverless} pour optimiser les coûts et la scalabilité.
+
+\begin{center}
+\begin{tikzpicture}[node distance=2cm, auto]
+    % Styles
+    \tikzstyle{block} = [rectangle, draw, fill=blue!20, text width=6em, text centered, rounded corners, minimum height=3em]
+    \tikzstyle{cloud} = [draw, ellipse, fill=red!20, minimum height=2em]
+    \tikzstyle{line} = [draw, -latex']
+    
+    % Nodes
+    \node [block] (client) {Client Web (Next.js)};
+    \node [block, below of=client, node distance=3cm] (api) {API REST (Express.js Serverless)};
+    \node [block, below left of=api, node distance=3cm] (db) {MongoDB Atlas};
+    \node [block, below right of=api, node distance=3cm] (storage) {Cloud Storage (S3/Cloudinary)};
+    
+    % Edges
+    \path [line] (client) -- node {HTTPS} (api);
+    \path [line] (api) -- node {Queries} (db);
+    \path [line] (api) -- node {Upload/Download} (storage);
+    
+\end{tikzpicture}
+\end{center}
+
+\subsection{Stack Technologique}
+
+\subsubsection{Frontend}
+
+\textbf{Framework :} Next.js 14+ (React)
+
+\textbf{Justification :}
+\begin{itemize}[leftmargin=*]
+    \item Rendu côté serveur (SSR) et génération statique (SSG) pour de meilleures performances
+    \item Routing intégré et optimisé
+    \item Support natif des API routes (peut servir de BFF si nécessaire)
+    \item Écosystème React mature et documentation extensive
+    \item Déploiement simplifié sur Vercel
+\end{itemize}
+
+\textbf{Styling :} Tailwind CSS
+
+\textbf{Justification :}
+\begin{itemize}[leftmargin=*]
+    \item Développement rapide avec classes utilitaires
+    \item Design system cohérent et maintenable
+    \item Optimisation automatique du CSS (purge des classes non utilisées)
+    \item Responsive design facilité
+\end{itemize}
+
+\textbf{Bibliothèques complémentaires :}
+\begin{itemize}[leftmargin=*]
+    \item \texttt{react-dropzone} : Gestion du drag-and-drop pour l'upload de fichiers
+    \item \texttt{axios} : Client HTTP pour les appels API
+    \item \texttt{react-query} : Gestion du cache et des états de chargement
+    \item \texttt{react-hook-form} : Gestion des formulaires
+    \item \texttt{zustand} ou \texttt{context API} : Gestion d'état global
+\end{itemize}
+
+\subsubsection{Backend}
+
+\textbf{Runtime :} Node.js 18+
+
+\textbf{Framework :} Express.js
+
+\textbf{Justification :}
+\begin{itemize}[leftmargin=*]
+    \item Framework minimaliste et flexible
+    \item Large écosystème de middlewares
+    \item Compatible avec l'architecture serverless (Vercel Functions, AWS Lambda)
+    \item Performance élevée pour les opérations I/O
+\end{itemize}
+
+\textbf{Architecture Serverless :}
+\begin{itemize}[leftmargin=*]
+    \item \textbf{Option 1 :} Vercel Serverless Functions (recommandé pour simplicité)
+    \item \textbf{Option 2 :} AWS Lambda + API Gateway (pour plus de contrôle)
+\end{itemize}
+
+\textbf{Justification du Serverless :}
+\begin{itemize}[leftmargin=*]
+    \item Coûts réduits (paiement à l'usage)
+    \item Scalabilité automatique
+    \item Maintenance infrastructure minimale
+    \item Déploiement simplifié
+\end{itemize}
+
+\textbf{Bibliothèques backend :}
+\begin{itemize}[leftmargin=*]
+    \item \texttt{mongoose} : ODM pour MongoDB
+    \item \texttt{jsonwebtoken} : Génération et validation de JWT
+    \item \texttt{bcryptjs} : Hashage des mots de passe
+    \item \texttt{multer} : Gestion de l'upload de fichiers
+    \item \texttt{express-validator} : Validation des données entrantes
+    \item \texttt{cors} : Gestion des CORS
+    \item \texttt{helmet} : Sécurisation des headers HTTP
+\end{itemize}
+
+\subsubsection{Base de Données}
+
+\textbf{Technologie :} MongoDB Atlas (Cloud)
+
+\textbf{Justification :}
+\begin{itemize}[leftmargin=*]
+    \item Schéma flexible adapté à l'évolution des besoins
+    \item Performance élevée pour les opérations de lecture
+    \item Hébergement managé (backups automatiques, monitoring)
+    \item Scalabilité horizontale
+    \item Intégration native avec Node.js via Mongoose
+\end{itemize}
+
+\subsubsection{Stockage de Fichiers}
+
+\textbf{Options recommandées :}
+\begin{itemize}[leftmargin=*]
+    \item \textbf{AWS S3} : Solution robuste et scalable
+    \item \textbf{Cloudinary} : Simplicité d'intégration, CDN intégré
+    \item \textbf{Vercel Blob Storage} : Intégration native avec Vercel
+\end{itemize}
+
+\subsection{Modèle de Données}
+
+\subsubsection{Collection : Users}
+
+\begin{lstlisting}[language=json, basicstyle=\small\ttfamily]
+{
+  "_id": ObjectId,
+  "email": String (unique, required),
+  "password": String (hashed, required),
+  "role": String (enum: ["responsable", "superadmin"]),
+  "assignedYear": String (nullable, required for responsable),
+  "assignedFiliere": String (nullable, required for responsable),
+  "firstName": String,
+  "lastName": String,
+  "isActive": Boolean (default: true),
+  "createdAt": Date,
+  "updatedAt": Date
+}
+\end{lstlisting}
+
+\subsubsection{Collection : Files}
+
+\begin{lstlisting}[language=json, basicstyle=\small\ttfamily]
+{
+  "_id": ObjectId,
+  "fileName": String (required),
+  "originalName": String (required),
+  "fileType": String (required),
+  "fileSize": Number (bytes),
+  "fileUrl": String (required, cloud storage URL),
+  "year": String (required),
+  "filiere": String (required),
+  "module": String (required),
+  "uploadedBy": ObjectId (ref: Users),
+  "uploadedAt": Date,
+  "updatedAt": Date
+}
+\end{lstlisting}
+
+\subsubsection{Collection : AcademicStructure}
+
+\begin{lstlisting}[language=json, basicstyle=\small\ttfamily]
+{
+  "_id": ObjectId,
+  "years": [
+    {
+      "name": String (e.g., "1ere Annee"),
+      "filieres": [
+        {
+          "name": String (e.g., "Genie Informatique"),
+          "modules": [String] (e.g., ["Algorithmique", "BDD"])
+        }
+      ]
+    }
+  ],
+  "updatedAt": Date
+}
+\end{lstlisting}
+
+\subsubsection{Collection : ActivityLogs (optionnel)}
+
+\begin{lstlisting}[language=json, basicstyle=\small\ttfamily]
+{
+  "_id": ObjectId,
+  "userId": ObjectId (ref: Users),
+  "action": String (e.g., "FILE_UPLOAD", "FILE_DELETE"),
+  "targetId": ObjectId (ref to affected resource),
+  "details": Object (additional context),
+  "timestamp": Date
+}
+\end{lstlisting}
+
+\subsection{Architecture API REST}
+
+\subsubsection{Endpoints Authentification}
+
+\begin{itemize}[leftmargin=*]
+    \item \texttt{POST /api/auth/login} : Connexion utilisateur
+    \item \texttt{POST /api/auth/logout} : Déconnexion
+    \item \texttt{GET /api/auth/me} : Récupération du profil utilisateur connecté
+\end{itemize}
+
+\subsubsection{Endpoints Fichiers}
+
+\begin{itemize}[leftmargin=*]
+    \item \texttt{GET /api/files} : Liste des fichiers (avec filtres query params)
+    \item \texttt{GET /api/files/:id} : Détails d'un fichier
+    \item \texttt{POST /api/files} : Upload d'un fichier (multipart/form-data)
+    \item \texttt{PUT /api/files/:id} : Modification des métadonnées
+    \item \texttt{DELETE /api/files/:id} : Suppression d'un fichier
+    \item \texttt{GET /api/files/:id/download} : Téléchargement d'un fichier
+\end{itemize}
+
+\subsubsection{Endpoints Utilisateurs (Superadmin uniquement)}
+
+\begin{itemize}[leftmargin=*]
+    \item \texttt{GET /api/users} : Liste des responsables
+    \item \texttt{POST /api/users} : Création d'un responsable
+    \item \texttt{PUT /api/users/:id} : Modification d'un responsable
+    \item \texttt{DELETE /api/users/:id} : Suppression d'un responsable
+\end{itemize}
+
+\subsubsection{Endpoints Structure Académique}
+
+\begin{itemize}[leftmargin=*]
+    \item \texttt{GET /api/structure} : Récupération de la structure complète
+    \item \texttt{PUT /api/structure} : Mise à jour de la structure (Superadmin)
+\end{itemize}
+
+\subsubsection{Endpoints Statistiques (Superadmin)}
+
+\begin{itemize}[leftmargin=*]
+    \item \texttt{GET /api/stats/dashboard} : Statistiques globales
+    \item \texttt{GET /api/stats/files-by-filiere} : Répartition des fichiers
+\end{itemize}
+
+\subsection{Sécurité de l'API}
+
+\begin{itemize}[leftmargin=*]
+    \item \textbf{Authentification :} JWT stocké en httpOnly cookie ou localStorage
+    \item \textbf{Autorisation :} Middleware de vérification des rôles sur chaque endpoint protégé
+    \item \textbf{Validation :} Validation stricte des inputs avec express-validator
+    \item \textbf{Rate Limiting :} Limitation du nombre de requêtes par IP
+    \item \textbf{CORS :} Configuration restrictive des origines autorisées
+    \item \textbf{Helmet :} Protection contre les vulnérabilités courantes (XSS, clickjacking)
+\end{itemize}
+
+\section{Contraintes Non-Fonctionnelles}
+
+\subsection{Sécurité}
+
+\subsubsection{Authentification et Autorisation}
+
+\begin{itemize}[leftmargin=*]
+    \item Mots de passe hashés avec bcrypt (minimum 10 rounds)
+    \item Tokens JWT avec expiration (recommandé : 24h)
+    \item Validation stricte des rôles sur chaque action sensible
+    \item Protection contre les attaques par force brute (rate limiting sur login)
+\end{itemize}
+
+\subsubsection{Protection des Données}
+
+\begin{itemize}[leftmargin=*]
+    \item Communications HTTPS obligatoires en production
+    \item Validation et sanitisation de tous les inputs utilisateurs
+    \item Protection contre les injections NoSQL
+    \item Protection contre les attaques XSS et CSRF
+    \item Isolation des données par périmètre (responsables ne voient que leur scope)
+\end{itemize}
+
+\subsubsection{Gestion des Fichiers}
+
+\begin{itemize}[leftmargin=*]
+    \item Validation des types MIME des fichiers uploadés
+    \item Limitation de la taille des fichiers (50 MB par défaut)
+    \item Scan antivirus recommandé (optionnel pour v1)
+    \item URLs de téléchargement signées avec expiration (si S3)
+\end{itemize}
+
+\subsection{Performance}
+
+\begin{itemize}[leftmargin=*]
+    \item \textbf{Temps de chargement initial :} < 3 secondes
+    \item \textbf{Temps de réponse API :} < 500ms pour 95\% des requêtes
+    \item \textbf{Upload de fichiers :} Support de fichiers jusqu'à 50 MB avec barre de progression
+    \item \textbf{Pagination :} 20-50 résultats par page pour éviter la surcharge
+    \item \textbf{Optimisation images :} Compression et lazy loading
+    \item \textbf{Caching :} Mise en cache des données statiques (structure académique)
+\end{itemize}
+
+\subsection{Scalabilité}
+
+\begin{itemize}[leftmargin=*]
+    \item Architecture serverless permettant une scalabilité automatique
+    \item Base de données MongoDB Atlas avec scaling horizontal
+    \item CDN pour la distribution des fichiers statiques
+    \item Capacité à supporter 1000+ utilisateurs simultanés
+\end{itemize}
+
+\subsection{Disponibilité}
+
+\begin{itemize}[leftmargin=*]
+    \item \textbf{Uptime cible :} 99.5\% (environ 3.6 heures de downtime par mois)
+    \item Backups automatiques quotidiens de la base de données
+    \item Monitoring et alertes en cas d'erreurs critiques
+    \item Plan de reprise d'activité documenté
+\end{itemize}
+
+\subsection{Compatibilité}
+
+\subsubsection{Navigateurs}
+
+Support des versions récentes (dernières 2 versions majeures) :
+\begin{itemize}[leftmargin=*]
+    \item Google Chrome
+    \item Mozilla Firefox
+    \item Safari
+    \item Microsoft Edge
+\end{itemize}
+
+\subsubsection{Responsive Design}
+
+\begin{itemize}[leftmargin=*]
+    \item \textbf{Mobile :} 320px - 767px
+    \item \textbf{Tablette :} 768px - 1023px
+    \item \textbf{Desktop :} 1024px et plus
+\end{itemize}
+
+\subsection{Hébergement et Déploiement}
+
+\subsubsection{Environnements}
+
+\begin{itemize}[leftmargin=*]
+    \item \textbf{Développement :} Local (localhost)
+    \item \textbf{Staging :} Environnement de pré-production pour tests
+    \item \textbf{Production :} Environnement public
+\end{itemize}
+
+\subsubsection{Plateforme d'Hébergement Recommandée}
+
+\textbf{Frontend :} Vercel
+\begin{itemize}[leftmargin=*]
+    \item Déploiement automatique depuis Git
+    \item CDN global intégré
+    \item HTTPS automatique
+    \item Preview deployments pour chaque PR
+\end{itemize}
+
+\textbf{Backend :} Vercel Serverless Functions ou AWS Lambda
+\begin{itemize}[leftmargin=*]
+    \item Scalabilité automatique
+    \item Paiement à l'usage
+    \item Intégration CI/CD
+\end{itemize}
+
+\textbf{Base de données :} MongoDB Atlas
+\begin{itemize}[leftmargin=*]
+    \item Cluster managé
+    \item Backups automatiques
+    \item Monitoring intégré
+\end{itemize}
+
+\textbf{Stockage fichiers :} AWS S3 ou Cloudinary
+\begin{itemize}[leftmargin=*]
+    \item Stockage illimité
+    \item CDN intégré
+    \item Gestion des permissions
+\end{itemize}
+
+\subsection{Maintenance et Évolutivité}
+
+\begin{itemize}[leftmargin=*]
+    \item Code documenté et structuré selon les bonnes pratiques
+    \item Tests unitaires et d'intégration (couverture minimale : 70\%)
+    \item Versioning sémantique (SemVer)
+    \item Documentation technique (README, API docs)
+    \item Logs structurés pour faciliter le debugging
+\end{itemize}
+
+\section{Maquettes et Interfaces Clés}
+
+\subsection{Page d'Accueil (Étudiants)}
+
+\textbf{Description :}
+
+La page d'accueil présente une interface épurée et intuitive permettant aux étudiants de rechercher et filtrer les ressources pédagogiques.
+
+\textbf{Éléments principaux :}
+\begin{itemize}[leftmargin=*]
+    \item \textbf{Header :} Logo ENSA-SHARE, navigation (Accueil, À propos, Contact), bouton "Connexion" (pour responsables/admin)
+    \item \textbf{Section Filtres :} 
+    \begin{itemize}
+        \item Dropdown "Année" (1ère année, 2ème année, etc.)
+        \item Dropdown "Filière" (dynamique selon l'année sélectionnée)
+        \item Dropdown "Module" (dynamique selon la filière)
+        \item Barre de recherche textuelle
+        \item Bouton "Rechercher"
+    \end{itemize}
+    \item \textbf{Section Résultats :}
+    \begin{itemize}
+        \item Grille de cartes affichant les fichiers
+        \item Chaque carte contient : icône du type de fichier, nom, module, taille, date d'upload, bouton "Télécharger"
+        \item Pagination en bas de page
+    \end{itemize}
+    \item \textbf{Footer :} Informations de contact, liens utiles
+\end{itemize}
+
+\subsection{Page de Connexion}
+
+\textbf{Description :}
+
+Interface minimaliste de connexion pour les responsables et superadmin.
+
+\textbf{Éléments :}
+\begin{itemize}[leftmargin=*]
+    \item Logo centré
+    \item Formulaire avec champs Email et Mot de passe
+    \item Checkbox "Se souvenir de moi"
+    \item Bouton "Se connecter"
+    \item Lien "Mot de passe oublié ?" (optionnel v1)
+    \item Messages d'erreur en cas d'échec
+\end{itemize}
+
+\subsection{Dashboard Responsable}
+
+\textbf{Description :}
+
+Interface de gestion pour les délégués, affichant leurs fichiers et permettant l'upload.
+
+\textbf{Éléments :}
+\begin{itemize}[leftmargin=*]
+    \item \textbf{Sidebar :} Navigation (Mes fichiers, Uploader, Profil, Déconnexion)
+    \item \textbf{Section Statistiques :}
+    \begin{itemize}
+        \item Nombre de fichiers uploadés
+        \item Espace utilisé
+        \item Dernier upload
+    \end{itemize}
+    \item \textbf{Section Upload :}
+    \begin{itemize}
+        \item Zone drag-and-drop pour fichiers
+        \item Sélection du module (dropdown)
+        \item Bouton "Uploader"
+        \item Barre de progression
+    \end{itemize}
+    \item \textbf{Liste des Fichiers :}
+    \begin{itemize}
+        \item Tableau avec colonnes : Nom, Module, Type, Taille, Date, Actions (Modifier, Supprimer)
+        \item Filtres et recherche
+        \item Pagination
+    \end{itemize}
+\end{itemize}
+
+\subsection{Dashboard Superadmin}
+
+\textbf{Description :}
+
+Interface complète de supervision et gestion globale.
+
+\textbf{Éléments :}
+\begin{itemize}[leftmargin=*]
+    \item \textbf{Sidebar :} Navigation (Dashboard, Fichiers, Utilisateurs, Structure, Logs, Profil, Déconnexion)
+    \item \textbf{Page Dashboard :}
+    \begin{itemize}
+        \item Cartes de statistiques (Total fichiers, Total responsables, Uploads ce mois, Espace utilisé)
+        \item Graphique de répartition des fichiers par filière
+        \item Liste des derniers uploads
+    \end{itemize}
+    \item \textbf{Page Fichiers :}
+    \begin{itemize}
+        \item Filtres avancés (Année, Filière, Module, Uploadé par)
+        \item Tableau complet avec actions (Voir, Télécharger, Supprimer)
+    \end{itemize}
+    \item \textbf{Page Utilisateurs :}
+    \begin{itemize}
+        \item Liste des responsables avec informations (Nom, Email, Filière, Année, Statut)
+        \item Bouton "Ajouter un responsable"
+        \item Actions : Modifier, Désactiver, Supprimer
+    \end{itemize}
+    \item \textbf{Page Structure :}
+    \begin{itemize}
+        \item Interface d'édition de la hiérarchie académique
+        \item Ajout/suppression d'années, filières, modules
+    \end{itemize}
+\end{itemize}
+
+\subsection{Principes de Design}
+
+\begin{itemize}[leftmargin=*]
+    \item \textbf{Palette de couleurs :} Tons professionnels (bleu primaire, gris neutres, accents verts pour succès)
+    \item \textbf{Typographie :} Police sans-serif moderne (Inter, Roboto)
+    \item \textbf{Iconographie :} Icônes cohérentes (Heroicons, Lucide)
+    \item \textbf{Espacement :} Utilisation de la grille Tailwind (4px base)
+    \item \textbf{Feedback utilisateur :} Toasts/notifications pour chaque action
+    \item \textbf{Accessibilité :} Contraste WCAG AA minimum, navigation au clavier
+\end{itemize}
+
+\section{Plan de Développement}
+
+\subsection{Phases du Projet}
+
+\subsubsection{Phase 1 : Initialisation et Architecture (Semaine 1-2)}
+
+\begin{itemize}[leftmargin=*]
+    \item Configuration de l'environnement de développement
+    \item Initialisation des projets frontend (Next.js) et backend (Express)
+    \item Configuration de MongoDB Atlas
+    \item Configuration du stockage cloud (S3/Cloudinary)
+    \item Mise en place du repository Git et CI/CD
+\end{itemize}
+
+\subsubsection{Phase 2 : Backend Core (Semaine 3-4)}
+
+\begin{itemize}[leftmargin=*]
+    \item Implémentation des modèles de données (Mongoose schemas)
+    \item Développement du système d'authentification (JWT)
+    \item Développement des endpoints API (CRUD fichiers, utilisateurs)
+    \item Implémentation de la logique de contrôle d'accès
+    \item Tests unitaires backend
+\end{itemize}
+
+\subsubsection{Phase 3 : Frontend Core (Semaine 5-6)}
+
+\begin{itemize}[leftmargin=*]
+    \item Développement de la page d'accueil et système de filtrage
+    \item Développement de la page de connexion
+    \item Développement du dashboard responsable
+    \item Implémentation de l'upload de fichiers (drag-and-drop)
+    \item Intégration avec l'API backend
+\end{itemize}
+
+\subsubsection{Phase 4 : Administration (Semaine 7)}
+
+\begin{itemize}[leftmargin=*]
+    \item Développement du dashboard superadmin
+    \item Gestion des utilisateurs (CRUD responsables)
+    \item Gestion de la structure académique
+    \item Statistiques et logs
+\end{itemize}
+
+\subsubsection{Phase 5 : Tests et Optimisation (Semaine 8)}
+
+\begin{itemize}[leftmargin=*]
+    \item Tests d'intégration end-to-end
+    \item Tests de charge et performance
+    \item Optimisation des requêtes et du chargement
+    \item Correction des bugs identifiés
+    \item Audit de sécurité
+\end{itemize}
+
+\subsubsection{Phase 6 : Déploiement et Documentation (Semaine 9)}
+
+\begin{itemize}[leftmargin=*]
+    \item Déploiement en environnement de staging
+    \item Tests utilisateurs (UAT)
+    \item Rédaction de la documentation technique
+    \item Rédaction du guide utilisateur
+    \item Déploiement en production
+\end{itemize}
+
+\subsection{Livrables}
+
+\begin{enumerate}[leftmargin=*]
+    \item Code source complet (frontend + backend) sur repository Git
+    \item Documentation technique (architecture, API, modèles de données)
+    \item Guide utilisateur (pour chaque rôle)
+    \item Application déployée en production
+    \item Scripts de déploiement et configuration
+    \item Rapport de tests et audit de sécurité
+\end{enumerate}
+
+\subsection{Critères d'Acceptation}
+
+\begin{itemize}[leftmargin=*]
+    \item Toutes les user stories sont implémentées et validées
+    \item Les tests couvrent au minimum 70\% du code
+    \item L'application est responsive sur mobile, tablette et desktop
+    \item Les temps de réponse respectent les contraintes de performance
+    \item L'audit de sécurité ne révèle aucune vulnérabilité critique
+    \item La documentation est complète et à jour
+\end{itemize}
+
+\section{Risques et Mitigation}
+
+\subsection{Risques Techniques}
+
+\begin{enumerate}[leftmargin=*]
+    \item \textbf{Risque :} Problèmes de scalabilité avec MongoDB
+    
+    \textbf{Mitigation :} Utilisation de MongoDB Atlas avec auto-scaling, indexation optimale des collections
+    
+    \item \textbf{Risque :} Coûts élevés de stockage cloud
+    
+    \textbf{Mitigation :} Mise en place de quotas par utilisateur, compression des fichiers, politique de rétention
+    
+    \item \textbf{Risque :} Failles de sécurité
+    
+    \textbf{Mitigation :} Audit de sécurité régulier, utilisation de bibliothèques éprouvées, validation stricte des inputs
+    
+    \item \textbf{Risque :} Performance dégradée avec volume important de fichiers
+    
+    \textbf{Mitigation :} Pagination, lazy loading, CDN pour distribution, caching
+\end{enumerate}
+
+\subsection{Risques Organisationnels}
+
+\begin{enumerate}[leftmargin=*]
+    \item \textbf{Risque :} Retard dans le développement
+    
+    \textbf{Mitigation :} Planning réaliste avec buffer, développement itératif, priorisation des fonctionnalités critiques
+    
+    \item \textbf{Risque :} Adoption faible par les utilisateurs
+    
+    \textbf{Mitigation :} Implication des utilisateurs dès la phase de conception, formation des responsables, interface intuitive
+    
+    \item \textbf{Risque :} Manque de clarté des besoins
+    
+    \textbf{Mitigation :} Validation régulière avec les parties prenantes, prototypes itératifs
+\end{enumerate}
+
+\section{Conclusion}
+
+Le projet \textbf{ENSA-SHARE} représente une solution moderne et complète pour centraliser et faciliter le partage de ressources pédagogiques au sein d'un établissement d'enseignement supérieur. 
+
+L'architecture proposée, basée sur Next.js, Express.js en mode Serverless et MongoDB, garantit une solution scalable, performante et maintenable. La séparation claire des rôles (Étudiant, Responsable, Superadmin) assure une gestion sécurisée et efficace des contenus.
+
+Ce cahier des charges constitue le référentiel technique et fonctionnel pour le développement de la plateforme. Il devra être complété par des maquettes détaillées et validé par l'ensemble des parties prenantes avant le démarrage effectif du développement.
+
+\vspace{1cm}
+
+\begin{center}
+\textit{Document rédigé le \today}
+\end{center}
+
+\end{document}
