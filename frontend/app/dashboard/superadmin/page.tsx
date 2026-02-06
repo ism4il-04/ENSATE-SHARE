@@ -11,7 +11,7 @@ export default function SuperadminDashboard() {
         queryKey: ['dashboard-stats'],
         queryFn: async () => {
             const response = await statsAPI.getDashboardStats();
-            return response.data;
+            return response.data.stats;
         },
     });
 
@@ -20,7 +20,7 @@ export default function SuperadminDashboard() {
         queryKey: ['file-distribution'],
         queryFn: async () => {
             const response = await statsAPI.getFilesByFiliere();
-            return response.data;
+            return response.data.distribution;
         },
     });
 

@@ -81,5 +81,6 @@ export const structureAPI = {
 export const statsAPI = {
     getDashboardStats: () => api.get('/stats/dashboard'),
     getFilesByFiliere: () => api.get('/stats/files-by-filiere'),
+    getFilesByYear: () => api.get('/stats/files-by-year'),
     getActivityLogs: (params?: any) => api.get('/stats/logs', { params }),
 };

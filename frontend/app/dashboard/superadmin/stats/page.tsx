@@ -10,7 +10,7 @@ export default function StatsPage() {
         queryKey: ['stats-by-year'],
         queryFn: async () => {
             const response = await statsAPI.getFilesByYear();
-            return response.data;
+            return response.data.distribution;
         },
     });
 
@@ -19,7 +19,7 @@ export default function StatsPage() {
         queryKey: ['stats-by-filiere'],
         queryFn: async () => {
             const response = await statsAPI.getFilesByFiliere();
-            return response.data;
+            return response.data.distribution;
         },
     });
 
@@ -28,7 +28,7 @@ export default function StatsPage() {
         queryKey: ['dashboard-stats'],
         queryFn: async () => {
             const response = await statsAPI.getDashboardStats();
-            return response.data;
+            return response.data.stats;
         },
     });
 

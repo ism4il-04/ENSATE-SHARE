@@ -98,6 +98,40 @@ export const getFilesByFiliere = async (
     }
 };
 
+// @desc    Get files distribution by year
+// @route   GET /api/stats/files-by-year
+// @access  Private (Superadmin only)
+export const getFilesByYear = async (
+    req: AuthRequest,
+    res: Response
+): Promise<void> => {
+    try {
+        const distribution = await File.aggregate([
+            {
+                $group: {
+                    _id: '$year',
+                    count: { $sum: 1 },
+                    totalSize: { $sum: '$fileSize' },
+                },
+            },
+            {
+                $sort: { _id: 1 },
+            },
+        ]);
+
+        res.status(200).json({
+            success: true,
+            distribution,
+        });
+    } catch (error: any) {
+        res.status(500).json({
+            success: false,
+            message: 'Error fetching files distribution by year',
+            error: error.message,
+        });
+    }
+};
+
 // @desc    Get activity logs
 // @route   GET /api/stats/logs
 // @access  Private (Superadmin only)
