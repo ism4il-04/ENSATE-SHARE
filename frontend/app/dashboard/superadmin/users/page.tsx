@@ -153,50 +153,62 @@ export default function UsersPage() {
                                 <tr className="border-b border-gray-200">
                                     <th className="text-left py-3 px-4 text-sm font-medium text-gray-600">Nom</th>
                                     <th className="text-left py-3 px-4 text-sm font-medium text-gray-600">Email</th>
-                                    <th className="text-left py-3 px-4 text-sm font-medium text-gray-600">Année</th>
-                                    <th className="text-left py-3 px-4 text-sm font-medium text-gray-600">Filière</th>
+                                    <th className="text-left py-3 px-4 text-sm font-medium text-gray-600">Année / Filière</th>
                                     <th className="text-left py-3 px-4 text-sm font-medium text-gray-600">Statut</th>
                                     <th className="text-right py-3 px-4 text-sm font-medium text-gray-600">Actions</th>
                                 </tr>
                             </thead>
                             <tbody>
-                                {usersData.map((user: any) => (
-                                    <tr key={user._id} className="border-b border-gray-100 hover:bg-gray-50">
-                                        <td className="py-3 px-4">
-                                            <span className="text-sm font-medium text-gray-900">
-                                                {user.firstName} {user.lastName}
-                                            </span>
-                                        </td>
-                                        <td className="py-3 px-4 text-sm text-gray-600">{user.email}</td>
-                                        <td className="py-3 px-4 text-sm text-gray-600">{user.assignedYear}</td>
-                                        <td className="py-3 px-4 text-sm text-gray-600">{user.assignedFiliere}</td>
-                                        <td className="py-3 px-4">
-                                            <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${user.isActive ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'
-                                                }`}>
-                                                {user.isActive ? 'Actif' : 'Inactif'}
-                                            </span>
-                                        </td>
-                                        <td className="py-3 px-4">
-                                            <div className="flex items-center justify-end gap-2">
-                                                <button
-                                                    onClick={() => openEditModal(user)}
-                                                    className="text-blue-500 hover:text-blue-600 p-2"
-                                                    title="Modifier"
-                                                >
-                                                    <Edit size={18} />
-                                                </button>
-                                                <button
-                                                    onClick={() => handleDelete(user)}
-                                                    className="text-red-500 hover:text-red-600 p-2"
-                                                    title="Supprimer"
-                                                    disabled={deleteMutation.isPending}
-                                                >
-                                                    <Trash2 size={18} />
-                                                </button>
-                                            </div>
-                                        </td>
-                                    </tr>
-                                ))}
+                                {usersData.map((user: any) => {
+                                    // Find user's filière data to show code
+                                    const userYear = structureData?.years?.find((y: any) => y.name === user.assignedYear);
+                                    const userFiliere = userYear?.filieres?.find((f: any) => f.name === user.assignedFiliere);
+
+                                    return (
+                                        <tr key={user._id} className="border-b border-gray-100 hover:bg-gray-50">
+                                            <td className="py-3 px-4">
+                                                <span className="text-sm font-medium text-gray-900">
+                                                    {user.firstName} {user.lastName}
+                                                </span>
+                                            </td>
+                                            <td className="py-3 px-4 text-sm text-gray-600">{user.email}</td>
+                                            <td className="py-3 px-4">
+                                                <div className="text-sm">
+                                                    <div className="font-medium text-gray-900">{user.assignedYear}</div>
+                                                    <div className="text-gray-600">
+                                                        {user.assignedFiliere}
+                                                        {userFiliere?.code && <span className="text-gray-500"> ({userFiliere.code})</span>}
+                                                    </div>
+                                                </div>
+                                            </td>
+                                            <td className="py-3 px-4">
+                                                <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${user.isActive ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'
+                                                    }`}>
+                                                    {user.isActive ? 'Actif' : 'Inactif'}
+                                                </span>
+                                            </td>
+                                            <td className="py-3 px-4">
+                                                <div className="flex items-center justify-end gap-2">
+                                                    <button
+                                                        onClick={() => openEditModal(user)}
+                                                        className="text-blue-500 hover:text-blue-600 p-2"
+                                                        title="Modifier"
+                                                    >
+                                                        <Edit size={18} />
+                                                    </button>
+                                                    <button
+                                                        onClick={() => handleDelete(user)}
+                                                        className="text-red-500 hover:text-red-600 p-2"
+                                                        title="Supprimer"
+                                                        disabled={deleteMutation.isPending}
+                                                    >
+                                                        <Trash2 size={18} />
+                                                    </button>
+                                                </div>
+                                            </td>
+                                        </tr>
+                                    );
+                                })}
                             </tbody>
                         </table>
                     </div>

@@ -11,6 +11,7 @@ import { generateThumbnailUrl, getFileCategoryColor, getFileTypeColor } from '@/
 export default function HomePage() {
     const [selectedYear, setSelectedYear] = useState('');
     const [selectedFiliere, setSelectedFiliere] = useState('');
+    const [selectedSemester, setSelectedSemester] = useState('');
     const [selectedModule, setSelectedModule] = useState('');
     const [searchQuery, setSearchQuery] = useState('');
     const [page, setPage] = useState(1);
@@ -26,11 +27,12 @@ export default function HomePage() {
 
     // Fetch files with filters
     const { data: filesData, isLoading } = useQuery({
-        queryKey: ['files', selectedYear, selectedFiliere, selectedModule, searchQuery, page],
+        queryKey: ['files', selectedYear, selectedFiliere, selectedSemester, selectedModule, searchQuery, page],
         queryFn: async () => {
             const params: any = { page, limit: 12 };
             if (selectedYear) params.year = selectedYear;
             if (selectedFiliere) params.filiere = selectedFiliere;
+            if (selectedSemester) params.semester = selectedSemester;
             if (selectedModule) params.module = selectedModule;
             if (searchQuery) params.search = searchQuery;
 
@@ -41,6 +43,7 @@ export default function HomePage() {
 
     const selectedYearData = structureData?.years.find((y) => y.name === selectedYear);
     const selectedFiliereData = selectedYearData?.filieres.find((f) => f.name === selectedFiliere);
+    const selectedSemesterData = selectedFiliereData?.semesters?.find((s: any) => s.name === selectedSemester);
 
     const formatFileSize = (bytes: number) => {
         if (bytes < 1024) return bytes + ' B';
@@ -71,7 +74,7 @@ export default function HomePage() {
                 {/* Filters Section */}
                 <div className="card mb-8">
                     <h2 className="text-xl font-semibold mb-4">Rechercher des ressources</h2>
-                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-4">
+                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-4 mb-4">
                         {/* Year Filter */}
                         <div>
                             <label className="block text-sm font-medium text-gray-700 mb-2">Année</label>
@@ -80,6 +83,7 @@ export default function HomePage() {
                                 onChange={(e) => {
                                     setSelectedYear(e.target.value);
                                     setSelectedFiliere('');
+                                    setSelectedSemester('');
                                     setSelectedModule('');
                                 }}
                                 className="input-field"
@@ -100,6 +104,7 @@ export default function HomePage() {
                                 value={selectedFiliere}
                                 onChange={(e) => {
                                     setSelectedFiliere(e.target.value);
+                                    setSelectedSemester('');
                                     setSelectedModule('');
                                 }}
                                 className="input-field"
@@ -114,6 +119,27 @@ export default function HomePage() {
                             </select>
                         </div>
 
+                        {/* Semester Filter */}
+                        <div>
+                            <label className="block text-sm font-medium text-gray-700 mb-2">Semestre</label>
+                            <select
+                                value={selectedSemester}
+                                onChange={(e) => {
+                                    setSelectedSemester(e.target.value);
+                                    setSelectedModule('');
+                                }}
+                                className="input-field"
+                                disabled={!selectedFiliere}
+                            >
+                                <option value="">Tous les semestres</option>
+                                {selectedFiliereData?.semesters?.map((semester: any) => (
+                                    <option key={semester.name} value={semester.name}>
+                                        {semester.name}
+                                    </option>
+                                ))}
+                            </select>
+                        </div>
+
                         {/* Module Filter */}
                         <div>
                             <label className="block text-sm font-medium text-gray-700 mb-2">Module</label>
@@ -121,10 +147,10 @@ export default function HomePage() {
                                 value={selectedModule}
                                 onChange={(e) => setSelectedModule(e.target.value)}
                                 className="input-field"
-                                disabled={!selectedFiliere}
+                                disabled={!selectedSemester}
                             >
-                                <option value="">Tous les modules</option>
-                                {selectedFiliereData?.modules.map((module) => (
+                                <option value="">{selectedSemester ? 'Tous les modules' : 'Sélectionnez d\'abord un semestre'}</option>
+                                {selectedSemesterData?.modules?.map((module: string) => (
                                     <option key={module} value={module}>
                                         {module}
                                     </option>

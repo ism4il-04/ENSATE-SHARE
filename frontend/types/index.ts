@@ -19,6 +19,7 @@ export interface File {
     fileUrl: string;
     year: string;
     filiere: string;
+    semester: string;
     module: string;
     fileCategory: 'Cours' | 'TD' | 'TP' | 'EXAM' | 'Autre';
     fileLabel?: string;
@@ -28,21 +29,24 @@ export interface File {
         lastName: string;
         email: string;
     };
-    uploadedAt: string;
+    createdAt: string;
     updatedAt: string;
 }
 
-export interface Module {
-    name: string;
-}
-
-export interface Filiere {
+export interface Semester {
     name: string;
     modules: string[];
 }
 
+export interface Filiere {
+    name: string;
+    code?: string;
+    semesters: Semester[];
+}
+
 export interface Year {
     name: string;
+    cycle?: string;
     filieres: Filiere[];
 }
 

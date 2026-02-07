@@ -14,6 +14,7 @@ export default function UploadPage() {
     const { user } = useAuthStore();
 
     const [selectedFile, setSelectedFile] = useState<File | null>(null);
+    const [semester, setSemester] = useState('');
     const [module, setModule] = useState('');
     const [fileCategory, setFileCategory] = useState<'Cours' | 'TD' | 'TP' | 'EXAM' | 'Autre'>('Autre');
     const [fileLabel, setFileLabel] = useState('');
@@ -30,10 +31,14 @@ export default function UploadPage() {
         },
     });
 
-    // Get modules for responsable's assigned year/filiere
-    const modules = structureData?.years
+    // Get semesters and modules for responsable's assigned year/filiere
+    const semesters = structureData?.years
         ?.find((y: any) => y.name === user?.assignedYear)
         ?.filieres?.find((f: any) => f.name === user?.assignedFiliere)
+        ?.semesters || [];
+
+    const modules = semesters
+        ?.find((s: any) => s.name === semester)
         ?.modules || [];
 
     // Upload mutation
@@ -104,13 +109,14 @@ export default function UploadPage() {
     const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
 
-        if (!selectedFile || !module) {
-            setErrorMessage('Veuillez sélectionner un fichier et un module');
+        if (!selectedFile || !semester || !module) {
+            setErrorMessage('Veuillez sélectionner un fichier, un semestre et un module');
             return;
         }
 
         const formData = new FormData();
         formData.append('file', selectedFile);
+        formData.append('semester', semester);
         formData.append('module', module);
         formData.append('fileCategory', fileCategory);
         if (fileLabel.trim()) {
@@ -189,6 +195,30 @@ export default function UploadPage() {
                     </div>
                 </div>
 
+                {/* Semester Selection */}
+                <div className="card">
+                    <label htmlFor="semester" className="block text-sm font-medium text-gray-700 mb-3">
+                        Semestre <span className="text-red-500">*</span>
+                    </label>
+                    <select
+                        id="semester"
+                        value={semester}
+                        onChange={(e) => {
+                            setSemester(e.target.value);
+                            setModule(''); // Reset module when semester changes
+                        }}
+                        className="input-field"
+                        required
+                    >
+                        <option value="">Sélectionnez un semestre</option>
+                        {semesters.map((sem: any) => (
+                            <option key={sem.name} value={sem.name}>
+                                {sem.name}
+                            </option>
+                        ))}
+                    </select>
+                </div>
+
                 {/* Module Selection */}
                 <div className="card">
                     <label htmlFor="module" className="block text-sm font-medium text-gray-700 mb-3">
@@ -199,9 +229,10 @@ export default function UploadPage() {
                         value={module}
                         onChange={(e) => setModule(e.target.value)}
                         className="input-field"
+                        disabled={!semester}
                         required
                     >
-                        <option value="">Sélectionnez un module</option>
+                        <option value="">{semester ? 'Sélectionnez un module' : 'Sélectionnez d\'abord un semestre'}</option>
                         {modules.map((mod: string) => (
                             <option key={mod} value={mod}>
                                 {mod}
@@ -285,7 +316,7 @@ export default function UploadPage() {
                 <div className="flex gap-4">
                     <button
                         type="submit"
-                        disabled={!selectedFile || !module || uploadStatus === 'uploading'}
+                        disabled={!selectedFile || !semester || !module || uploadStatus === 'uploading'}
                         className="btn-primary disabled:opacity-50 disabled:cursor-not-allowed"
                     >
                         {uploadStatus === 'uploading' ? 'Upload en cours...' : 'Uploader'}

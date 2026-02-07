@@ -246,7 +246,7 @@ export default function FilesPage() {
                                                 </td>
                                                 <td className="py-3 px-4 text-sm text-gray-600">{file.module}</td>
                                                 <td className="py-3 px-4 text-sm text-gray-600">{formatFileSize(file.fileSize)}</td>
-                                                <td className="py-3 px-4 text-sm text-gray-600">{formatDate(file.uploadedAt)}</td>
+                                                <td className="py-3 px-4 text-sm text-gray-600">{formatDate(file.createdAt)}</td>
                                                 <td className="py-3 px-4">
                                                     <div className="flex items-center justify-end gap-2">
                                                         <a

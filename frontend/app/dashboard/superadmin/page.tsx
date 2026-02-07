@@ -241,7 +241,7 @@ export default function SuperadminDashboard() {
                                                 </p>
                                                 <span className="text-gray-400">•</span>
                                                 <p className="text-xs text-gray-500">
-                                                    {formatDate(file.uploadedAt)}
+                                                    {formatDate(file.createdAt)}
                                                 </p>
                                                 <span className="text-gray-400">•</span>
                                                 <span className="text-xs text-gray-500">

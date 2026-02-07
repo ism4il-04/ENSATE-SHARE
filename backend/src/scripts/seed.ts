@@ -32,98 +32,276 @@ const seedDatabase = async () => {
             logger.info('ℹ️  Superadmin account already exists');
         }
 
-        // Create sample academic structure
-        const existingStructure = await AcademicStructure.findOne();
+        // Delete existing academic structure and create new one
+        await AcademicStructure.deleteMany({});
+        logger.info('🗑️  Deleted existing academic structure');
 
-        if (!existingStructure) {
-            await AcademicStructure.create({
-                years: [
-                    {
-                        name: '1ère Année',
-                        filieres: [
-                            {
-                                name: 'Tronc Commun',
-                                modules: [
-                                    'Mathématiques 1',
-                                    'Physique 1',
-                                    'Algorithmique',
-                                    'Électronique',
-                                    'Mécanique',
-                                    'Langues et Communication',
-                                ],
-                            },
-                        ],
-                    },
-                    {
-                        name: '2ème Année',
-                        filieres: [
-                            {
-                                name: 'Génie Informatique',
-                                modules: [
-                                    'Programmation Orientée Objet',
-                                    'Structures de Données',
-                                    'Bases de Données',
-                                    'Réseaux Informatiques',
-                                    'Systèmes d\'Exploitation',
-                                ],
-                            },
-                            {
-                                name: 'Génie Électrique',
-                                modules: [
-                                    'Électronique de Puissance',
-                                    'Automatique',
-                                    'Traitement du Signal',
-                                    'Machines Électriques',
-                                ],
-                            },
-                            {
-                                name: 'Génie Mécanique',
-                                modules: [
-                                    'Résistance des Matériaux',
-                                    'Thermodynamique',
-                                    'Mécanique des Fluides',
-                                    'CAO/DAO',
-                                ],
-                            },
-                        ],
-                    },
-                    {
-                        name: '3ème Année',
-                        filieres: [
-                            {
-                                name: 'Génie Informatique',
-                                modules: [
-                                    'Développement Web',
-                                    'Intelligence Artificielle',
-                                    'Sécurité Informatique',
-                                    'Génie Logiciel',
-                                    'Cloud Computing',
-                                ],
-                            },
-                            {
-                                name: 'Génie Électrique',
-                                modules: [
-                                    'Énergies Renouvelables',
-                                    'Électronique Embarquée',
-                                    'Commande Numérique',
-                                ],
-                            },
-                            {
-                                name: 'Génie Mécanique',
-                                modules: [
-                                    'Fabrication Mécanique',
-                                    'Maintenance Industrielle',
-                                    'Gestion de Production',
-                                ],
-                            },
-                        ],
-                    },
-                ],
-            });
-            logger.success('✅ Sample academic structure created');
-        } else {
-            logger.info('ℹ️  Academic structure already exists');
-        }
+        await AcademicStructure.create({
+            years: [
+                // ============================================
+                // CYCLE PRÉPARATOIRE (2 years)
+                // ============================================
+                {
+                    name: '1ère Année (2AP1)',
+                    cycle: 'CP',
+                    filieres: [
+                        {
+                            code: '2AP',
+                            name: 'Cycle Préparatoire',
+                            semesters: [
+                                {
+                                    name: 'S1',
+                                    modules: [
+                                        'Analyse 1',
+                                        'Algèbre 1',
+                                        'Mécanique du point',
+                                        'Thermodynamique',
+                                        'Algorithmique et programmation',
+                                        'Langues et Communication 1',
+                                    ],
+                                },
+                                {
+                                    name: 'S2',
+                                    modules: [
+                                        'Analyse 2',
+                                        'Algèbre 2',
+                                        'Électricité',
+                                        'Optique',
+                                        'Programmation C',
+                                        'Langues et Communication 2',
+                                    ],
+                                },
+                            ],
+                        },
+                    ],
+                },
+                {
+                    name: '2ème Année (2AP2)',
+                    cycle: 'CP',
+                    filieres: [
+                        {
+                            code: '2AP',
+                            name: 'Cycle Préparatoire',
+                            semesters: [
+                                {
+                                    name: 'S3',
+                                    modules: [
+                                        'Analyse 3',
+                                        'Probabilités et Statistiques',
+                                        'Mécanique du solide',
+                                        'Électronique analogique',
+                                        'Structures de données',
+                                        'Techniques de communication',
+                                    ],
+                                },
+                                {
+                                    name: 'S4',
+                                    modules: [
+                                        'Analyse numérique',
+                                        'Équations différentielles',
+                                        'Électronique numérique',
+                                        'Systèmes logiques',
+                                        'Programmation orientée objet',
+                                        'Développement personnel',
+                                    ],
+                                },
+                            ],
+                        },
+                    ],
+                },
+
+                // ============================================
+                // CYCLE D'INGÉNIEUR (3 years, 7 filières)
+                // ============================================
+                {
+                    name: '3ème Année (1CI)',
+                    cycle: 'CI',
+                    filieres: [
+                        {
+                            code: 'GI',
+                            name: 'Génie Informatique',
+                            semesters: [
+                                { name: 'S5', modules: ['Module GI S5-1', 'Module GI S5-2', 'Module GI S5-3'] },
+                                { name: 'S6', modules: ['Module GI S6-1', 'Module GI S6-2', 'Module GI S6-3'] },
+                            ],
+                        },
+                        {
+                            code: 'GSECS',
+                            name: 'Génie Système Embarqué et Cyber Security',
+                            semesters: [
+                                { name: 'S5', modules: ['Module GSECS S5-1', 'Module GSECS S5-2', 'Module GSECS S5-3'] },
+                                { name: 'S6', modules: ['Module GSECS S6-1', 'Module GSECS S6-2', 'Module GSECS S6-3'] },
+                            ],
+                        },
+                        {
+                            code: 'GM',
+                            name: 'Génie Mécatronique',
+                            semesters: [
+                                { name: 'S5', modules: ['Module GM S5-1', 'Module GM S5-2', 'Module GM S5-3'] },
+                                { name: 'S6', modules: ['Module GM S6-1', 'Module GM S6-2', 'Module GM S6-3'] },
+                            ],
+                        },
+                        {
+                            code: 'GC',
+                            name: 'Génie Civil',
+                            semesters: [
+                                { name: 'S5', modules: ['Module GC S5-1', 'Module GC S5-2', 'Module GC S5-3'] },
+                                { name: 'S6', modules: ['Module GC S6-1', 'Module GC S6-2', 'Module GC S6-3'] },
+                            ],
+                        },
+                        {
+                            code: 'SCM',
+                            name: 'Supply Chain Management',
+                            semesters: [
+                                { name: 'S5', modules: ['Module SCM S5-1', 'Module SCM S5-2', 'Module SCM S5-3'] },
+                                { name: 'S6', modules: ['Module SCM S6-1', 'Module SCM S6-2', 'Module SCM S6-3'] },
+                            ],
+                        },
+                        {
+                            code: 'BDIA',
+                            name: 'Big Data et Intelligence Artificielle',
+                            semesters: [
+                                { name: 'S5', modules: ['Module BDIA S5-1', 'Module BDIA S5-2', 'Module BDIA S5-3'] },
+                                { name: 'S6', modules: ['Module BDIA S6-1', 'Module BDIA S6-2', 'Module BDIA S6-3'] },
+                            ],
+                        },
+                        {
+                            code: 'GSTR',
+                            name: 'Génie des Systèmes de Télécommunications et Réseaux',
+                            semesters: [
+                                { name: 'S5', modules: ['Module GSTR S5-1', 'Module GSTR S5-2', 'Module GSTR S5-3'] },
+                                { name: 'S6', modules: ['Module GSTR S6-1', 'Module GSTR S6-2', 'Module GSTR S6-3'] },
+                            ],
+                        },
+                    ],
+                },
+                {
+                    name: '4ème Année (2CI)',
+                    cycle: 'CI',
+                    filieres: [
+                        {
+                            code: 'GI',
+                            name: 'Génie Informatique',
+                            semesters: [
+                                { name: 'S7', modules: ['Module GI S7-1', 'Module GI S7-2', 'Module GI S7-3'] },
+                                { name: 'S8', modules: ['Module GI S8-1', 'Module GI S8-2', 'Module GI S8-3'] },
+                            ],
+                        },
+                        {
+                            code: 'GSECS',
+                            name: 'Génie Système Embarqué et Cyber Security',
+                            semesters: [
+                                { name: 'S7', modules: ['Module GSECS S7-1', 'Module GSECS S7-2', 'Module GSECS S7-3'] },
+                                { name: 'S8', modules: ['Module GSECS S8-1', 'Module GSECS S8-2', 'Module GSECS S8-3'] },
+                            ],
+                        },
+                        {
+                            code: 'GM',
+                            name: 'Génie Mécatronique',
+                            semesters: [
+                                { name: 'S7', modules: ['Module GM S7-1', 'Module GM S7-2', 'Module GM S7-3'] },
+                                { name: 'S8', modules: ['Module GM S8-1', 'Module GM S8-2', 'Module GM S8-3'] },
+                            ],
+                        },
+                        {
+                            code: 'GC',
+                            name: 'Génie Civil',
+                            semesters: [
+                                { name: 'S7', modules: ['Module GC S7-1', 'Module GC S7-2', 'Module GC S7-3'] },
+                                { name: 'S8', modules: ['Module GC S8-1', 'Module GC S8-2', 'Module GC S8-3'] },
+                            ],
+                        },
+                        {
+                            code: 'SCM',
+                            name: 'Supply Chain Management',
+                            semesters: [
+                                { name: 'S7', modules: ['Module SCM S7-1', 'Module SCM S7-2', 'Module SCM S7-3'] },
+                                { name: 'S8', modules: ['Module SCM S8-1', 'Module SCM S8-2', 'Module SCM S8-3'] },
+                            ],
+                        },
+                        {
+                            code: 'BDIA',
+                            name: 'Big Data et Intelligence Artificielle',
+                            semesters: [
+                                { name: 'S7', modules: ['Module BDIA S7-1', 'Module BDIA S7-2', 'Module BDIA S7-3'] },
+                                { name: 'S8', modules: ['Module BDIA S8-1', 'Module BDIA S8-2', 'Module BDIA S8-3'] },
+                            ],
+                        },
+                        {
+                            code: 'GSTR',
+                            name: 'Génie des Systèmes de Télécommunications et Réseaux',
+                            semesters: [
+                                { name: 'S7', modules: ['Module GSTR S7-1', 'Module GSTR S7-2', 'Module GSTR S7-3'] },
+                                { name: 'S8', modules: ['Module GSTR S8-1', 'Module GSTR S8-2', 'Module GSTR S8-3'] },
+                            ],
+                        },
+                    ],
+                },
+                {
+                    name: '5ème Année (3CI)',
+                    cycle: 'CI',
+                    filieres: [
+                        {
+                            code: 'GI',
+                            name: 'Génie Informatique',
+                            semesters: [
+                                { name: 'S9', modules: ['Module GI S9-1', 'Module GI S9-2', 'Module GI S9-3'] },
+                                { name: 'S10', modules: ['Module GI S10-1', 'Module GI S10-2', 'Module GI S10-3'] },
+                            ],
+                        },
+                        {
+                            code: 'GSECS',
+                            name: 'Génie Système Embarqué et Cyber Security',
+                            semesters: [
+                                { name: 'S9', modules: ['Module GSECS S9-1', 'Module GSECS S9-2', 'Module GSECS S9-3'] },
+                                { name: 'S10', modules: ['Module GSECS S10-1', 'Module GSECS S10-2', 'Module GSECS S10-3'] },
+                            ],
+                        },
+                        {
+                            code: 'GM',
+                            name: 'Génie Mécatronique',
+                            semesters: [
+                                { name: 'S9', modules: ['Module GM S9-1', 'Module GM S9-2', 'Module GM S9-3'] },
+                                { name: 'S10', modules: ['Module GM S10-1', 'Module GM S10-2', 'Module GM S10-3'] },
+                            ],
+                        },
+                        {
+                            code: 'GC',
+                            name: 'Génie Civil',
+                            semesters: [
+                                { name: 'S9', modules: ['Module GC S9-1', 'Module GC S9-2', 'Module GC S9-3'] },
+                                { name: 'S10', modules: ['Module GC S10-1', 'Module GC S10-2', 'Module GC S10-3'] },
+                            ],
+                        },
+                        {
+                            code: 'SCM',
+                            name: 'Supply Chain Management',
+                            semesters: [
+                                { name: 'S9', modules: ['Module SCM S9-1', 'Module SCM S9-2', 'Module SCM S9-3'] },
+                                { name: 'S10', modules: ['Module SCM S10-1', 'Module SCM S10-2', 'Module SCM S10-3'] },
+                            ],
+                        },
+                        {
+                            code: 'BDIA',
+                            name: 'Big Data et Intelligence Artificielle',
+                            semesters: [
+                                { name: 'S9', modules: ['Module BDIA S9-1', 'Module BDIA S9-2', 'Module BDIA S9-3'] },
+                                { name: 'S10', modules: ['Module BDIA S10-1', 'Module BDIA S10-2', 'Module BDIA S10-3'] },
+                            ],
+                        },
+                        {
+                            code: 'GSTR',
+                            name: 'Génie des Systèmes de Télécommunications et Réseaux',
+                            semesters: [
+                                { name: 'S9', modules: ['Module GSTR S9-1', 'Module GSTR S9-2', 'Module GSTR S9-3'] },
+                                { name: 'S10', modules: ['Module GSTR S10-1', 'Module GSTR S10-2', 'Module GSTR S10-3'] },
+                            ],
+                        },
+                    ],
+                },
+            ],
+        });
+        logger.success('✅ ENSA academic structure created successfully!');
 
         logger.success('🎉 Database seeding completed successfully!');
         process.exit(0);

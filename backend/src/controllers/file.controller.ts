@@ -10,13 +10,14 @@ import path from 'path';
 // @access  Public
 export const getFiles = async (req: AuthRequest, res: Response): Promise<void> => {
     try {
-        const { year, filiere, module, fileCategory, search, page = 1, limit = 20 } = req.query;
+        const { year, filiere, semester, module, fileCategory, search, page = 1, limit = 20 } = req.query;
 
         // Build filter object
         const filter: any = {};
 
         if (year) filter.year = year;
         if (filiere) filter.filiere = filiere;
+        if (semester) filter.semester = semester;
         if (module) filter.module = module;
         if (fileCategory) filter.fileCategory = fileCategory;
 
@@ -39,7 +40,7 @@ export const getFiles = async (req: AuthRequest, res: Response): Promise<void> =
         // Get files
         const files = await File.find(filter)
             .populate('uploadedBy', 'firstName lastName email')
-            .sort({ uploadedAt: -1 })
+            .sort({ createdAt: -1 })
             .skip(skip)
             .limit(limitNum);
 
@@ -115,7 +116,15 @@ export const uploadFile = async (req: AuthRequest, res: Response): Promise<void>
             return;
         }
 
-        const { module, fileCategory = 'Autre', fileLabel } = req.body;
+        const { semester, module, fileCategory = 'Autre', fileLabel } = req.body;
+
+        if (!semester) {
+            res.status(400).json({
+                success: false,
+                message: 'Semester is required',
+            });
+            return;
+        }
 
         if (!module) {
             res.status(400).json({
@@ -158,7 +167,7 @@ export const uploadFile = async (req: AuthRequest, res: Response): Promise<void>
             .replace(/[^a-zA-Z0-9._-]/g, '_'); // Replace special chars with underscore
 
         const result = await cloudinary.uploader.upload(dataURI, {
-            folder: `ensa-share/${year}/${filiere}/${module}`,
+            folder: `ensa-share/${year}/${filiere}/${semester}/${module}`,
             resource_type: 'auto',
             public_id: sanitizedFilename.replace(/\.[^/.]+$/, ''), // Remove extension from public_id
         });
@@ -177,6 +186,7 @@ export const uploadFile = async (req: AuthRequest, res: Response): Promise<void>
             publicId: result.public_id,
             year,
             filiere,
+            semester,
             module,
             fileCategory,
             fileLabel: fileLabel || undefined,
@@ -187,7 +197,7 @@ export const uploadFile = async (req: AuthRequest, res: Response): Promise<void>
         await ActivityLog.create({
             userId: req.user._id,
             action: 'upload',
-            details: `Uploaded ${file.fileName} to ${year} - ${filiere} - ${module}`,
+            details: `Uploaded ${file.fileName} to ${year} - ${filiere} - ${semester} - ${module}`,
         });
 
         res.status(201).json({
@@ -240,12 +250,13 @@ export const updateFile = async (req: AuthRequest, res: Response): Promise<void>
         }
 
         // Update allowed fields
-        const { fileName, module, fileCategory, fileLabel } = req.body;
+        const { fileName, semester, module, fileCategory, fileLabel } = req.body;
 
         if (fileName) {
             file.fileName = fileName;
             file.displayName = fileName; // Update display name too
         }
+        if (semester) file.semester = semester;
         if (module) file.module = module;
         if (fileCategory) file.fileCategory = fileCategory;
         if (fileLabel !== undefined) file.fileLabel = fileLabel;

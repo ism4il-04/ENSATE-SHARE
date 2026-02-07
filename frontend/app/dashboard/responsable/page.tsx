@@ -86,7 +86,7 @@ export default function ResponsableDashboard() {
                             <p className="text-sm text-gray-600">Ce mois</p>
                             <p className="text-3xl font-bold text-gray-900 mt-1">
                                 {recentFiles.filter((f: any) => {
-                                    const uploadDate = new Date(f.uploadedAt);
+                                    const uploadDate = new Date(f.createdAt);
                                     const now = new Date();
                                     return uploadDate.getMonth() === now.getMonth() &&
                                         uploadDate.getFullYear() === now.getFullYear();
@@ -194,7 +194,7 @@ export default function ResponsableDashboard() {
                                             </td>
                                             <td className="py-3 px-4 text-sm text-gray-600">{file.module}</td>
                                             <td className="py-3 px-4 text-sm text-gray-600">{formatFileSize(file.fileSize)}</td>
-                                            <td className="py-3 px-4 text-sm text-gray-600">{formatDate(file.uploadedAt)}</td>
+                                            <td className="py-3 px-4 text-sm text-gray-600">{formatDate(file.createdAt)}</td>
                                         </tr>
                                     );
                                 })}

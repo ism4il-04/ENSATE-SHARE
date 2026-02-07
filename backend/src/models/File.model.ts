@@ -10,11 +10,12 @@ export interface IFile extends Document {
     publicId: string; // Cloudinary public ID for deletion
     year: string;
     filiere: string;
+    semester: string; // "S1" to "S10"
     module: string;
     fileCategory: 'Cours' | 'TD' | 'TP' | 'EXAM' | 'Autre'; // Fixed category
     fileLabel?: string; // Custom label (e.g., "Cours n°1")
     uploadedBy: mongoose.Types.ObjectId;
-    uploadedAt: Date;
+    createdAt: Date;
     updatedAt: Date;
 }
 
@@ -60,6 +61,11 @@ const fileSchema = new Schema<IFile>(
             type: String,
             required: [true, 'Filiere is required'],
         },
+        semester: {
+            type: String,
+            required: [true, 'Semester is required'],
+            enum: ['S1', 'S2', 'S3', 'S4', 'S5', 'S6', 'S7', 'S8', 'S9', 'S10'],
+        },
         module: {
             type: String,
             required: [true, 'Module is required'],
@@ -88,7 +94,7 @@ const fileSchema = new Schema<IFile>(
 );
 
 // Indexes for efficient querying
-fileSchema.index({ year: 1, filiere: 1, module: 1 });
+fileSchema.index({ year: 1, filiere: 1, semester: 1, module: 1 });
 fileSchema.index({ uploadedBy: 1 });
 fileSchema.index({ fileName: 'text', originalName: 'text' });
 

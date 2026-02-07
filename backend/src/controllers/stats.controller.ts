@@ -24,7 +24,7 @@ export const getDashboardStats = async (
         startOfMonth.setHours(0, 0, 0, 0);
 
         const filesThisMonth = await File.countDocuments({
-            uploadedAt: { $gte: startOfMonth },
+            createdAt: { $gte: startOfMonth },
         });
 
         // Total storage used (sum of all file sizes)
@@ -42,7 +42,7 @@ export const getDashboardStats = async (
         // Recent uploads (last 10)
         const recentUploads = await File.find()
             .populate('uploadedBy', 'firstName lastName')
-            .sort({ uploadedAt: -1 })
+            .sort({ createdAt: -1 })
             .limit(10);
 
         res.status(200).json({
