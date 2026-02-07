@@ -110,10 +110,29 @@ export default function LoginPage() {
                     </div>
                 </div>
 
-                {/* Demo Credentials */}
-                <div className="mt-6 bg-white/10 backdrop-blur-sm rounded-lg p-4 text-white text-sm">
-                    <p className="font-semibold mb-2">Comptes de démonstration :</p>
-                    <p>Superadmin: admin@ensa.ac.ma / Admin@123</p>
+                {/* Quick Login Buttons for Testing */}
+                <div className="mt-6 bg-white/10 backdrop-blur-sm rounded-lg p-4">
+                    <p className="font-semibold mb-3 text-white text-sm">Connexion rapide (test) :</p>
+                    <div className="flex gap-3">
+                        <button
+                            onClick={() => {
+                                setEmail('admin@ensa.ac.ma');
+                                setPassword('Admin@123');
+                            }}
+                            className="flex-1 bg-white/20 hover:bg-white/30 text-white px-4 py-2 rounded-lg text-sm font-medium transition-colors"
+                        >
+                            Admin
+                        </button>
+                        <button
+                            onClick={() => {
+                                setEmail('lyamani.ismail@etu.uae.ac.ma');
+                                setPassword('12345678');
+                            }}
+                            className="flex-1 bg-white/20 hover:bg-white/30 text-white px-4 py-2 rounded-lg text-sm font-medium transition-colors"
+                        >
+                            Responsable
+                        </button>
+                    </div>
                 </div>
             </div>
         </div>

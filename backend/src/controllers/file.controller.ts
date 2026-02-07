@@ -10,7 +10,7 @@ import path from 'path';
 // @access  Public
 export const getFiles = async (req: AuthRequest, res: Response): Promise<void> => {
     try {
-        const { year, filiere, module, search, page = 1, limit = 20 } = req.query;
+        const { year, filiere, module, fileCategory, search, page = 1, limit = 20 } = req.query;
 
         // Build filter object
         const filter: any = {};
@@ -18,6 +18,7 @@ export const getFiles = async (req: AuthRequest, res: Response): Promise<void> =
         if (year) filter.year = year;
         if (filiere) filter.filiere = filiere;
         if (module) filter.module = module;
+        if (fileCategory) filter.fileCategory = fileCategory;
 
         // Text search on file names
         if (search) {
@@ -114,7 +115,7 @@ export const uploadFile = async (req: AuthRequest, res: Response): Promise<void>
             return;
         }
 
-        const { module } = req.body;
+        const { module, fileCategory = 'Autre', fileLabel } = req.body;
 
         if (!module) {
             res.status(400).json({
@@ -167,8 +168,9 @@ export const uploadFile = async (req: AuthRequest, res: Response): Promise<void>
 
         // Create file document
         const file = await File.create({
-            fileName: req.file.originalname,
+            fileName: sanitizedFilename,
             originalName: req.file.originalname,
+            displayName: req.file.originalname, // Preserve accents for display
             fileType: ext,
             fileSize: req.file.size,
             fileUrl: result.secure_url,
@@ -176,6 +178,8 @@ export const uploadFile = async (req: AuthRequest, res: Response): Promise<void>
             year,
             filiere,
             module,
+            fileCategory,
+            fileLabel: fileLabel || undefined,
             uploadedBy: req.user._id,
         });
 
@@ -236,10 +240,15 @@ export const updateFile = async (req: AuthRequest, res: Response): Promise<void>
         }
 
         // Update allowed fields
-        const { fileName, module } = req.body;
+        const { fileName, module, fileCategory, fileLabel } = req.body;
 
-        if (fileName) file.fileName = fileName;
+        if (fileName) {
+            file.fileName = fileName;
+            file.displayName = fileName; // Update display name too
+        }
         if (module) file.module = module;
+        if (fileCategory) file.fileCategory = fileCategory;
+        if (fileLabel !== undefined) file.fileLabel = fileLabel;
 
         await file.save();
 

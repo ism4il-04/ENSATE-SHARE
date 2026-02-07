@@ -15,6 +15,8 @@ export default function UploadPage() {
 
     const [selectedFile, setSelectedFile] = useState<File | null>(null);
     const [module, setModule] = useState('');
+    const [fileCategory, setFileCategory] = useState<'Cours' | 'TD' | 'TP' | 'EXAM' | 'Autre'>('Autre');
+    const [fileLabel, setFileLabel] = useState('');
     const [uploadProgress, setUploadProgress] = useState(0);
     const [uploadStatus, setUploadStatus] = useState<'idle' | 'uploading' | 'success' | 'error'>('idle');
     const [errorMessage, setErrorMessage] = useState('');
@@ -110,6 +112,10 @@ export default function UploadPage() {
         const formData = new FormData();
         formData.append('file', selectedFile);
         formData.append('module', module);
+        formData.append('fileCategory', fileCategory);
+        if (fileLabel.trim()) {
+            formData.append('fileLabel', fileLabel.trim());
+        }
 
         uploadMutation.mutate(formData);
     };
@@ -140,10 +146,10 @@ export default function UploadPage() {
                     <div
                         {...getRootProps()}
                         className={`border-2 border-dashed rounded-lg p-12 text-center cursor-pointer transition-colors ${isDragActive
-                                ? 'border-primary-500 bg-primary-50'
-                                : selectedFile
-                                    ? 'border-green-500 bg-green-50'
-                                    : 'border-gray-300 hover:border-primary-400'
+                            ? 'border-primary-500 bg-primary-50'
+                            : selectedFile
+                                ? 'border-green-500 bg-green-50'
+                                : 'border-gray-300 hover:border-primary-400'
                             }`}
                     >
                         <input {...getInputProps()} />
@@ -202,6 +208,45 @@ export default function UploadPage() {
                             </option>
                         ))}
                     </select>
+                </div>
+
+                {/* File Category Selection */}
+                <div className="card">
+                    <label htmlFor="fileCategory" className="block text-sm font-medium text-gray-700 mb-3">
+                        Type de fichier <span className="text-red-500">*</span>
+                    </label>
+                    <select
+                        id="fileCategory"
+                        value={fileCategory}
+                        onChange={(e) => setFileCategory(e.target.value as any)}
+                        className="input-field"
+                        required
+                    >
+                        <option value="Cours">Cours</option>
+                        <option value="TD">TD</option>
+                        <option value="TP">TP</option>
+                        <option value="EXAM">EXAM</option>
+                        <option value="Autre">Autre</option>
+                    </select>
+                </div>
+
+                {/* File Label Input */}
+                <div className="card">
+                    <label htmlFor="fileLabel" className="block text-sm font-medium text-gray-700 mb-3">
+                        Label personnalisé (optionnel)
+                    </label>
+                    <input
+                        id="fileLabel"
+                        type="text"
+                        value={fileLabel}
+                        onChange={(e) => setFileLabel(e.target.value)}
+                        placeholder='Ex: "Cours n°1", "TD Chapitre 3"'
+                        className="input-field"
+                        maxLength={100}
+                    />
+                    <p className="text-xs text-gray-500 mt-1">
+                        Ajoutez un titre personnalisé pour identifier facilement ce fichier
+                    </p>
                 </div>
 
                 {/* Error Message */}

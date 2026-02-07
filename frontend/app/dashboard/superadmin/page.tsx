@@ -4,6 +4,7 @@ import { useQuery } from '@tanstack/react-query';
 import { statsAPI } from '@/lib/api';
 import { Users, FileText, HardDrive, TrendingUp, Activity } from 'lucide-react';
 import Link from 'next/link';
+import { generateThumbnailUrl, getFileCategoryColor } from '@/lib/utils/fileHelpers';
 
 export default function SuperadminDashboard() {
     // Fetch dashboard stats
@@ -197,25 +198,60 @@ export default function SuperadminDashboard() {
                     </div>
                     {statsData?.recentUploads && statsData.recentUploads.length > 0 ? (
                         <div className="space-y-3">
-                            {statsData.recentUploads.map((file: any) => (
-                                <div key={file._id} className="flex items-start gap-3 p-3 bg-gray-50 rounded-lg">
-                                    <FileText size={20} className="text-gray-400 mt-1" />
-                                    <div className="flex-1 min-w-0">
-                                        <p className="text-sm font-medium text-gray-900 truncate">
-                                            {file.fileName}
-                                        </p>
-                                        <p className="text-xs text-gray-600">
-                                            {file.year} - {file.filiere} - {file.module}
-                                        </p>
-                                        <p className="text-xs text-gray-500 mt-1">
-                                            Par {file.uploadedBy?.firstName} {file.uploadedBy?.lastName} • {formatDate(file.uploadedAt)}
-                                        </p>
+                            {statsData.recentUploads.map((file: any) => {
+                                const categoryColors = getFileCategoryColor(file.fileCategory || 'Autre');
+                                const thumbnailUrl = generateThumbnailUrl(file.fileUrl, file.fileType);
+
+                                return (
+                                    <div key={file._id} className="flex items-start gap-3 p-3 bg-gray-50 rounded-lg hover:bg-gray-100 transition-colors">
+                                        {file.fileType === 'pdf' ? (
+                                            <img
+                                                src={thumbnailUrl}
+                                                alt="Preview"
+                                                className="w-16 h-16 object-cover rounded border border-gray-200 flex-shrink-0"
+                                                onError={(e) => {
+                                                    (e.target as HTMLImageElement).style.display = 'none';
+                                                }}
+                                            />
+                                        ) : (
+                                            <div className="w-16 h-16 bg-white rounded flex items-center justify-center border border-gray-200 flex-shrink-0">
+                                                <FileText size={28} className="text-gray-400" />
+                                            </div>
+                                        )}
+                                        <div className="flex-1 min-w-0">
+                                            <div className="flex items-start justify-between gap-2 mb-1">
+                                                <p className="text-sm font-medium text-gray-900 truncate">
+                                                    {file.displayName || file.fileName}
+                                                </p>
+                                                <span className={`inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium ${categoryColors.bg} ${categoryColors.text} flex-shrink-0`}>
+                                                    {file.fileCategory || 'Autre'}
+                                                </span>
+                                            </div>
+                                            {file.fileLabel && (
+                                                <p className="text-xs text-gray-600 italic mb-1">
+                                                    {file.fileLabel}
+                                                </p>
+                                            )}
+                                            <p className="text-xs text-gray-600">
+                                                {file.year} - {file.filiere} - {file.module}
+                                            </p>
+                                            <div className="flex items-center gap-2 mt-1">
+                                                <p className="text-xs text-gray-500">
+                                                    Par {file.uploadedBy?.firstName} {file.uploadedBy?.lastName}
+                                                </p>
+                                                <span className="text-gray-400">•</span>
+                                                <p className="text-xs text-gray-500">
+                                                    {formatDate(file.uploadedAt)}
+                                                </p>
+                                                <span className="text-gray-400">•</span>
+                                                <span className="text-xs text-gray-500">
+                                                    {formatFileSize(file.fileSize)}
+                                                </span>
+                                            </div>
+                                        </div>
                                     </div>
-                                    <span className="text-xs text-gray-500 whitespace-nowrap">
-                                        {formatFileSize(file.fileSize)}
-                                    </span>
-                                </div>
-                            ))}
+                                );
+                            })}
                         </div>
                     ) : (
                         <p className="text-gray-500 text-center py-8">Aucun upload récent</p>

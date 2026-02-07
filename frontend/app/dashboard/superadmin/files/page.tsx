@@ -4,6 +4,7 @@ import { useState } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { filesAPI, structureAPI } from '@/lib/api';
 import { FileText, Download, Trash2, Search, Filter } from 'lucide-react';
+import { generateThumbnailUrl, getFileCategoryColor } from '@/lib/utils/fileHelpers';
 
 export default function FilesPage() {
     const queryClient = useQueryClient();
@@ -12,6 +13,7 @@ export default function FilesPage() {
     const [selectedYear, setSelectedYear] = useState('');
     const [selectedFiliere, setSelectedFiliere] = useState('');
     const [selectedModule, setSelectedModule] = useState('');
+    const [selectedCategory, setSelectedCategory] = useState('');
     const [page, setPage] = useState(1);
 
     // Fetch academic structure
@@ -25,13 +27,14 @@ export default function FilesPage() {
 
     // Fetch files
     const { data: filesData, isLoading } = useQuery({
-        queryKey: ['all-files', searchQuery, selectedYear, selectedFiliere, selectedModule, page],
+        queryKey: ['all-files', searchQuery, selectedYear, selectedFiliere, selectedModule, selectedCategory, page],
         queryFn: async () => {
             const params: any = { page, limit: 20 };
             if (searchQuery) params.search = searchQuery;
             if (selectedYear) params.year = selectedYear;
             if (selectedFiliere) params.filiere = selectedFiliere;
             if (selectedModule) params.module = selectedModule;
+            if (selectedCategory) params.fileCategory = selectedCategory;
 
             const response = await filesAPI.getFiles(params);
             return response.data;
@@ -82,7 +85,7 @@ export default function FilesPage() {
 
             {/* Filters */}
             <div className="card mb-6">
-                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-4">
                     {/* Search */}
                     <div>
                         <label className="block text-sm font-medium text-gray-700 mb-2">Recherche</label>
@@ -157,6 +160,23 @@ export default function FilesPage() {
                             ))}
                         </select>
                     </div>
+
+                    {/* Category Filter */}
+                    <div>
+                        <label className="block text-sm font-medium text-gray-700 mb-2">Type</label>
+                        <select
+                            value={selectedCategory}
+                            onChange={(e) => setSelectedCategory(e.target.value)}
+                            className="input-field"
+                        >
+                            <option value="">Tous les types</option>
+                            <option value="Cours">Cours</option>
+                            <option value="TD">TD</option>
+                            <option value="TP">TP</option>
+                            <option value="EXAM">EXAM</option>
+                            <option value="Autre">Autre</option>
+                        </select>
+                    </div>
                 </div>
             </div>
 
@@ -178,7 +198,9 @@ export default function FilesPage() {
                             <table className="w-full">
                                 <thead>
                                     <tr className="border-b border-gray-200">
+                                        <th className="text-left py-3 px-4 text-sm font-medium text-gray-600">Aperçu</th>
                                         <th className="text-left py-3 px-4 text-sm font-medium text-gray-600">Fichier</th>
+                                        <th className="text-left py-3 px-4 text-sm font-medium text-gray-600">Type</th>
                                         <th className="text-left py-3 px-4 text-sm font-medium text-gray-600">Année</th>
                                         <th className="text-left py-3 px-4 text-sm font-medium text-gray-600">Filière</th>
                                         <th className="text-left py-3 px-4 text-sm font-medium text-gray-600">Module</th>
@@ -189,45 +211,80 @@ export default function FilesPage() {
                                     </tr>
                                 </thead>
                                 <tbody>
-                                    {filesData.files.map((file: any) => (
-                                        <tr key={file._id} className="border-b border-gray-100 hover:bg-gray-50">
-                                            <td className="py-3 px-4">
-                                                <div className="flex items-center gap-2">
-                                                    <FileText size={16} className="text-gray-400" />
-                                                    <span className="text-sm text-gray-900">{file.fileName}</span>
-                                                </div>
-                                            </td>
-                                            <td className="py-3 px-4 text-sm text-gray-600">{file.year}</td>
-                                            <td className="py-3 px-4 text-sm text-gray-600">{file.filiere}</td>
-                                            <td className="py-3 px-4 text-sm text-gray-600">{file.module}</td>
-                                            <td className="py-3 px-4 text-sm text-gray-600">
-                                                {file.uploadedBy?.firstName} {file.uploadedBy?.lastName}
-                                            </td>
-                                            <td className="py-3 px-4 text-sm text-gray-600">{formatFileSize(file.fileSize)}</td>
-                                            <td className="py-3 px-4 text-sm text-gray-600">{formatDate(file.uploadedAt)}</td>
-                                            <td className="py-3 px-4">
-                                                <div className="flex items-center justify-end gap-2">
-                                                    <a
-                                                        href={file.fileUrl}
-                                                        target="_blank"
-                                                        rel="noopener noreferrer"
-                                                        className="text-primary-500 hover:text-primary-600 p-2"
-                                                        title="Télécharger"
-                                                    >
-                                                        <Download size={18} />
-                                                    </a>
-                                                    <button
-                                                        onClick={() => handleDelete(file._id, file.fileName)}
-                                                        className="text-red-500 hover:text-red-600 p-2"
-                                                        title="Supprimer"
-                                                        disabled={deleteMutation.isPending}
-                                                    >
-                                                        <Trash2 size={18} />
-                                                    </button>
-                                                </div>
-                                            </td>
-                                        </tr>
-                                    ))}
+                                    {filesData.files.map((file: any) => {
+                                        const categoryColors = getFileCategoryColor(file.fileCategory || 'Autre');
+                                        const thumbnailUrl = generateThumbnailUrl(file.fileUrl, file.fileType);
+
+                                        return (
+                                            <tr key={file._id} className="border-b border-gray-100 hover:bg-gray-50">
+                                                <td className="py-3 px-4">
+                                                    {file.fileType === 'pdf' ? (
+                                                        <img
+                                                            src={thumbnailUrl}
+                                                            alt="Preview"
+                                                            className="w-12 h-12 object-cover rounded border border-gray-200"
+                                                            onError={(e) => {
+                                                                (e.target as HTMLImageElement).style.display = 'none';
+                                                            }}
+                                                        />
+                                                    ) : (
+                                                        <div className="w-12 h-12 bg-gray-100 rounded flex items-center justify-center">
+                                                            <FileText size={24} className="text-gray-400" />
+                                                        </div>
+                                                    )}
+                                                </td>
+                                                <td className="py-3 px-4">
+                                                    <div className="flex flex-col gap-1">
+                                                        <div className="flex items-center gap-2">
+                                                            <FileText size={16} className="text-gray-400" />
+                                                            <span className="text-sm text-gray-900 font-medium">
+                                                                {file.displayName || file.fileName}
+                                                            </span>
+                                                        </div>
+                                                        {file.fileLabel && (
+                                                            <span className="text-xs text-gray-600 italic ml-6">
+                                                                {file.fileLabel}
+                                                            </span>
+                                                        )}
+                                                    </div>
+                                                </td>
+                                                <td className="py-3 px-4">
+                                                    <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${categoryColors.bg} ${categoryColors.text}`}>
+                                                        {file.fileCategory || 'Autre'}
+                                                    </span>
+                                                </td>
+                                                <td className="py-3 px-4 text-sm text-gray-600">{file.year}</td>
+                                                <td className="py-3 px-4 text-sm text-gray-600">{file.filiere}</td>
+                                                <td className="py-3 px-4 text-sm text-gray-600">{file.module}</td>
+                                                <td className="py-3 px-4 text-sm text-gray-600">
+                                                    {file.uploadedBy?.firstName} {file.uploadedBy?.lastName}
+                                                </td>
+                                                <td className="py-3 px-4 text-sm text-gray-600">{formatFileSize(file.fileSize)}</td>
+                                                <td className="py-3 px-4 text-sm text-gray-600">{formatDate(file.uploadedAt)}</td>
+                                                <td className="py-3 px-4">
+                                                    <div className="flex items-center justify-end gap-2">
+                                                        <a
+                                                            href={file.fileUrl}
+                                                            target="_blank"
+                                                            rel="noopener noreferrer"
+                                                            className="text-primary-500 hover:text-primary-600 p-2"
+                                                            title="Télécharger"
+                                                        >
+                                                            <Download size={18} />
+                                                        </a>
+                                                        <button
+                                                            onClick={() => handleDelete(file._id, file.displayName || file.fileName)}
+                                                            className="text-red-500 hover:text-red-600 p-2"
+                                                            title="Supprimer"
+                                                            disabled={deleteMutation.isPending}
+                                                        >
+                                                            <Trash2 size={18} />
+                                                        </button>
+                                                    </div>
+                                                </td>
+                                            </tr>
+                                        );
+                                    })}
                                 </tbody>
                             </table>
                         </div>

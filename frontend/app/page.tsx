@@ -6,6 +6,7 @@ import { filesAPI, structureAPI } from '@/lib/api';
 import { File as FileType, AcademicStructure } from '@/types';
 import { Search, Download, FileText, LogIn } from 'lucide-react';
 import Link from 'next/link';
+import { generateThumbnailUrl, getFileCategoryColor, getFileTypeColor } from '@/lib/utils/fileHelpers';
 
 export default function HomePage() {
     const [selectedYear, setSelectedYear] = useState('');
@@ -163,36 +164,71 @@ export default function HomePage() {
                     ) : filesData?.files && filesData.files.length > 0 ? (
                         <>
                             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                                {filesData.files.map((file: FileType) => (
-                                    <div key={file._id} className="card hover:shadow-lg transition-shadow">
-                                        <div className="flex items-start gap-4">
-                                            <div className="flex-shrink-0">
-                                                <FileText className="text-primary-500" size={40} />
+                                {filesData.files.map((file: FileType) => {
+                                    const categoryColors = getFileCategoryColor(file.fileCategory || 'Autre');
+                                    const thumbnailUrl = generateThumbnailUrl(file.fileUrl, file.fileType);
+
+                                    return (
+                                        <div key={file._id} className="card hover:shadow-lg transition-shadow">
+                                            {/* Thumbnail */}
+                                            <div className="mb-4 relative">
+                                                {file.fileType.toLowerCase() === 'pdf' ? (
+                                                    <img
+                                                        src={thumbnailUrl}
+                                                        alt="Preview"
+                                                        className="w-full h-48 object-cover rounded-lg border border-gray-200"
+                                                        onError={(e) => {
+                                                            const parent = (e.target as HTMLImageElement).parentElement;
+                                                            if (parent) {
+                                                                parent.innerHTML = '<div class="w-full h-48 bg-gray-100 rounded-lg flex items-center justify-center"><svg class="text-gray-400" width="64" height="64" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path></svg></div>';
+                                                            }
+                                                        }}
+                                                    />
+                                                ) : (
+                                                    <div className="w-full h-48 bg-gradient-to-br from-gray-50 to-gray-100 rounded-lg flex flex-col items-center justify-center border border-gray-200">
+                                                        <FileText size={64} className={getFileTypeColor(file.fileType)} />
+                                                        <span className="mt-3 px-3 py-1 bg-white rounded-full text-sm font-semibold text-gray-700 border border-gray-200">
+                                                            {file.fileType.toUpperCase()}
+                                                        </span>
+                                                    </div>
+                                                )}
                                             </div>
-                                            <div className="flex-1 min-w-0">
-                                                <h3 className="font-semibold text-gray-900 truncate mb-1">
-                                                    {file.fileName}
+
+                                            {/* File Info */}
+                                            <div className="flex items-start justify-between mb-2">
+                                                <h3 className="font-semibold text-gray-900 truncate flex-1">
+                                                    {file.displayName || file.fileName}
                                                 </h3>
-                                                <p className="text-sm text-gray-600 mb-2">{file.module}</p>
-                                                <div className="flex items-center justify-between text-xs text-gray-500">
-                                                    <span>{file.fileType.toUpperCase()}</span>
-                                                    <span>{formatFileSize(file.fileSize)}</span>
-                                                </div>
-                                                <div className="mt-3">
-                                                    <a
-                                                        href={file.fileUrl}
-                                                        target="_blank"
-                                                        rel="noopener noreferrer"
-                                                        className="btn-primary w-full text-center text-sm flex items-center justify-center gap-2"
-                                                    >
-                                                        <Download size={16} />
-                                                        Télécharger
-                                                    </a>
-                                                </div>
+                                                <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${categoryColors.bg} ${categoryColors.text} ml-2 flex-shrink-0`}>
+                                                    {file.fileCategory || 'Autre'}
+                                                </span>
                                             </div>
+
+                                            {file.fileLabel && (
+                                                <p className="text-sm text-gray-600 italic mb-2">
+                                                    {file.fileLabel}
+                                                </p>
+                                            )}
+
+                                            <p className="text-sm text-gray-600 mb-3">{file.module}</p>
+
+                                            <div className="flex items-center justify-between text-xs text-gray-500 mb-3">
+                                                <span>{file.fileType.toUpperCase()}</span>
+                                                <span>{formatFileSize(file.fileSize)}</span>
+                                            </div>
+
+                                            <a
+                                                href={file.fileUrl}
+                                                target="_blank"
+                                                rel="noopener noreferrer"
+                                                className="btn-primary w-full text-center text-sm flex items-center justify-center gap-2"
+                                            >
+                                                <Download size={16} />
+                                                Télécharger
+                                            </a>
                                         </div>
-                                    </div>
-                                ))}
+                                    );
+                                })}
                             </div>
 
                             {/* Pagination */}

@@ -5,6 +5,7 @@ import { useAuthStore } from '@/store/authStore';
 import { filesAPI, statsAPI } from '@/lib/api';
 import { Upload, FileText, HardDrive, TrendingUp } from 'lucide-react';
 import Link from 'next/link';
+import { generateThumbnailUrl, getFileCategoryColor } from '@/lib/utils/fileHelpers';
 
 export default function ResponsableDashboard() {
     const { user } = useAuthStore();
@@ -140,26 +141,63 @@ export default function ResponsableDashboard() {
                         <table className="w-full">
                             <thead>
                                 <tr className="border-b border-gray-200">
+                                    <th className="text-left py-3 px-4 text-sm font-medium text-gray-600">Aperçu</th>
                                     <th className="text-left py-3 px-4 text-sm font-medium text-gray-600">Nom du fichier</th>
+                                    <th className="text-left py-3 px-4 text-sm font-medium text-gray-600">Type</th>
                                     <th className="text-left py-3 px-4 text-sm font-medium text-gray-600">Module</th>
                                     <th className="text-left py-3 px-4 text-sm font-medium text-gray-600">Taille</th>
                                     <th className="text-left py-3 px-4 text-sm font-medium text-gray-600">Date</th>
                                 </tr>
                             </thead>
                             <tbody>
-                                {recentFiles.map((file: any) => (
-                                    <tr key={file._id} className="border-b border-gray-100 hover:bg-gray-50">
-                                        <td className="py-3 px-4">
-                                            <div className="flex items-center gap-2">
-                                                <FileText size={16} className="text-gray-400" />
-                                                <span className="text-sm text-gray-900">{file.fileName}</span>
-                                            </div>
-                                        </td>
-                                        <td className="py-3 px-4 text-sm text-gray-600">{file.module}</td>
-                                        <td className="py-3 px-4 text-sm text-gray-600">{formatFileSize(file.fileSize)}</td>
-                                        <td className="py-3 px-4 text-sm text-gray-600">{formatDate(file.uploadedAt)}</td>
-                                    </tr>
-                                ))}
+                                {recentFiles.map((file: any) => {
+                                    const categoryColors = getFileCategoryColor(file.fileCategory || 'Autre');
+                                    const thumbnailUrl = generateThumbnailUrl(file.fileUrl, file.fileType);
+
+                                    return (
+                                        <tr key={file._id} className="border-b border-gray-100 hover:bg-gray-50">
+                                            <td className="py-3 px-4">
+                                                {file.fileType === 'pdf' ? (
+                                                    <img
+                                                        src={thumbnailUrl}
+                                                        alt="Preview"
+                                                        className="w-12 h-12 object-cover rounded border border-gray-200"
+                                                        onError={(e) => {
+                                                            (e.target as HTMLImageElement).style.display = 'none';
+                                                        }}
+                                                    />
+                                                ) : (
+                                                    <div className="w-12 h-12 bg-gray-100 rounded flex items-center justify-center">
+                                                        <FileText size={24} className="text-gray-400" />
+                                                    </div>
+                                                )}
+                                            </td>
+                                            <td className="py-3 px-4">
+                                                <div className="flex flex-col gap-1">
+                                                    <div className="flex items-center gap-2">
+                                                        <FileText size={16} className="text-gray-400" />
+                                                        <span className="text-sm text-gray-900 font-medium">
+                                                            {file.displayName || file.fileName}
+                                                        </span>
+                                                    </div>
+                                                    {file.fileLabel && (
+                                                        <span className="text-xs text-gray-600 italic ml-6">
+                                                            {file.fileLabel}
+                                                        </span>
+                                                    )}
+                                                </div>
+                                            </td>
+                                            <td className="py-3 px-4">
+                                                <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${categoryColors.bg} ${categoryColors.text}`}>
+                                                    {file.fileCategory || 'Autre'}
+                                                </span>
+                                            </td>
+                                            <td className="py-3 px-4 text-sm text-gray-600">{file.module}</td>
+                                            <td className="py-3 px-4 text-sm text-gray-600">{formatFileSize(file.fileSize)}</td>
+                                            <td className="py-3 px-4 text-sm text-gray-600">{formatDate(file.uploadedAt)}</td>
+                                        </tr>
+                                    );
+                                })}
                             </tbody>
                         </table>
                     </div>

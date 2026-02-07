@@ -3,6 +3,7 @@ import mongoose, { Document, Schema } from 'mongoose';
 export interface IFile extends Document {
     fileName: string;
     originalName: string;
+    displayName: string; // Original filename with accents preserved
     fileType: string;
     fileSize: number;
     fileUrl: string;
@@ -10,6 +11,8 @@ export interface IFile extends Document {
     year: string;
     filiere: string;
     module: string;
+    fileCategory: 'Cours' | 'TD' | 'TP' | 'EXAM' | 'Autre'; // Fixed category
+    fileLabel?: string; // Custom label (e.g., "Cours n°1")
     uploadedBy: mongoose.Types.ObjectId;
     uploadedAt: Date;
     updatedAt: Date;
@@ -25,6 +28,11 @@ const fileSchema = new Schema<IFile>(
         originalName: {
             type: String,
             required: [true, 'Original file name is required'],
+            trim: true,
+        },
+        displayName: {
+            type: String,
+            required: [true, 'Display name is required'],
             trim: true,
         },
         fileType: {
@@ -55,6 +63,18 @@ const fileSchema = new Schema<IFile>(
         module: {
             type: String,
             required: [true, 'Module is required'],
+        },
+        fileCategory: {
+            type: String,
+            required: [true, 'File category is required'],
+            enum: ['Cours', 'TD', 'TP', 'EXAM', 'Autre'],
+            default: 'Autre',
+        },
+        fileLabel: {
+            type: String,
+            required: false,
+            trim: true,
+            maxlength: [100, 'File label cannot exceed 100 characters'],
         },
         uploadedBy: {
             type: Schema.Types.ObjectId,

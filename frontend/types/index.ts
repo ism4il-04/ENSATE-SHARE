@@ -13,12 +13,15 @@ export interface File {
     _id: string;
     fileName: string;
     originalName: string;
+    displayName: string;
     fileType: string;
     fileSize: number;
     fileUrl: string;
     year: string;
     filiere: string;
     module: string;
+    fileCategory: 'Cours' | 'TD' | 'TP' | 'EXAM' | 'Autre';
+    fileLabel?: string;
     uploadedBy: {
         _id: string;
         firstName: string;
