@@ -64,11 +64,11 @@ export const getFileTypeColor = (fileType: string): string => {
  */
 export const getFileCategoryColor = (category: string): { bg: string; text: string } => {
     const colors: Record<string, { bg: string; text: string }> = {
-        'Cours': { bg: 'bg-blue-100', text: 'text-blue-700' },
-        'TD': { bg: 'bg-green-100', text: 'text-green-700' },
-        'TP': { bg: 'bg-purple-100', text: 'text-purple-700' },
-        'EXAM': { bg: 'bg-red-100', text: 'text-red-700' },
-        'Autre': { bg: 'bg-gray-100', text: 'text-gray-700' },
+        'Cours': { bg: 'bg-accent-100', text: 'text-accent-800' },
+        'TD': { bg: 'bg-atlas-100', text: 'text-atlas-800' },
+        'TP': { bg: 'bg-gold-100', text: 'text-gold-800' },
+        'EXAM': { bg: 'bg-red-100', text: 'text-red-800' },
+        'Autre': { bg: 'bg-cream-300/60', text: 'text-atlas-700' },
     };
 
     return colors[category] || colors['Autre'];

@@ -1,6 +1,7 @@
 'use client';
 
 import Link from 'next/link';
+import Image from 'next/image';
 import { usePathname, useRouter } from 'next/navigation';
 import { useAuthStore } from '@/store/authStore';
 import {
@@ -46,10 +47,16 @@ export default function Sidebar() {
         <aside className="w-64 bg-white border-r border-gray-200 min-h-screen flex flex-col">
             {/* Logo */}
             <div className="p-6 border-b border-gray-200">
-                <Link href="/">
-                    <h1 className="text-2xl font-bold text-primary-500">ENSA-SHARE</h1>
+                <Link href="/" className="block">
+                    <Image
+                        src="/ensa-share_logo.png"
+                        alt="ENSA-SHARE"
+                        width={180}
+                        height={56}
+                        className="h-9 w-auto"
+                    />
                 </Link>
-                <p className="text-sm text-gray-600 mt-1">
+                <p className="text-sm text-gray-600 mt-2">
                     {user?.role === 'superadmin' ? 'Superadmin' : 'Responsable'}
                 </p>
             </div>

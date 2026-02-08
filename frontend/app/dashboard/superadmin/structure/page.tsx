@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { structureAPI } from '@/lib/api';
 import { Plus, Edit, Trash2, X, Save } from 'lucide-react';
@@ -18,12 +18,13 @@ export default function StructurePage() {
             const response = await structureAPI.getStructure();
             return response.data.structure;
         },
-        onSuccess: (data) => {
-            if (!editMode) {
-                setStructureData(data);
-            }
-        },
     });
+
+    useEffect(() => {
+        if (data != null && !editMode) {
+            setStructureData(data);
+        }
+    }, [data, editMode]);
 
     // Update mutation
     const updateMutation = useMutation({

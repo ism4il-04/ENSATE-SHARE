@@ -3,8 +3,12 @@
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { useAuthStore } from '@/store/authStore';
-import { LogIn } from 'lucide-react';
 import Link from 'next/link';
+import Image from 'next/image';
+
+const LOGIN_BG = '#192436';
+const LOGIN_GRADIENT_LIGHT = '#243247';
+const LOGIN_GRADIENT_DARK = '#0f1622';
 
 export default function LoginPage() {
     const router = useRouter();
@@ -18,7 +22,6 @@ export default function LoginPage() {
 
         try {
             await login(email, password);
-            // Redirect based on role
             const user = useAuthStore.getState().user;
             if (user?.role === 'superadmin') {
                 router.push('/dashboard/superadmin');
@@ -31,31 +34,44 @@ export default function LoginPage() {
     };
 
     return (
-        <div className="min-h-screen bg-gradient-to-br from-primary-500 to-primary-700 flex items-center justify-center px-4">
-            <div className="max-w-md w-full">
-                {/* Logo/Header */}
-                <div className="text-center mb-8">
-                    <h1 className="text-4xl font-bold text-white mb-2">ENSA-SHARE</h1>
-                    <p className="text-primary-100">Connexion à votre espace</p>
-                </div>
-
-                {/* Login Card */}
-                <div className="bg-white rounded-lg shadow-xl p-8">
-                    <div className="flex items-center justify-center mb-6">
-                        <div className="bg-primary-100 p-3 rounded-full">
-                            <LogIn className="text-primary-500" size={32} />
-                        </div>
+        <div
+            className="min-h-screen flex items-center justify-center px-4 relative overflow-hidden"
+            style={{
+                backgroundImage: `linear-gradient(160deg, ${LOGIN_GRADIENT_LIGHT}99 0%, ${LOGIN_BG} 40%, ${LOGIN_GRADIENT_DARK} 100%), url(/hero-bg.png)`,
+                backgroundSize: 'cover',
+                backgroundPosition: 'center',
+            }}
+        >
+            <div className="max-w-md w-full relative z-10">
+                <div
+                    className="rounded-2xl shadow-2xl p-8 sm:p-10 border border-white/10"
+                    style={{
+                        background: `linear-gradient(180deg, ${LOGIN_GRADIENT_LIGHT} 0%, ${LOGIN_BG} 100%)`,
+                        boxShadow: '0 25px 50px -12px rgba(0,0,0,0.4), 0 0 0 1px rgba(255,255,255,0.05)',
+                    }}
+                >
+                    <div className="flex flex-col items-center mb-8">
+                        <Link href="/" className="block mb-5">
+                            <Image
+                                src="/ensa-share_logo_white.png"
+                                alt="ENSA-SHARE"
+                                width={280}
+                                height={90}
+                                className="h-20 w-auto max-w-[280px]"
+                            />
+                        </Link>
+                        <p className="text-white/70 text-sm tracking-wide">Connexion à votre espace</p>
                     </div>
 
-                    <form onSubmit={handleSubmit} className="space-y-6">
+                    <form onSubmit={handleSubmit} className="space-y-5">
                         {error && (
-                            <div className="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded-lg">
+                            <div className="bg-red-500/20 border border-red-400/40 text-red-200 px-4 py-3 rounded-xl text-sm">
                                 {error}
                             </div>
                         )}
 
                         <div>
-                            <label htmlFor="email" className="block text-sm font-medium text-gray-700 mb-2">
+                            <label htmlFor="email" className="block text-sm font-medium text-white/90 mb-2">
                                 Email
                             </label>
                             <input
@@ -64,13 +80,13 @@ export default function LoginPage() {
                                 value={email}
                                 onChange={(e) => setEmail(e.target.value)}
                                 required
-                                className="input-field"
+                                className="w-full px-4 py-3 rounded-xl bg-white/10 border border-white/20 text-white placeholder-white/40 focus:outline-none focus:ring-2 focus:ring-white/30 focus:border-white/30 transition-all"
                                 placeholder="votre.email@ensa.ac.ma"
                             />
                         </div>
 
                         <div>
-                            <label htmlFor="password" className="block text-sm font-medium text-gray-700 mb-2">
+                            <label htmlFor="password" className="block text-sm font-medium text-white/90 mb-2">
                                 Mot de passe
                             </label>
                             <input
@@ -79,7 +95,7 @@ export default function LoginPage() {
                                 value={password}
                                 onChange={(e) => setPassword(e.target.value)}
                                 required
-                                className="input-field"
+                                className="w-full px-4 py-3 rounded-xl bg-white/10 border border-white/20 text-white placeholder-white/40 focus:outline-none focus:ring-2 focus:ring-white/30 focus:border-white/30 transition-all"
                                 placeholder="••••••••"
                             />
                         </div>
@@ -87,48 +103,56 @@ export default function LoginPage() {
                         <button
                             type="submit"
                             disabled={isLoading}
-                            className="w-full btn-primary flex items-center justify-center gap-2 disabled:opacity-50"
+                            className="w-full py-3.5 rounded-xl font-semibold text-white transition-all duration-200 disabled:opacity-50 hover:opacity-95"
+                            style={{
+                                background: `linear-gradient(135deg, ${LOGIN_GRADIENT_LIGHT} 0%, ${LOGIN_BG} 100%)`,
+                                boxShadow: '0 4px 14px 0 rgba(0,0,0,0.25), inset 0 1px 0 0 rgba(255,255,255,0.1)',
+                            }}
                         >
                             {isLoading ? (
-                                <>
-                                    <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-white"></div>
+                                <span className="inline-flex items-center gap-2">
+                                    <span className="animate-spin rounded-full h-5 w-5 border-2 border-white/30 border-t-white" />
                                     Connexion en cours...
-                                </>
+                                </span>
                             ) : (
-                                <>
-                                    <LogIn size={20} />
-                                    Se connecter
-                                </>
+                                'Se connecter'
                             )}
                         </button>
                     </form>
 
                     <div className="mt-6 text-center">
-                        <Link href="/" className="text-primary-500 hover:text-primary-600 text-sm">
-                            ← Retour à l'accueil
+                        <Link
+                            href="/"
+                            className="text-white/60 hover:text-white text-sm font-medium transition-colors"
+                        >
+                            ← Retour à l&apos;accueil
                         </Link>
                     </div>
                 </div>
 
-                {/* Quick Login Buttons for Testing */}
-                <div className="mt-6 bg-white/10 backdrop-blur-sm rounded-lg p-4">
-                    <p className="font-semibold mb-3 text-white text-sm">Connexion rapide (test) :</p>
+                <div
+                    className="mt-6 rounded-xl p-4 border border-white/10"
+                    style={{ background: 'rgba(25,36,54,0.6)', backdropFilter: 'blur(12px)' }}
+                >
+                    <p className="font-semibold mb-3 text-white/90 text-sm">Connexion rapide (test) :</p>
                     <div className="flex gap-3">
                         <button
+                            type="button"
                             onClick={() => {
                                 setEmail('admin@ensa.ac.ma');
                                 setPassword('Admin@123');
                             }}
-                            className="flex-1 bg-white/20 hover:bg-white/30 text-white px-4 py-2 rounded-lg text-sm font-medium transition-colors"
+                            className="flex-1 py-2.5 rounded-lg text-sm font-medium text-white/90 transition-colors border border-white/20 hover:bg-white/10"
                         >
                             Admin
                         </button>
                         <button
+                            type="button"
                             onClick={() => {
                                 setEmail('lyamani.ismail@etu.uae.ac.ma');
                                 setPassword('12345678');
                             }}
-                            className="flex-1 bg-white/20 hover:bg-white/30 text-white px-4 py-2 rounded-lg text-sm font-medium transition-colors"
+                            className="flex-1 py-2.5 rounded-lg text-sm font-medium text-white/90 transition-colors border border-white/20 hover:bg-white/10"
                         >
                             Responsable
                         </button>

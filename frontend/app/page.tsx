@@ -1,22 +1,44 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useRef, useEffect, Suspense } from 'react';
+import { useRouter } from 'next/navigation';
 import { useQuery } from '@tanstack/react-query';
-import { filesAPI, structureAPI } from '@/lib/api';
-import { File as FileType, AcademicStructure } from '@/types';
-import { Search, Download, FileText, LogIn } from 'lucide-react';
+import { structureAPI } from '@/lib/api';
+import { AcademicStructure, Year, Filiere } from '@/types';
+import {
+    LogIn,
+    ArrowRight,
+    BookOpen,
+    ChevronDown,
+    ChevronLeft,
+    Library,
+    Share2,
+    Sparkles,
+    Upload,
+    Download,
+} from 'lucide-react';
 import Link from 'next/link';
-import { generateThumbnailUrl, getFileCategoryColor, getFileTypeColor } from '@/lib/utils/fileHelpers';
+import Image from 'next/image';
 
-export default function HomePage() {
-    const [selectedYear, setSelectedYear] = useState('');
-    const [selectedFiliere, setSelectedFiliere] = useState('');
-    const [selectedSemester, setSelectedSemester] = useState('');
-    const [selectedModule, setSelectedModule] = useState('');
-    const [searchQuery, setSearchQuery] = useState('');
-    const [page, setPage] = useState(1);
+const CYCLE_LABELS: Record<string, string> = {
+    CP: 'Cycle préparatoire',
+    CI: "Cycle d'ingénieur",
+};
 
-    // Fetch academic structure
+const CYCLE_DESCRIPTIONS: Record<string, string> = {
+    CP: '1ère et 2ème année — tronc commun',
+    CI: '3ème, 4ème et 5ème année — par filière',
+};
+
+function WelcomeContent() {
+    const router = useRouter();
+    const parcoursRef = useRef<HTMLElement>(null);
+    const [cycle, setCycle] = useState<'CP' | 'CI' | ''>('');
+    const [filiere, setFiliere] = useState('');
+    const [year, setYear] = useState('');
+    const [semester, setSemester] = useState('');
+    const [parcoursVisible, setParcoursVisible] = useState(false);
+
     const { data: structureData } = useQuery({
         queryKey: ['structure'],
         queryFn: async () => {
@@ -25,278 +47,393 @@ export default function HomePage() {
         },
     });
 
-    // Fetch files with filters
-    const { data: filesData, isLoading } = useQuery({
-        queryKey: ['files', selectedYear, selectedFiliere, selectedSemester, selectedModule, searchQuery, page],
-        queryFn: async () => {
-            const params: any = { page, limit: 12 };
-            if (selectedYear) params.year = selectedYear;
-            if (selectedFiliere) params.filiere = selectedFiliere;
-            if (selectedSemester) params.semester = selectedSemester;
-            if (selectedModule) params.module = selectedModule;
-            if (searchQuery) params.search = searchQuery;
+    const yearsForCycle: Year[] = (structureData?.years ?? []).filter((y) => y.cycle === cycle);
+    const filieresForCycle: Filiere[] = (() => {
+        const seen = new Map<string, Filiere>();
+        for (const y of yearsForCycle) {
+            for (const f of y.filieres || []) {
+                if (!seen.has(f.name)) seen.set(f.name, f);
+            }
+        }
+        return Array.from(seen.values());
+    })();
+    const selectedYearData = yearsForCycle.find((y) => y.name === year);
+    const filiereData = selectedYearData?.filieres?.find((f) => f.name === filiere);
+    const semesters = filiereData?.semesters ?? [];
+    const canGoToResources = year && semester && (cycle === 'CP' || (cycle === 'CI' && filiere));
 
-            const response = await filesAPI.getFiles(params);
-            return response.data;
-        },
-    });
+    // What to show: only the next choice (progressive disclosure)
+    const showCycle = !cycle;
+    const showFiliere = cycle === 'CI' && !filiere;
+    const showYear = (cycle === 'CP' || (cycle === 'CI' && filiere)) && !year;
+    const showSemester = Boolean(selectedYearData) && !semester;
+    const showCTA = canGoToResources;
 
-    const selectedYearData = structureData?.years.find((y) => y.name === selectedYear);
-    const selectedFiliereData = selectedYearData?.filieres.find((f) => f.name === selectedFiliere);
-    const selectedSemesterData = selectedFiliereData?.semesters?.find((s: any) => s.name === selectedSemester);
+    const canGoBack = cycle && (showFiliere || showYear || showSemester || showCTA);
 
-    const formatFileSize = (bytes: number) => {
-        if (bytes < 1024) return bytes + ' B';
-        if (bytes < 1024 * 1024) return (bytes / 1024).toFixed(2) + ' KB';
-        return (bytes / (1024 * 1024)).toFixed(2) + ' MB';
+    const goBack = () => {
+        if (showCTA) {
+            setSemester('');
+            return;
+        }
+        if (showSemester) {
+            setYear('');
+            setSemester('');
+            return;
+        }
+        if (showYear) {
+            if (cycle === 'CP') {
+                setCycle('');
+                setYear('');
+                setSemester('');
+            } else {
+                setYear('');
+                setFiliere('');
+            }
+            return;
+        }
+        if (showFiliere) {
+            setCycle('');
+            setFiliere('');
+            setYear('');
+            setSemester('');
+        }
     };
 
+    useEffect(() => {
+        const el = parcoursRef.current;
+        if (!el) return;
+        const obs = new IntersectionObserver(
+            ([e]) => setParcoursVisible(e.isIntersecting),
+            { threshold: 0.2, rootMargin: '0px 0px -10% 0px' }
+        );
+        obs.observe(el);
+        return () => obs.disconnect();
+    }, []);
+
+    const scrollToParcours = () => {
+        parcoursRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    };
+
+    const goToResources = () => {
+        const f =
+            cycle === 'CP' && !filiere && selectedYearData?.filieres?.[0]
+                ? selectedYearData.filieres[0].name
+                : filiere;
+        const params = new URLSearchParams();
+        params.set('cycle', cycle);
+        params.set('year', year);
+        params.set('semester', semester);
+        if (f) params.set('filiere', f);
+        router.push(`/resources?${params.toString()}`);
+    };
+
+    // Breadcrumb items (clickable to go back to that step)
+    const breadcrumbItems: { label: string; onClick: () => void }[] = [];
+    if (cycle) {
+        breadcrumbItems.push({
+            label: CYCLE_LABELS[cycle] || cycle,
+            onClick: () => {
+                setCycle('');
+                setFiliere('');
+                setYear('');
+                setSemester('');
+            },
+        });
+    }
+    if (cycle === 'CI' && filiere) {
+        breadcrumbItems.push({
+            label: filiere,
+            onClick: () => {
+                setFiliere('');
+                setYear('');
+                setSemester('');
+            },
+        });
+    }
+    if (year) {
+        breadcrumbItems.push({
+            label: year,
+            onClick: () => {
+                setYear('');
+                setSemester('');
+            },
+        });
+    }
+    if (semester) {
+        breadcrumbItems.push({
+            label: semester,
+            onClick: () => setSemester(''),
+        });
+    }
+
+    const yearsForCurrentStep =
+        cycle === 'CP'
+            ? yearsForCycle
+            : yearsForCycle.filter((y) => (y.filieres || []).some((f) => f.name === filiere));
+
     return (
-        <div className="min-h-screen bg-gray-50">
-            {/* Header */}
-            <header className="bg-white shadow-sm">
-                <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4">
-                    <div className="flex justify-between items-center">
-                        <div>
-                            <h1 className="text-3xl font-bold text-primary-500">ENSA-SHARE</h1>
-                            <p className="text-sm text-gray-600">Plateforme de Partage de Ressources Pédagogiques</p>
-                        </div>
-                        <Link href="/login" className="btn-primary flex items-center gap-2">
-                            <LogIn size={20} />
-                            Connexion
-                        </Link>
+        <div className="min-h-screen bg-cream-100 scroll-smooth">
+            {/* Hero: full screen. For hero-bg.png, 1920×1080 (16:9) is recommended for sharp full-screen display. */}
+            <header
+                className="relative min-h-screen flex flex-col overflow-hidden bg-atlas-900"
+                style={{
+                    backgroundImage: 'linear-gradient(to bottom, rgba(15,24,40,0.78) 0%, rgba(8,13,20,0.92) 100%), url(/hero-bg.png)',
+                    backgroundSize: 'cover',
+                    backgroundPosition: 'center',
+                }}
+            >
+                <nav className="relative z-10 flex justify-end p-4 sm:p-6">
+                    <Link
+                        href="/login"
+                        className="inline-flex items-center gap-2 px-4 py-2.5 rounded-xl bg-white/10 hover:bg-white/20 text-cream-50 border border-white/20 backdrop-blur-sm transition-all duration-200 hover:shadow-lg"
+                    >
+                        <LogIn size={18} />
+                        Connexion
+                    </Link>
+                </nav>
+
+                <div className="relative z-10 flex-1 flex flex-col justify-center px-4 sm:px-6 lg:px-8 max-w-4xl mx-auto w-full text-center sm:text-left pb-20">
+                    <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full bg-white/10 text-cream-200/90 text-sm font-medium mb-6 w-fit mx-auto sm:mx-0">
+                        <Sparkles size={14} />
+                        Plateforme ENSA
                     </div>
+                    <h1 className="text-4xl sm:text-5xl lg:text-6xl font-bold text-cream-50 tracking-tight leading-tight">
+                        ENSA-SHARE
+                    </h1>
+                    <p className="mt-4 text-lg sm:text-xl text-cream-200/90 max-w-2xl leading-relaxed">
+                        Les délégués déposent cours, TD, TP et examens ; vous les retrouvez par parcours et module, puis vous consultez et téléchargez en un clic.
+                    </p>
+                    <div className="mt-6 flex flex-wrap items-center gap-3 text-cream-300/90 text-sm">
+                        <span className="inline-flex items-center gap-1.5">
+                            <Upload size={16} />
+                            Dépôt par les délégués
+                        </span>
+                        <span className="text-cream-500/80" aria-hidden>·</span>
+                        <span className="inline-flex items-center gap-1.5">
+                            <Library size={16} />
+                            Parcours & modules
+                        </span>
+                        <span className="text-cream-500/80" aria-hidden>·</span>
+                        <span className="inline-flex items-center gap-1.5">
+                            <Download size={16} />
+                            Consultation & téléchargement
+                        </span>
+                    </div>
+                    <button
+                        type="button"
+                        onClick={scrollToParcours}
+                        className="mt-14 inline-flex flex-col items-center gap-2 text-cream-400 hover:text-cream-50 transition-colors group"
+                        aria-label="Choisir mon parcours"
+                    >
+                        <span className="text-sm font-medium">Choisir mon parcours</span>
+                        <span className="rounded-full border-2 border-current p-2 group-hover:scale-110 transition-transform">
+                            <ChevronDown size={20} />
+                        </span>
+                    </button>
                 </div>
             </header>
 
-            {/* Main Content */}
-            <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-                {/* Filters Section */}
-                <div className="card mb-8">
-                    <h2 className="text-xl font-semibold mb-4">Rechercher des ressources</h2>
-                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-4 mb-4">
-                        {/* Year Filter */}
-                        <div>
-                            <label className="block text-sm font-medium text-gray-700 mb-2">Année</label>
-                            <select
-                                value={selectedYear}
-                                onChange={(e) => {
-                                    setSelectedYear(e.target.value);
-                                    setSelectedFiliere('');
-                                    setSelectedSemester('');
-                                    setSelectedModule('');
-                                }}
-                                className="input-field"
-                            >
-                                <option value="">Toutes les années</option>
-                                {structureData?.years.map((year) => (
-                                    <option key={year.name} value={year.name}>
-                                        {year.name}
-                                    </option>
-                                ))}
-                            </select>
-                        </div>
-
-                        {/* Filiere Filter */}
-                        <div>
-                            <label className="block text-sm font-medium text-gray-700 mb-2">Filière</label>
-                            <select
-                                value={selectedFiliere}
-                                onChange={(e) => {
-                                    setSelectedFiliere(e.target.value);
-                                    setSelectedSemester('');
-                                    setSelectedModule('');
-                                }}
-                                className="input-field"
-                                disabled={!selectedYear}
-                            >
-                                <option value="">Toutes les filières</option>
-                                {selectedYearData?.filieres.map((filiere) => (
-                                    <option key={filiere.name} value={filiere.name}>
-                                        {filiere.name}
-                                    </option>
-                                ))}
-                            </select>
-                        </div>
-
-                        {/* Semester Filter */}
-                        <div>
-                            <label className="block text-sm font-medium text-gray-700 mb-2">Semestre</label>
-                            <select
-                                value={selectedSemester}
-                                onChange={(e) => {
-                                    setSelectedSemester(e.target.value);
-                                    setSelectedModule('');
-                                }}
-                                className="input-field"
-                                disabled={!selectedFiliere}
-                            >
-                                <option value="">Tous les semestres</option>
-                                {selectedFiliereData?.semesters?.map((semester: any) => (
-                                    <option key={semester.name} value={semester.name}>
-                                        {semester.name}
-                                    </option>
-                                ))}
-                            </select>
-                        </div>
-
-                        {/* Module Filter */}
-                        <div>
-                            <label className="block text-sm font-medium text-gray-700 mb-2">Module</label>
-                            <select
-                                value={selectedModule}
-                                onChange={(e) => setSelectedModule(e.target.value)}
-                                className="input-field"
-                                disabled={!selectedSemester}
-                            >
-                                <option value="">{selectedSemester ? 'Tous les modules' : 'Sélectionnez d\'abord un semestre'}</option>
-                                {selectedSemesterData?.modules?.map((module: string) => (
-                                    <option key={module} value={module}>
-                                        {module}
-                                    </option>
-                                ))}
-                            </select>
-                        </div>
-
-                        {/* Search */}
-                        <div>
-                            <label className="block text-sm font-medium text-gray-700 mb-2">Recherche</label>
-                            <div className="relative">
-                                <input
-                                    type="text"
-                                    value={searchQuery}
-                                    onChange={(e) => setSearchQuery(e.target.value)}
-                                    placeholder="Nom du fichier..."
-                                    className="input-field pl-10"
-                                />
-                                <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" size={20} />
-                            </div>
-                        </div>
-                    </div>
-                </div>
-
-                {/* Results Section */}
-                <div>
-                    <div className="flex justify-between items-center mb-4">
-                        <h2 className="text-xl font-semibold">
-                            {filesData?.total || 0} fichier(s) trouvé(s)
+            {/* ——— Parcours: one step at a time, breadcrumb + back ——— */}
+            <main className="relative">
+                <section
+                    ref={parcoursRef}
+                    id="parcours"
+                    className="scroll-mt-8 py-12 sm:py-20 px-4 sm:px-6 lg:px-8"
+                    style={{ scrollMarginTop: '2rem' }}
+                >
+                    <div
+                        className={`max-w-4xl mx-auto transition-all duration-500 ${
+                            parcoursVisible ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-6'
+                        }`}
+                    >
+                        <h2 className="text-2xl sm:text-3xl font-bold text-atlas-800 text-center mb-8">
+                            Choisissez votre parcours
                         </h2>
-                    </div>
 
-                    {isLoading ? (
-                        <div className="text-center py-12">
-                            <div className="inline-block animate-spin rounded-full h-12 w-12 border-b-2 border-primary-500"></div>
-                        </div>
-                    ) : filesData?.files && filesData.files.length > 0 ? (
-                        <>
-                            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                                {filesData.files.map((file: FileType) => {
-                                    const categoryColors = getFileCategoryColor(file.fileCategory || 'Autre');
-                                    const thumbnailUrl = generateThumbnailUrl(file.fileUrl, file.fileType);
-
-                                    return (
-                                        <div key={file._id} className="card hover:shadow-lg transition-shadow">
-                                            {/* Thumbnail */}
-                                            <div className="mb-4 relative">
-                                                {file.fileType.toLowerCase() === 'pdf' ? (
-                                                    <img
-                                                        src={thumbnailUrl}
-                                                        alt="Preview"
-                                                        className="w-full h-48 object-cover rounded-lg border border-gray-200"
-                                                        onError={(e) => {
-                                                            const parent = (e.target as HTMLImageElement).parentElement;
-                                                            if (parent) {
-                                                                parent.innerHTML = '<div class="w-full h-48 bg-gray-100 rounded-lg flex items-center justify-center"><svg class="text-gray-400" width="64" height="64" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path></svg></div>';
-                                                            }
-                                                        }}
-                                                    />
-                                                ) : (
-                                                    <div className="w-full h-48 bg-gradient-to-br from-gray-50 to-gray-100 rounded-lg flex flex-col items-center justify-center border border-gray-200">
-                                                        <FileText size={64} className={getFileTypeColor(file.fileType)} />
-                                                        <span className="mt-3 px-3 py-1 bg-white rounded-full text-sm font-semibold text-gray-700 border border-gray-200">
-                                                            {file.fileType.toUpperCase()}
-                                                        </span>
-                                                    </div>
-                                                )}
-                                            </div>
-
-                                            {/* File Info */}
-                                            <div className="flex items-start justify-between mb-2">
-                                                <h3 className="font-semibold text-gray-900 truncate flex-1">
-                                                    {file.displayName || file.fileName}
-                                                </h3>
-                                                <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${categoryColors.bg} ${categoryColors.text} ml-2 flex-shrink-0`}>
-                                                    {file.fileCategory || 'Autre'}
-                                                </span>
-                                            </div>
-
-                                            {file.fileLabel && (
-                                                <p className="text-sm text-gray-600 italic mb-2">
-                                                    {file.fileLabel}
-                                                </p>
+                        {/* Progress: breadcrumb (pills) + back button */}
+                        {(breadcrumbItems.length > 0 || canGoBack) && (
+                            <div className="mb-8 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+                                <div className="flex flex-wrap items-center gap-2 min-w-0">
+                                    {breadcrumbItems.map((item, i) => (
+                                        <span key={i} className="flex items-center gap-1.5 shrink-0">
+                                            {i > 0 && (
+                                                <ChevronDown
+                                                    className="text-atlas-400 rotate-[-90deg] flex-shrink-0"
+                                                    size={16}
+                                                    aria-hidden
+                                                />
                                             )}
-
-                                            <p className="text-sm text-gray-600 mb-3">{file.module}</p>
-
-                                            <div className="flex items-center justify-between text-xs text-gray-500 mb-3">
-                                                <span>{file.fileType.toUpperCase()}</span>
-                                                <span>{formatFileSize(file.fileSize)}</span>
-                                            </div>
-
-                                            <a
-                                                href={file.fileUrl}
-                                                target="_blank"
-                                                rel="noopener noreferrer"
-                                                className="btn-primary w-full text-center text-sm flex items-center justify-center gap-2"
+                                            <button
+                                                type="button"
+                                                onClick={item.onClick}
+                                                className="rounded-xl px-4 py-2.5 text-sm font-semibold bg-atlas-800/90 text-cream-50 hover:bg-atlas-700 hover:shadow-[0_0_20px_-4px_rgba(13,148,136,0.3)] transition-all duration-200 truncate max-w-[160px] sm:max-w-[200px] border border-atlas-600/50"
                                             >
-                                                <Download size={16} />
-                                                Télécharger
-                                            </a>
-                                        </div>
-                                    );
-                                })}
-                            </div>
-
-                            {/* Pagination */}
-                            {filesData.pages > 1 && (
-                                <div className="flex justify-center gap-2 mt-8">
-                                    <button
-                                        onClick={() => setPage((p) => Math.max(1, p - 1))}
-                                        disabled={page === 1}
-                                        className="btn-outline disabled:opacity-50"
-                                    >
-                                        Précédent
-                                    </button>
-                                    <span className="px-4 py-2">
-                                        Page {page} sur {filesData.pages}
-                                    </span>
-                                    <button
-                                        onClick={() => setPage((p) => Math.min(filesData.pages, p + 1))}
-                                        disabled={page === filesData.pages}
-                                        className="btn-outline disabled:opacity-50"
-                                    >
-                                        Suivant
-                                    </button>
+                                                {item.label}
+                                            </button>
+                                        </span>
+                                    ))}
                                 </div>
-                            )}
-                        </>
-                    ) : (
-                        <div className="text-center py-12 card">
-                            <FileText className="mx-auto text-gray-400 mb-4" size={64} />
-                            <p className="text-gray-600">Aucun fichier trouvé</p>
-                        </div>
-                    )}
-                </div>
+                                {canGoBack && (
+                                    <button
+                                        type="button"
+                                        onClick={goBack}
+                                        className="inline-flex items-center gap-2 px-4 py-2.5 rounded-xl text-sm font-semibold text-atlas-700 bg-white border-2 border-atlas-300 hover:border-accent-500 hover:text-accent-600 hover:shadow-[0_0_16px_-4px_rgba(13,148,136,0.2)] transition-all duration-200 shrink-0"
+                                    >
+                                        <ChevronLeft size={18} />
+                                        Retour
+                                    </button>
+                                )}
+                            </div>
+                        )}
+
+                        {/* Progress bar: smooth single bar */}
+                        {cycle && (
+                            <div className="mb-10">
+                                <div className="h-2 rounded-full bg-cream-200 overflow-hidden">
+                                    <div
+                                        className="h-full rounded-full bg-gradient-to-r from-accent-400 to-accent-600 transition-[width] duration-500 ease-out"
+                                        style={{
+                                            width: showCTA ? '100%' : showSemester ? '75%' : showYear ? '50%' : '25%',
+                                        }}
+                                    />
+                                </div>
+                                <p className="mt-2 text-xs text-atlas-500 text-center">
+                                    {showCycle && 'Choisissez votre cycle'}
+                                    {showFiliere && 'Choisissez votre filière'}
+                                    {showYear && 'Choisissez l\'année'}
+                                    {showSemester && 'Choisissez le semestre'}
+                                    {showCTA && 'Parcours sélectionné'}
+                                </p>
+                            </div>
+                        )}
+
+                        {/* Step: show only current choice */}
+                        {showCycle && (
+                            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 sm:gap-6">
+                                {(['CP', 'CI'] as const).map((c) => (
+                                    <button
+                                        key={c}
+                                        type="button"
+                                        onClick={() => setCycle(c)}
+                                        className="group relative rounded-2xl p-6 sm:p-8 text-left transition-all duration-300 border-2 border-cream-300 bg-white hover:border-atlas-400 hover:shadow-glass-lg overflow-hidden"
+                                    >
+                                        <div className="absolute inset-0 opacity-0 group-hover:opacity-100 transition-opacity bg-gradient-to-br from-accent-500/5 to-transparent" />
+                                        <div className="relative">
+                                            <span className="inline-flex items-center justify-center w-12 h-12 rounded-xl mb-4 bg-cream-200 text-atlas-600 group-hover:bg-accent-100 group-hover:text-accent-700 transition-colors">
+                                                <BookOpen size={24} />
+                                            </span>
+                                            <h3 className="text-lg font-bold text-atlas-800">
+                                                {CYCLE_LABELS[c] || c}
+                                            </h3>
+                                            <p className="mt-1 text-sm text-atlas-600">
+                                                {CYCLE_DESCRIPTIONS[c] || ''}
+                                            </p>
+                                        </div>
+                                    </button>
+                                ))}
+                            </div>
+                        )}
+
+                        {showFiliere && (
+                            <div className="flex flex-wrap gap-3 justify-center sm:justify-start">
+                                {filieresForCycle.map((f) => (
+                                    <button
+                                        key={f.name}
+                                        type="button"
+                                        onClick={() => setFiliere(f.name)}
+                                        className="rounded-xl px-5 py-3.5 text-sm font-medium border-2 border-cream-300 bg-white text-atlas-700 hover:border-atlas-400 hover:bg-atlas-50/50 transition-all"
+                                    >
+                                        {f.name}
+                                    </button>
+                                ))}
+                            </div>
+                        )}
+
+                        {showYear && (
+                            <div className="flex flex-wrap gap-3 justify-center sm:justify-start">
+                                {yearsForCurrentStep.map((y) => (
+                                    <button
+                                        key={y.name}
+                                        type="button"
+                                        onClick={() => {
+                                            setYear(y.name);
+                                            if (cycle === 'CP') setFiliere(y.filieres?.[0]?.name ?? '');
+                                        }}
+                                        className="rounded-xl px-5 py-3.5 text-sm font-medium border-2 border-cream-300 bg-white text-atlas-700 hover:border-atlas-400 hover:bg-atlas-50/50 transition-all"
+                                    >
+                                        {y.name}
+                                    </button>
+                                ))}
+                            </div>
+                        )}
+
+                        {showSemester && (
+                            <div className="flex flex-wrap gap-3 justify-center sm:justify-start">
+                                {semesters.map((s) => (
+                                    <button
+                                        key={s.name}
+                                        type="button"
+                                        onClick={() => setSemester(s.name)}
+                                        className="rounded-xl px-5 py-3.5 text-sm font-medium border-2 border-cream-300 bg-white text-atlas-700 hover:border-accent-200 hover:bg-accent-50/50 transition-all"
+                                    >
+                                        {s.name}
+                                    </button>
+                                ))}
+                            </div>
+                        )}
+
+                        {showCTA && (
+                            <div className="text-center py-6">
+                                <p className="text-atlas-600 mb-6">
+                                    Parcours sélectionné. Accédez aux modules et documents.
+                                </p>
+                                <button
+                                    type="button"
+                                    onClick={goToResources}
+                                    className="btn-primary inline-flex items-center justify-center gap-2 min-w-[260px] py-4 text-base"
+                                >
+                                    Voir les modules et ressources
+                                    <ArrowRight size={20} />
+                                </button>
+                            </div>
+                        )}
+                    </div>
+                </section>
             </main>
 
-            {/* Footer */}
-            <footer className="bg-white border-t mt-12">
-                <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
-                    <p className="text-center text-gray-600 text-sm">
-                        © 2026 ENSA-SHARE - École Nationale des Sciences Appliquées
+            <footer className="border-t border-cream-300/60 bg-cream-50/50 py-8">
+                <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 flex flex-col items-center gap-3 text-center">
+                    <Link href="/">
+                        <Image
+                            src="/ensa-share_logo.png"
+                            alt="ENSA-SHARE"
+                            width={140}
+                            height={44}
+                            className="h-8 w-auto opacity-90 hover:opacity-100 transition-opacity"
+                        />
+                    </Link>
+                    <p className="text-atlas-600 text-sm">
+                        © 2026 ENSA-SHARE — École Nationale des Sciences Appliquées
                     </p>
                 </div>
             </footer>
         </div>
+    );
+}
+
+function WelcomeFallback() {
+    return (
+        <div className="min-h-screen bg-cream-100 flex items-center justify-center">
+            <div className="w-10 h-10 rounded-full border-2 border-atlas-200 border-t-accent-500 animate-spin" />
+        </div>
+    );
+}
+
+export default function HomePage() {
+    return (
+        <Suspense fallback={<WelcomeFallback />}>
+            <WelcomeContent />
+        </Suspense>
     );
 }

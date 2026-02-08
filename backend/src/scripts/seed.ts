@@ -245,7 +245,8 @@ const seedDatabase = async () => {
                             code: 'GI',
                             name: 'Génie Informatique',
                             semesters: [
-                                { name: 'S9', modules: ['Module GI S9-1', 'Module GI S9-2', 'Module GI S9-3'] },
+                                { name: 'S9 - Systèmes d\'Information et d\'Aide à la Décision', modules: ['Module GI SIAD S9-1', 'Module GI SIAD S9-2', 'Module GI SIAD S9-3'] },
+                                { name: 'S9 - Génie Logiciel', modules: ['Module GI GL S9-1', 'Module GI GL S9-2', 'Module GI GL S9-3'] },
                                 { name: 'S10', modules: ['Module GI S10-1', 'Module GI S10-2', 'Module GI S10-3'] },
                             ],
                         },
@@ -277,7 +278,8 @@ const seedDatabase = async () => {
                             code: 'SCM',
                             name: 'Supply Chain Management',
                             semesters: [
-                                { name: 'S9', modules: ['Module SCM S9-1', 'Module SCM S9-2', 'Module SCM S9-3'] },
+                                { name: 'S9 - Option Ingénierie Automobile', modules: ['Module SCM IA S9-1', 'Module SCM IA S9-2', 'Module SCM IA S9-3'] },
+                                { name: 'S9 - Option Logistique et Transport', modules: ['Module SCM LT S9-1', 'Module SCM LT S9-2', 'Module SCM LT S9-3'] },
                                 { name: 'S10', modules: ['Module SCM S10-1', 'Module SCM S10-2', 'Module SCM S10-3'] },
                             ],
                         },
@@ -293,7 +295,8 @@ const seedDatabase = async () => {
                             code: 'GSTR',
                             name: 'Génie des Systèmes de Télécommunications et Réseaux',
                             semesters: [
-                                { name: 'S9', modules: ['Module GSTR S9-1', 'Module GSTR S9-2', 'Module GSTR S9-3'] },
+                                { name: 'S9 - Cybersécurité et Systèmes Embarqués', modules: ['Module GSTR CSE S9-1', 'Module GSTR CSE S9-2', 'Module GSTR CSE S9-3'] },
+                                { name: 'S9 - Systèmes de Télécommunication et Réseaux', modules: ['Module GSTR STR S9-1', 'Module GSTR STR S9-2', 'Module GSTR STR S9-3'] },
                                 { name: 'S10', modules: ['Module GSTR S10-1', 'Module GSTR S10-2', 'Module GSTR S10-3'] },
                             ],
                         },
