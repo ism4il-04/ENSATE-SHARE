@@ -6,7 +6,7 @@ import { Providers } from './providers';
 const inter = Inter({ subsets: ['latin'] });
 
 export const metadata: Metadata = {
-    title: 'ENSA-SHARE - Plateforme de Partage de Ressources Pédagogiques',
+    title: 'ENSA-SHARE',
     description: 'Application web de gestion et partage de documents académiques',
 };
 
