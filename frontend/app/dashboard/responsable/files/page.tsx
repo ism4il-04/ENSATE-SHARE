@@ -30,10 +30,9 @@ export default function FilesPage() {
         },
     });
 
-    const modules = structureData?.years
-        ?.find((y: any) => y.name === user?.assignedYear)
-        ?.filieres?.find((f: any) => f.name === user?.assignedFiliere)
-        ?.modules || [];
+    const selectedCycle = structureData?.cycles?.find((c: any) => c.name === user?.assignedFiliere);
+    const selectedYearData = selectedCycle?.years?.find((y: any) => y.code === user?.assignedYear);
+    const modules = [...new Set(selectedYearData?.semesters?.flatMap((s: any) => s.modules || []) || [])];
 
     // Fetch files
     const { data: filesData, isLoading } = useQuery({

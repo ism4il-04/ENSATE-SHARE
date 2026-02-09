@@ -72,8 +72,9 @@ export default function FilesPage() {
         });
     };
 
-    const selectedYearData = structureData?.years?.find((y: any) => y.name === selectedYear);
-    const selectedFiliereData = selectedYearData?.filieres?.find((f: any) => f.name === selectedFiliere);
+    const selectedCycleData = structureData?.cycles?.find((c: any) => c.name === selectedFiliere);
+    const selectedYearData = selectedCycleData?.years?.find((y: any) => y.code === selectedYear);
+    const modulesForFilter = [...new Set(selectedYearData?.semesters?.flatMap((s: any) => s.modules || []) || [])];
 
     return (
         <div className="p-8">
@@ -101,43 +102,43 @@ export default function FilesPage() {
                         </div>
                     </div>
 
-                    {/* Year Filter */}
-                    <div>
-                        <label className="block text-sm font-medium text-gray-700 mb-2">Année</label>
-                        <select
-                            value={selectedYear}
-                            onChange={(e) => {
-                                setSelectedYear(e.target.value);
-                                setSelectedFiliere('');
-                                setSelectedModule('');
-                            }}
-                            className="input-field"
-                        >
-                            <option value="">Toutes les années</option>
-                            {structureData?.years?.map((year: any) => (
-                                <option key={year.name} value={year.name}>
-                                    {year.name}
-                                </option>
-                            ))}
-                        </select>
-                    </div>
-
-                    {/* Filiere Filter */}
+                    {/* Filière (cycle) Filter */}
                     <div>
                         <label className="block text-sm font-medium text-gray-700 mb-2">Filière</label>
                         <select
                             value={selectedFiliere}
                             onChange={(e) => {
                                 setSelectedFiliere(e.target.value);
+                                setSelectedYear('');
                                 setSelectedModule('');
                             }}
                             className="input-field"
-                            disabled={!selectedYear}
                         >
                             <option value="">Toutes les filières</option>
-                            {selectedYearData?.filieres?.map((filiere: any) => (
-                                <option key={filiere.name} value={filiere.name}>
-                                    {filiere.name}
+                            {structureData?.cycles?.map((c: any) => (
+                                <option key={c.name} value={c.name}>
+                                    {c.name}
+                                </option>
+                            ))}
+                        </select>
+                    </div>
+
+                    {/* Year (code) Filter */}
+                    <div>
+                        <label className="block text-sm font-medium text-gray-700 mb-2">Année</label>
+                        <select
+                            value={selectedYear}
+                            onChange={(e) => {
+                                setSelectedYear(e.target.value);
+                                setSelectedModule('');
+                            }}
+                            className="input-field"
+                            disabled={!selectedFiliere}
+                        >
+                            <option value="">Toutes les années</option>
+                            {selectedCycleData?.years?.map((y: any) => (
+                                <option key={y.code} value={y.code}>
+                                    {y.code}
                                 </option>
                             ))}
                         </select>
@@ -150,10 +151,10 @@ export default function FilesPage() {
                             value={selectedModule}
                             onChange={(e) => setSelectedModule(e.target.value)}
                             className="input-field"
-                            disabled={!selectedFiliere}
+                            disabled={!selectedYear}
                         >
                             <option value="">Tous les modules</option>
-                            {selectedFiliereData?.modules?.map((module: string) => (
+                            {modulesForFilter.map((module: string) => (
                                 <option key={module} value={module}>
                                     {module}
                                 </option>

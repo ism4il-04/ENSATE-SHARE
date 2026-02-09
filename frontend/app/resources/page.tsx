@@ -61,9 +61,9 @@ function ResourcesContent() {
         },
     });
 
-    const selectedYearData = structureData?.years.find((y) => y.name === year);
-    const selectedFiliereData = selectedYearData?.filieres?.find((f) => f.name === filiere);
-    const selectedSemesterData = selectedFiliereData?.semesters?.find((s) => s.name === semester);
+    const selectedCycle = structureData?.cycles?.find((c) => c.name === filiere);
+    const selectedYearData = selectedCycle?.years?.find((y) => y.code === year);
+    const selectedSemesterData = selectedYearData?.semesters?.find((s) => s.name === semester);
     const modules = selectedSemesterData?.modules ?? [];
 
     const hasValidContext = cycle && year && filiere && semester;

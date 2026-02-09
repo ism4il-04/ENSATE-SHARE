@@ -74,7 +74,7 @@ export const usersAPI = {
 // Structure API
 export const structureAPI = {
     getStructure: () => api.get('/structure'),
-    updateStructure: (data: any) => api.put('/structure', data),
+    updateStructure: (data: { cycles: unknown[] }) => api.put('/structure', data),
 };
 
 // Stats API (Superadmin only)

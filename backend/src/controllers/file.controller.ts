@@ -1,6 +1,7 @@
 import { Response } from 'express';
 import File from '../models/File.model';
 import ActivityLog from '../models/ActivityLog.model';
+import AcademicStructure from '../models/AcademicStructure.model';
 import cloudinary from '../config/cloudinary';
 import { AuthRequest } from '../middleware/auth.middleware';
 import path from 'path';
@@ -142,6 +143,36 @@ export const uploadFile = async (req: AuthRequest, res: Response): Promise<void>
             // Responsable: use assigned year/filiere
             year = req.user.assignedYear!;
             filiere = req.user.assignedFiliere!;
+
+            // Ensure the responsable can only upload to semesters of their assigned year (filiere = cycle name, year = year code)
+            const structure = await AcademicStructure.findOne();
+            if (structure?.cycles) {
+                const cycleData = structure.cycles.find((c) => c.name === filiere);
+                const yearData = cycleData?.years.find((y) => y.code === year);
+                const semesterData = yearData?.semesters.find((s) => s.name === semester);
+
+                if (!cycleData || !yearData) {
+                    res.status(400).json({
+                        success: false,
+                        message: 'Your assigned year or filière is not in the academic structure. Contact the administrator.',
+                    });
+                    return;
+                }
+                if (!semesterData) {
+                    res.status(400).json({
+                        success: false,
+                        message: `Semester "${semester}" is not part of your assigned year (${year}). You can only upload to: ${yearData.semesters.map((s) => s.name).join(', ')}.`,
+                    });
+                    return;
+                }
+                if (!semesterData.modules.includes(module)) {
+                    res.status(400).json({
+                        success: false,
+                        message: `Module "${module}" is not in semester ${semester}. Allowed modules: ${semesterData.modules.join(', ')}.`,
+                    });
+                    return;
+                }
+            }
         } else {
             // Superadmin: must provide year and filiere
             year = req.body.year;

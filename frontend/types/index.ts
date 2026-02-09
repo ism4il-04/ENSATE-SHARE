@@ -38,6 +38,17 @@ export interface Semester {
     modules: string[];
 }
 
+export interface YearLevel {
+    code: string; // "2AP1", "GI1", "GSTR1"
+    semesters: Semester[];
+}
+
+export interface Cycle {
+    name: string; // "Cycle Préparatoire", "Cycle Ingénieur - Génie Informatique"
+    cycle: 'CP' | 'CI';
+    years: YearLevel[];
+}
+
 export interface Filiere {
     name: string;
     code?: string;
@@ -52,7 +63,7 @@ export interface Year {
 
 export interface AcademicStructure {
     _id: string;
-    years: Year[];
+    cycles: Cycle[];
     updatedAt: string;
 }
 

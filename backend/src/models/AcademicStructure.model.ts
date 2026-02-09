@@ -1,68 +1,54 @@
 import mongoose, { Document, Schema } from 'mongoose';
 
-interface ISemester {
-    name: string; // "S1" or "S2"
+export interface ISemester {
+    name: string;
     modules: string[];
 }
 
-interface IFiliere {
-    code: string; // "2AP", "GI", "GSECS", etc.
-    name: string;
+export interface IYearLevel {
+    code: string; // "2AP1", "GI1", "GSTR1", etc.
     semesters: ISemester[];
 }
 
-interface IYear {
-    name: string; // "1ère Année", "2ème Année", etc.
-    cycle: string; // "CP" (Cycle Préparatoire) or "CI" (Cycle d'Ingénieur)
-    filieres: IFiliere[];
+export interface ICycle {
+    name: string; // "Cycle Préparatoire", "Cycle Ingénieur - Génie Informatique"
+    cycle: 'CP' | 'CI'; // CP = Cycle Préparatoire, CI = Cycle Ingénieur
+    years: IYearLevel[];
 }
 
 export interface IAcademicStructure extends Document {
-    years: IYear[];
+    cycles: ICycle[];
     updatedAt: Date;
 }
 
+const semesterSchema = new Schema(
+    {
+        name: { type: String, required: true },
+        modules: [{ type: String, required: true }],
+    },
+    { _id: false }
+);
+
+const yearLevelSchema = new Schema(
+    {
+        code: { type: String, required: true },
+        semesters: [semesterSchema],
+    },
+    { _id: false }
+);
+
+const cycleSchema = new Schema(
+    {
+        name: { type: String, required: true },
+        cycle: { type: String, required: true, enum: ['CP', 'CI'] },
+        years: [yearLevelSchema],
+    },
+    { _id: false }
+);
+
 const academicStructureSchema = new Schema<IAcademicStructure>(
     {
-        years: [
-            {
-                name: {
-                    type: String,
-                    required: true,
-                },
-                cycle: {
-                    type: String,
-                    required: true,
-                    enum: ['CP', 'CI'],
-                },
-                filieres: [
-                    {
-                        code: {
-                            type: String,
-                            required: true,
-                        },
-                        name: {
-                            type: String,
-                            required: true,
-                        },
-                        semesters: [
-                            {
-                                name: {
-                                    type: String,
-                                    required: true,
-                                },
-                                modules: [
-                                    {
-                                        type: String,
-                                        required: true,
-                                    },
-                                ],
-                            },
-                        ],
-                    },
-                ],
-            },
-        ],
+        cycles: [cycleSchema],
     },
     {
         timestamps: true,

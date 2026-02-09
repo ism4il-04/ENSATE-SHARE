@@ -124,7 +124,7 @@ export default function UsersPage() {
         }
     };
 
-    const selectedYearData = structureData?.years?.find((y: any) => y.name === formData.assignedYear);
+    const selectedCycleData = structureData?.cycles?.find((c: any) => c.name === formData.assignedFiliere);
 
     return (
         <div className="p-8">
@@ -159,28 +159,20 @@ export default function UsersPage() {
                                 </tr>
                             </thead>
                             <tbody>
-                                {usersData.map((user: any) => {
-                                    // Find user's filière data to show code
-                                    const userYear = structureData?.years?.find((y: any) => y.name === user.assignedYear);
-                                    const userFiliere = userYear?.filieres?.find((f: any) => f.name === user.assignedFiliere);
-
-                                    return (
-                                        <tr key={user._id} className="border-b border-gray-100 hover:bg-gray-50">
-                                            <td className="py-3 px-4">
-                                                <span className="text-sm font-medium text-gray-900">
-                                                    {user.firstName} {user.lastName}
-                                                </span>
-                                            </td>
-                                            <td className="py-3 px-4 text-sm text-gray-600">{user.email}</td>
-                                            <td className="py-3 px-4">
-                                                <div className="text-sm">
-                                                    <div className="font-medium text-gray-900">{user.assignedYear}</div>
-                                                    <div className="text-gray-600">
-                                                        {user.assignedFiliere}
-                                                        {userFiliere?.code && <span className="text-gray-500"> ({userFiliere.code})</span>}
-                                                    </div>
-                                                </div>
-                                            </td>
+                                {usersData.map((user: any) => (
+                                    <tr key={user._id} className="border-b border-gray-100 hover:bg-gray-50">
+                                        <td className="py-3 px-4">
+                                            <span className="text-sm font-medium text-gray-900">
+                                                {user.firstName} {user.lastName}
+                                            </span>
+                                        </td>
+                                        <td className="py-3 px-4 text-sm text-gray-600">{user.email}</td>
+                                        <td className="py-3 px-4">
+                                            <div className="text-sm">
+                                                <div className="font-medium text-gray-900">{user.assignedYear}</div>
+                                                <div className="text-gray-600">{user.assignedFiliere}</div>
+                                            </div>
+                                        </td>
                                             <td className="py-3 px-4">
                                                 <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${user.isActive ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'
                                                     }`}>
@@ -207,8 +199,7 @@ export default function UsersPage() {
                                                 </div>
                                             </td>
                                         </tr>
-                                    );
-                                })}
+                                ))}
                             </tbody>
                         </table>
                     </div>
@@ -300,18 +291,18 @@ export default function UsersPage() {
                             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                                 <div>
                                     <label className="block text-sm font-medium text-gray-700 mb-2">
-                                        Année <span className="text-red-500">*</span>
+                                        Filière (cycle) <span className="text-red-500">*</span>
                                     </label>
                                     <select
-                                        value={formData.assignedYear}
-                                        onChange={(e) => setFormData({ ...formData, assignedYear: e.target.value, assignedFiliere: '' })}
+                                        value={formData.assignedFiliere}
+                                        onChange={(e) => setFormData({ ...formData, assignedFiliere: e.target.value, assignedYear: '' })}
                                         className="input-field"
                                         required
                                     >
-                                        <option value="">Sélectionnez une année</option>
-                                        {structureData?.years?.map((year: any) => (
-                                            <option key={year.name} value={year.name}>
-                                                {year.name}
+                                        <option value="">Sélectionnez une filière</option>
+                                        {structureData?.cycles?.map((c: any) => (
+                                            <option key={c.name} value={c.name}>
+                                                {c.name}
                                             </option>
                                         ))}
                                     </select>
@@ -319,19 +310,19 @@ export default function UsersPage() {
 
                                 <div>
                                     <label className="block text-sm font-medium text-gray-700 mb-2">
-                                        Filière <span className="text-red-500">*</span>
+                                        Année (code) <span className="text-red-500">*</span>
                                     </label>
                                     <select
-                                        value={formData.assignedFiliere}
-                                        onChange={(e) => setFormData({ ...formData, assignedFiliere: e.target.value })}
+                                        value={formData.assignedYear}
+                                        onChange={(e) => setFormData({ ...formData, assignedYear: e.target.value })}
                                         className="input-field"
                                         required
-                                        disabled={!formData.assignedYear}
+                                        disabled={!formData.assignedFiliere}
                                     >
-                                        <option value="">Sélectionnez une filière</option>
-                                        {selectedYearData?.filieres?.map((filiere: any) => (
-                                            <option key={filiere.name} value={filiere.name}>
-                                                {filiere.name}
+                                        <option value="">Sélectionnez une année</option>
+                                        {selectedCycleData?.years?.map((y: any) => (
+                                            <option key={y.code} value={y.code}>
+                                                {y.code}
                                             </option>
                                         ))}
                                     </select>

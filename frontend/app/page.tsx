@@ -4,7 +4,7 @@ import { useState, useRef, useEffect, Suspense } from 'react';
 import { useRouter } from 'next/navigation';
 import { useQuery } from '@tanstack/react-query';
 import { structureAPI } from '@/lib/api';
-import { AcademicStructure, Year, Filiere } from '@/types';
+import { AcademicStructure, Cycle } from '@/types';
 import {
     LogIn,
     ArrowRight,
@@ -47,19 +47,14 @@ function WelcomeContent() {
         },
     });
 
-    const yearsForCycle: Year[] = (structureData?.years ?? []).filter((y) => y.cycle === cycle);
-    const filieresForCycle: Filiere[] = (() => {
-        const seen = new Map<string, Filiere>();
-        for (const y of yearsForCycle) {
-            for (const f of y.filieres || []) {
-                if (!seen.has(f.name)) seen.set(f.name, f);
-            }
-        }
-        return Array.from(seen.values());
-    })();
-    const selectedYearData = yearsForCycle.find((y) => y.name === year);
-    const filiereData = selectedYearData?.filieres?.find((f) => f.name === filiere);
-    const semesters = filiereData?.semesters ?? [];
+    const cyclesForCycle: Cycle[] = (structureData?.cycles ?? []).filter((c) => c.cycle === cycle);
+    const cpCycle = cycle === 'CP' ? cyclesForCycle[0] : null;
+    const selectedFiliereCycle =
+        cycle === 'CI' && filiere ? cyclesForCycle.find((c) => c.name === filiere) : cpCycle;
+    const yearsForDisplay = selectedFiliereCycle?.years ?? [];
+    const selectedYearData = yearsForDisplay.find((y) => y.code === year);
+    const semesters = selectedYearData?.semesters ?? [];
+    const filieresForCycle: Cycle[] = cyclesForCycle;
     const canGoToResources = year && semester && (cycle === 'CP' || (cycle === 'CI' && filiere));
 
     // What to show: only the next choice (progressive disclosure)
@@ -116,10 +111,7 @@ function WelcomeContent() {
     };
 
     const goToResources = () => {
-        const f =
-            cycle === 'CP' && !filiere && selectedYearData?.filieres?.[0]
-                ? selectedYearData.filieres[0].name
-                : filiere;
+        const f = cycle === 'CP' ? cpCycle?.name : filiere;
         const params = new URLSearchParams();
         params.set('cycle', cycle);
         params.set('year', year);
@@ -167,10 +159,7 @@ function WelcomeContent() {
         });
     }
 
-    const yearsForCurrentStep =
-        cycle === 'CP'
-            ? yearsForCycle
-            : yearsForCycle.filter((y) => (y.filieres || []).some((f) => f.name === filiere));
+    const yearsForCurrentStep = yearsForDisplay;
 
     return (
         <div className="min-h-screen bg-cream-100 scroll-smooth">
@@ -337,14 +326,14 @@ function WelcomeContent() {
 
                         {showFiliere && (
                             <div className="flex flex-wrap gap-3 justify-center sm:justify-start">
-                                {filieresForCycle.map((f) => (
+                                {filieresForCycle.map((c) => (
                                     <button
-                                        key={f.name}
+                                        key={c.name}
                                         type="button"
-                                        onClick={() => setFiliere(f.name)}
+                                        onClick={() => setFiliere(c.name)}
                                         className="rounded-xl px-5 py-3.5 text-sm font-medium border-2 border-cream-300 bg-white text-atlas-700 hover:border-atlas-400 hover:bg-atlas-50/50 transition-all"
                                     >
-                                        {f.name}
+                                        {c.name}
                                     </button>
                                 ))}
                             </div>
@@ -354,15 +343,15 @@ function WelcomeContent() {
                             <div className="flex flex-wrap gap-3 justify-center sm:justify-start">
                                 {yearsForCurrentStep.map((y) => (
                                     <button
-                                        key={y.name}
+                                        key={y.code}
                                         type="button"
                                         onClick={() => {
-                                            setYear(y.name);
-                                            if (cycle === 'CP') setFiliere(y.filieres?.[0]?.name ?? '');
+                                            setYear(y.code);
+                                            if (cycle === 'CP') setFiliere(cpCycle?.name ?? '');
                                         }}
                                         className="rounded-xl px-5 py-3.5 text-sm font-medium border-2 border-cream-300 bg-white text-atlas-700 hover:border-atlas-400 hover:bg-atlas-50/50 transition-all"
                                     >
-                                        {y.name}
+                                        {y.code}
                                     </button>
                                 ))}
                             </div>

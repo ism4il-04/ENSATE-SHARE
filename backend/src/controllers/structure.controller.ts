@@ -10,10 +10,10 @@ export const getStructure = async (req: AuthRequest, res: Response): Promise<voi
     try {
         let structure = await AcademicStructure.findOne();
 
-        // If no structure exists, create a default one
+        // If no structure exists, create empty one (cycles: [])
         if (!structure) {
             structure = await AcademicStructure.create({
-                years: [],
+                cycles: [],
             });
         }
 
@@ -35,12 +35,12 @@ export const getStructure = async (req: AuthRequest, res: Response): Promise<voi
 // @access  Private (Superadmin only)
 export const updateStructure = async (req: AuthRequest, res: Response): Promise<void> => {
     try {
-        const { years } = req.body;
+        const { cycles } = req.body;
 
-        if (!years || !Array.isArray(years)) {
+        if (!cycles || !Array.isArray(cycles)) {
             res.status(400).json({
                 success: false,
-                message: 'Years array is required',
+                message: 'Cycles array is required',
             });
             return;
         }
@@ -48,9 +48,9 @@ export const updateStructure = async (req: AuthRequest, res: Response): Promise<
         let structure = await AcademicStructure.findOne();
 
         if (!structure) {
-            structure = await AcademicStructure.create({ years });
+            structure = await AcademicStructure.create({ cycles });
         } else {
-            structure.years = years;
+            structure.cycles = cycles;
             await structure.save();
         }
 

@@ -31,11 +31,10 @@ export default function UploadPage() {
         },
     });
 
-    // Get semesters and modules for responsable's assigned year/filiere
-    const semesters = structureData?.years
-        ?.find((y: any) => y.name === user?.assignedYear)
-        ?.filieres?.find((f: any) => f.name === user?.assignedFiliere)
-        ?.semesters || [];
+    // Get semesters and modules for responsable's assigned cycle (filiere) and year code
+    const selectedCycle = structureData?.cycles?.find((c: any) => c.name === user?.assignedFiliere);
+    const selectedYearData = selectedCycle?.years?.find((y: any) => y.code === user?.assignedYear);
+    const semesters = selectedYearData?.semesters || [];
 
     const modules = semesters
         ?.find((s: any) => s.name === semester)
@@ -195,11 +194,14 @@ export default function UploadPage() {
                     </div>
                 </div>
 
-                {/* Semester Selection */}
+                {/* Semester Selection - all semesters of the responsable's assigned year */}
                 <div className="card">
                     <label htmlFor="semester" className="block text-sm font-medium text-gray-700 mb-3">
                         Semestre <span className="text-red-500">*</span>
                     </label>
+                    <p className="text-xs text-gray-500 mb-2">
+                        Vous pouvez déposer des ressources dans tous les semestres de votre année ({user?.assignedYear}).
+                    </p>
                     <select
                         id="semester"
                         value={semester}
@@ -210,7 +212,11 @@ export default function UploadPage() {
                         className="input-field"
                         required
                     >
-                        <option value="">Sélectionnez un semestre</option>
+                        <option value="">
+                            {semesters.length === 0 && structureData
+                                ? 'Aucun semestre configuré pour votre année'
+                                : 'Sélectionnez un semestre'}
+                        </option>
                         {semesters.map((sem: any) => (
                             <option key={sem.name} value={sem.name}>
                                 {sem.name}
