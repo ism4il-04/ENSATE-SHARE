@@ -44,16 +44,14 @@ export default function StatsPage() {
 
     return (
         <div className="p-8">
-            {/* Header */}
             <div className="mb-8">
-                <h1 className="text-3xl font-bold text-gray-900">Statistiques détaillées</h1>
-                <p className="text-gray-600 mt-2">Analyse et visualisation des données</p>
+                <h1 className="text-3xl font-bold text-atlas-800">Statistiques détaillées</h1>
+                <p className="text-atlas-600 mt-2">Analyse et visualisation des données</p>
             </div>
 
-            {/* Distribution by Year */}
-            <div className="card mb-6">
-                <h2 className="text-xl font-semibold text-gray-900 mb-6 flex items-center gap-2">
-                    <BarChart3 size={24} className="text-primary-500" />
+            <div className="card mb-6 border border-cream-300/60">
+                <h2 className="text-xl font-semibold text-atlas-800 mb-6 flex items-center gap-2">
+                    <BarChart3 size={24} className="text-accent-500" />
                     Distribution par année
                 </h2>
                 <div className="space-y-4">
@@ -61,31 +59,30 @@ export default function StatsPage() {
                         yearDistribution.map((item: any) => (
                             <div key={item._id}>
                                 <div className="flex items-center justify-between mb-2">
-                                    <span className="text-sm font-medium text-gray-700">{item._id}</span>
-                                    <div className="text-sm text-gray-600">
+                                    <span className="text-sm font-medium text-atlas-700">{item._id}</span>
+                                    <div className="text-sm text-atlas-600">
                                         <span className="font-semibold">{item.count}</span> fichiers
                                         <span className="mx-2">•</span>
                                         <span>{formatFileSize(item.totalSize)}</span>
                                     </div>
                                 </div>
-                                <div className="w-full bg-gray-200 rounded-full h-3">
+                                <div className="w-full bg-cream-200 rounded-full h-3">
                                     <div
-                                        className="bg-primary-500 h-3 rounded-full transition-all duration-500"
+                                        className="bg-accent-500 h-3 rounded-full transition-all duration-500"
                                         style={{ width: `${(item.count / maxYearCount) * 100}%` }}
-                                    ></div>
+                                    />
                                 </div>
                             </div>
                         ))
                     ) : (
-                        <p className="text-gray-500 text-center py-8">Aucune donnée disponible</p>
+                        <p className="text-atlas-500 text-center py-8">Aucune donnée disponible</p>
                     )}
                 </div>
             </div>
 
-            {/* Distribution by Filiere */}
-            <div className="card mb-6">
-                <h2 className="text-xl font-semibold text-gray-900 mb-6 flex items-center gap-2">
-                    <BarChart3 size={24} className="text-blue-500" />
+            <div className="card mb-6 border border-cream-300/60">
+                <h2 className="text-xl font-semibold text-atlas-800 mb-6 flex items-center gap-2">
+                    <BarChart3 size={24} className="text-atlas-500" />
                     Distribution par filière
                 </h2>
                 <div className="space-y-4">
@@ -93,50 +90,47 @@ export default function StatsPage() {
                         filiereDistribution.map((item: any) => (
                             <div key={item._id}>
                                 <div className="flex items-center justify-between mb-2">
-                                    <span className="text-sm font-medium text-gray-700">{item._id}</span>
-                                    <div className="text-sm text-gray-600">
+                                    <span className="text-sm font-medium text-atlas-700">{item._id}</span>
+                                    <div className="text-sm text-atlas-600">
                                         <span className="font-semibold">{item.count}</span> fichiers
                                         <span className="mx-2">•</span>
                                         <span>{formatFileSize(item.totalSize)}</span>
                                     </div>
                                 </div>
-                                <div className="w-full bg-gray-200 rounded-full h-3">
+                                <div className="w-full bg-cream-200 rounded-full h-3">
                                     <div
-                                        className="bg-blue-500 h-3 rounded-full transition-all duration-500"
+                                        className="bg-atlas-500 h-3 rounded-full transition-all duration-500"
                                         style={{ width: `${(item.count / maxFiliereCount) * 100}%` }}
-                                    ></div>
+                                    />
                                 </div>
                             </div>
                         ))
                     ) : (
-                        <p className="text-gray-500 text-center py-8">Aucune donnée disponible</p>
+                        <p className="text-atlas-500 text-center py-8">Aucune donnée disponible</p>
                     )}
                 </div>
             </div>
 
-            {/* Summary Stats */}
             <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-                <div className="card text-center">
-                    <p className="text-sm text-gray-600 mb-2">Moyenne fichiers/année</p>
-                    <p className="text-3xl font-bold text-gray-900">
+                <div className="card text-center border border-cream-300/60">
+                    <p className="text-sm text-atlas-600 mb-2">Moyenne fichiers/année</p>
+                    <p className="text-3xl font-bold text-atlas-800">
                         {yearDistribution && yearDistribution.length > 0
                             ? Math.round(yearDistribution.reduce((acc: number, y: any) => acc + y.count, 0) / yearDistribution.length)
                             : 0}
                     </p>
                 </div>
-
-                <div className="card text-center">
-                    <p className="text-sm text-gray-600 mb-2">Moyenne fichiers/filière</p>
-                    <p className="text-3xl font-bold text-gray-900">
+                <div className="card text-center border border-cream-300/60">
+                    <p className="text-sm text-atlas-600 mb-2">Moyenne fichiers/filière</p>
+                    <p className="text-3xl font-bold text-atlas-800">
                         {filiereDistribution && filiereDistribution.length > 0
                             ? Math.round(filiereDistribution.reduce((acc: number, f: any) => acc + f.count, 0) / filiereDistribution.length)
                             : 0}
                     </p>
                 </div>
-
-                <div className="card text-center">
-                    <p className="text-sm text-gray-600 mb-2">Taille moyenne/fichier</p>
-                    <p className="text-3xl font-bold text-gray-900">
+                <div className="card text-center border border-cream-300/60">
+                    <p className="text-sm text-atlas-600 mb-2">Taille moyenne/fichier</p>
+                    <p className="text-3xl font-bold text-atlas-800">
                         {dashboardStats?.totalFiles && dashboardStats?.totalStorage
                             ? formatFileSize(dashboardStats.totalStorage / dashboardStats.totalFiles)
                             : '0 B'}

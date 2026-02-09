@@ -44,8 +44,8 @@ export default function SuperadminDashboard() {
 
     if (isLoading) {
         return (
-            <div className="flex items-center justify-center min-h-screen">
-                <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary-500"></div>
+            <div className="flex items-center justify-center min-h-[60vh]">
+                <div className="animate-spin rounded-full h-12 w-12 border-2 border-cream-300 border-t-accent-500" />
             </div>
         );
     }
@@ -54,63 +54,63 @@ export default function SuperadminDashboard() {
         <div className="p-8">
             {/* Header */}
             <div className="mb-8">
-                <h1 className="text-3xl font-bold text-gray-900">Tableau de bord Superadmin</h1>
-                <p className="text-gray-600 mt-2">Vue d'ensemble de la plateforme ENSA-SHARE</p>
+                <h1 className="text-3xl font-bold text-atlas-800">Tableau de bord Superadmin</h1>
+                <p className="text-atlas-600 mt-2">Vue d'ensemble de la plateforme ENSA-SHARE</p>
             </div>
 
             {/* Stats Cards */}
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
-                <div className="card">
+                <div className="card border border-cream-300/60 shadow-sm">
                     <div className="flex items-center justify-between">
                         <div>
-                            <p className="text-sm text-gray-600">Total fichiers</p>
-                            <p className="text-3xl font-bold text-gray-900 mt-1">
+                            <p className="text-sm text-atlas-600">Total fichiers</p>
+                            <p className="text-3xl font-bold text-atlas-800 mt-1">
                                 {statsData?.totalFiles || 0}
                             </p>
                         </div>
-                        <div className="bg-primary-100 p-3 rounded-full">
-                            <FileText className="text-primary-600" size={24} />
+                        <div className="bg-accent-100 p-3 rounded-xl">
+                            <FileText className="text-accent-600" size={24} />
                         </div>
                     </div>
                 </div>
 
-                <div className="card">
+                <div className="card border border-cream-300/60 shadow-sm">
                     <div className="flex items-center justify-between">
                         <div>
-                            <p className="text-sm text-gray-600">Responsables</p>
-                            <p className="text-3xl font-bold text-gray-900 mt-1">
+                            <p className="text-sm text-atlas-600">Responsables</p>
+                            <p className="text-3xl font-bold text-atlas-800 mt-1">
                                 {statsData?.totalResponsables || 0}
                             </p>
                         </div>
-                        <div className="bg-blue-100 p-3 rounded-full">
-                            <Users className="text-blue-600" size={24} />
+                        <div className="bg-atlas-100 p-3 rounded-xl">
+                            <Users className="text-atlas-600" size={24} />
                         </div>
                     </div>
                 </div>
 
-                <div className="card">
+                <div className="card border border-cream-300/60 shadow-sm">
                     <div className="flex items-center justify-between">
                         <div>
-                            <p className="text-sm text-gray-600">Stockage total</p>
-                            <p className="text-3xl font-bold text-gray-900 mt-1">
+                            <p className="text-sm text-atlas-600">Stockage total</p>
+                            <p className="text-3xl font-bold text-atlas-800 mt-1">
                                 {formatFileSize(statsData?.totalStorage || 0)}
                             </p>
                         </div>
-                        <div className="bg-purple-100 p-3 rounded-full">
+                        <div className="bg-purple-100 p-3 rounded-xl">
                             <HardDrive className="text-purple-600" size={24} />
                         </div>
                     </div>
                 </div>
 
-                <div className="card">
+                <div className="card border border-cream-300/60 shadow-sm">
                     <div className="flex items-center justify-between">
                         <div>
-                            <p className="text-sm text-gray-600">Ce mois</p>
-                            <p className="text-3xl font-bold text-gray-900 mt-1">
+                            <p className="text-sm text-atlas-600">Ce mois</p>
+                            <p className="text-3xl font-bold text-atlas-800 mt-1">
                                 {statsData?.filesThisMonth || 0}
                             </p>
                         </div>
-                        <div className="bg-green-100 p-3 rounded-full">
+                        <div className="bg-green-100 p-3 rounded-xl">
                             <TrendingUp className="text-green-600" size={24} />
                         </div>
                     </div>
@@ -119,38 +119,38 @@ export default function SuperadminDashboard() {
 
             {/* Quick Actions */}
             <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
-                <Link href="/dashboard/superadmin/users" className="card hover:shadow-lg transition-shadow cursor-pointer">
+                <Link href="/dashboard/superadmin/users" className="card border border-cream-300/60 hover:shadow-lg hover:border-accent-200 transition-all cursor-pointer">
                     <div className="flex items-center gap-4">
-                        <div className="bg-primary-500 p-3 rounded-lg">
-                            <Users className="text-white" size={28} />
+                        <div className="bg-accent-500 p-3 rounded-xl text-white">
+                            <Users size={28} />
                         </div>
                         <div>
-                            <h3 className="font-semibold text-gray-900">Gérer les utilisateurs</h3>
-                            <p className="text-sm text-gray-600">Comptes responsables</p>
+                            <h3 className="font-semibold text-atlas-800">Gérer les utilisateurs</h3>
+                            <p className="text-sm text-atlas-600">Comptes responsables</p>
                         </div>
                     </div>
                 </Link>
 
-                <Link href="/dashboard/superadmin/files" className="card hover:shadow-lg transition-shadow cursor-pointer">
+                <Link href="/dashboard/superadmin/files" className="card border border-cream-300/60 hover:shadow-lg hover:border-accent-200 transition-all cursor-pointer">
                     <div className="flex items-center gap-4">
-                        <div className="bg-blue-500 p-3 rounded-lg">
-                            <FileText className="text-white" size={28} />
+                        <div className="bg-atlas-600 p-3 rounded-xl text-white">
+                            <FileText size={28} />
                         </div>
                         <div>
-                            <h3 className="font-semibold text-gray-900">Tous les fichiers</h3>
-                            <p className="text-sm text-gray-600">Modération globale</p>
+                            <h3 className="font-semibold text-atlas-800">Tous les fichiers</h3>
+                            <p className="text-sm text-atlas-600">Modération globale</p>
                         </div>
                     </div>
                 </Link>
 
-                <Link href="/dashboard/superadmin/structure" className="card hover:shadow-lg transition-shadow cursor-pointer">
+                <Link href="/dashboard/superadmin/structure" className="card border border-cream-300/60 hover:shadow-lg hover:border-accent-200 transition-all cursor-pointer">
                     <div className="flex items-center gap-4">
-                        <div className="bg-purple-500 p-3 rounded-lg">
-                            <Activity className="text-white" size={28} />
+                        <div className="bg-atlas-700 p-3 rounded-xl text-white">
+                            <Activity size={28} />
                         </div>
                         <div>
-                            <h3 className="font-semibold text-gray-900">Structure académique</h3>
-                            <p className="text-sm text-gray-600">Années, filières, modules</p>
+                            <h3 className="font-semibold text-atlas-800">Structure académique</h3>
+                            <p className="text-sm text-atlas-600">Années, filières, modules</p>
                         </div>
                     </div>
                 </Link>
@@ -158,8 +158,8 @@ export default function SuperadminDashboard() {
 
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
                 {/* File Distribution */}
-                <div className="card">
-                    <h2 className="text-xl font-semibold text-gray-900 mb-4">
+                <div className="card border border-cream-300/60">
+                    <h2 className="text-xl font-semibold text-atlas-800 mb-4">
                         Distribution par filière
                     </h2>
                     {distributionData && distributionData.length > 0 ? (
@@ -167,32 +167,32 @@ export default function SuperadminDashboard() {
                             {distributionData.map((item: any) => (
                                 <div key={item._id}>
                                     <div className="flex items-center justify-between mb-2">
-                                        <span className="text-sm font-medium text-gray-700">{item._id}</span>
-                                        <span className="text-sm text-gray-600">
+                                        <span className="text-sm font-medium text-atlas-700">{item._id}</span>
+                                        <span className="text-sm text-atlas-600">
                                             {item.count} fichiers ({formatFileSize(item.totalSize)})
                                         </span>
                                     </div>
-                                    <div className="w-full bg-gray-200 rounded-full h-2">
+                                    <div className="w-full bg-cream-200 rounded-full h-2">
                                         <div
-                                            className="bg-primary-500 h-2 rounded-full"
+                                            className="bg-accent-500 h-2 rounded-full transition-all"
                                             style={{
                                                 width: `${(item.count / (statsData?.totalFiles || 1)) * 100}%`,
                                             }}
-                                        ></div>
+                                        />
                                     </div>
                                 </div>
                             ))}
                         </div>
                     ) : (
-                        <p className="text-gray-500 text-center py-8">Aucune donnée disponible</p>
+                        <p className="text-atlas-500 text-center py-8">Aucune donnée disponible</p>
                     )}
                 </div>
 
                 {/* Recent Uploads */}
-                <div className="card">
+                <div className="card border border-cream-300/60">
                     <div className="flex items-center justify-between mb-4">
-                        <h2 className="text-xl font-semibold text-gray-900">Uploads récents</h2>
-                        <Link href="/dashboard/superadmin/files" className="text-primary-500 hover:text-primary-600 text-sm font-medium">
+                        <h2 className="text-xl font-semibold text-atlas-800">Uploads récents</h2>
+                        <Link href="/dashboard/superadmin/files" className="text-accent-600 hover:text-accent-700 text-sm font-medium">
                             Voir tout →
                         </Link>
                     </div>
@@ -203,24 +203,24 @@ export default function SuperadminDashboard() {
                                 const thumbnailUrl = generateThumbnailUrl(file.fileUrl, file.fileType);
 
                                 return (
-                                    <div key={file._id} className="flex items-start gap-3 p-3 bg-gray-50 rounded-lg hover:bg-gray-100 transition-colors">
+                                    <div key={file._id} className="flex items-start gap-3 p-3 bg-cream-50 rounded-lg hover:bg-cream-100 transition-colors border border-cream-300/40">
                                         {file.fileType === 'pdf' ? (
                                             <img
                                                 src={thumbnailUrl}
                                                 alt="Preview"
-                                                className="w-16 h-16 object-cover rounded border border-gray-200 flex-shrink-0"
+                                                className="w-16 h-16 object-cover rounded border border-cream-300 flex-shrink-0"
                                                 onError={(e) => {
                                                     (e.target as HTMLImageElement).style.display = 'none';
                                                 }}
                                             />
                                         ) : (
-                                            <div className="w-16 h-16 bg-white rounded flex items-center justify-center border border-gray-200 flex-shrink-0">
-                                                <FileText size={28} className="text-gray-400" />
+                                            <div className="w-16 h-16 bg-white rounded flex items-center justify-center border border-cream-300 flex-shrink-0">
+                                                <FileText size={28} className="text-atlas-400" />
                                             </div>
                                         )}
                                         <div className="flex-1 min-w-0">
                                             <div className="flex items-start justify-between gap-2 mb-1">
-                                                <p className="text-sm font-medium text-gray-900 truncate">
+                                                <p className="text-sm font-medium text-atlas-800 truncate">
                                                     {file.displayName || file.fileName}
                                                 </p>
                                                 <span className={`inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium ${categoryColors.bg} ${categoryColors.text} flex-shrink-0`}>
@@ -228,23 +228,23 @@ export default function SuperadminDashboard() {
                                                 </span>
                                             </div>
                                             {file.fileLabel && (
-                                                <p className="text-xs text-gray-600 italic mb-1">
-                                                    {file.fileLabel}
-                                                </p>
+                                            <p className="text-xs text-atlas-600 italic mb-1">
+                                                {file.fileLabel}
+                                            </p>
                                             )}
-                                            <p className="text-xs text-gray-600">
+                                            <p className="text-xs text-atlas-600">
                                                 {file.year} - {file.filiere} - {file.module}
                                             </p>
                                             <div className="flex items-center gap-2 mt-1">
-                                                <p className="text-xs text-gray-500">
+                                                <p className="text-xs text-atlas-500">
                                                     Par {file.uploadedBy?.firstName} {file.uploadedBy?.lastName}
                                                 </p>
-                                                <span className="text-gray-400">•</span>
-                                                <p className="text-xs text-gray-500">
+                                                <span className="text-atlas-400">•</span>
+                                                <p className="text-xs text-atlas-500">
                                                     {formatDate(file.createdAt)}
                                                 </p>
-                                                <span className="text-gray-400">•</span>
-                                                <span className="text-xs text-gray-500">
+                                                <span className="text-atlas-400">•</span>
+                                                <span className="text-xs text-atlas-500">
                                                     {formatFileSize(file.fileSize)}
                                                 </span>
                                             </div>
@@ -254,7 +254,7 @@ export default function SuperadminDashboard() {
                             })}
                         </div>
                     ) : (
-                        <p className="text-gray-500 text-center py-8">Aucun upload récent</p>
+                        <p className="text-atlas-500 text-center py-8">Aucun upload récent</p>
                     )}
                 </div>
             </div>

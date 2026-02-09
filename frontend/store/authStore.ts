@@ -7,6 +7,7 @@ interface AuthState {
     token: string | null;
     isAuthenticated: boolean;
     isLoading: boolean;
+    isInitialized: boolean; // true only after first checkAuth() has completed (prevents flash + wrong redirect)
     error: string | null;
     login: (email: string, password: string) => Promise<void>;
     logout: () => Promise<void>;
@@ -20,6 +21,7 @@ export const useAuthStore = create<AuthState>((set) => ({
     token: null,
     isAuthenticated: false,
     isLoading: false,
+    isInitialized: false,
     error: null,
 
     login: async (email: string, password: string) => {
@@ -65,9 +67,10 @@ export const useAuthStore = create<AuthState>((set) => ({
     },
 
     checkAuth: async () => {
+        if (typeof window === 'undefined') return;
         const token = localStorage.getItem('token');
         if (!token) {
-            set({ isAuthenticated: false, user: null });
+            set({ isAuthenticated: false, user: null, isInitialized: true, isLoading: false });
             return;
         }
 
@@ -79,6 +82,7 @@ export const useAuthStore = create<AuthState>((set) => ({
                 token,
                 isAuthenticated: true,
                 isLoading: false,
+                isInitialized: true,
             });
         } catch (error) {
             localStorage.removeItem('token');
@@ -87,6 +91,7 @@ export const useAuthStore = create<AuthState>((set) => ({
                 token: null,
                 isAuthenticated: false,
                 isLoading: false,
+                isInitialized: true,
             });
         }
     },

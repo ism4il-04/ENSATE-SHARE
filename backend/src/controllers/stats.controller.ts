@@ -140,19 +140,22 @@ export const getActivityLogs = async (
     res: Response
 ): Promise<void> => {
     try {
-        const { page = 1, limit = 50 } = req.query;
+        const { page = 1, limit = 50, action } = req.query;
 
         const pageNum = parseInt(page as string);
         const limitNum = parseInt(limit as string);
         const skip = (pageNum - 1) * limitNum;
 
-        const logs = await ActivityLog.find()
+        const filter: Record<string, unknown> = {};
+        if (action && typeof action === 'string') filter.action = action;
+
+        const logs = await ActivityLog.find(filter)
             .populate('userId', 'firstName lastName email')
             .sort({ timestamp: -1 })
             .skip(skip)
             .limit(limitNum);
 
-        const total = await ActivityLog.countDocuments();
+        const total = await ActivityLog.countDocuments(filter);
 
         res.status(200).json({
             success: true,

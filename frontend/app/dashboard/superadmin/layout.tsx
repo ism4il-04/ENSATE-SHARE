@@ -8,7 +8,7 @@ export default function SuperadminDashboardLayout({
 }) {
     return (
         <ProtectedRoute allowedRoles={['superadmin']}>
-            <div className="flex min-h-screen bg-gray-50">
+            <div className="flex min-h-screen bg-cream-100">
                 <Sidebar />
                 <main className="flex-1 overflow-auto">
                     {children}
