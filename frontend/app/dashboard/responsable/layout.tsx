@@ -1,18 +1,67 @@
+'use client';
+
 import ProtectedRoute from '@/components/ProtectedRoute';
 import Sidebar from '@/components/Sidebar';
+import { useState } from 'react';
 
 export default function ResponsableDashboardLayout({
     children,
 }: {
     children: React.ReactNode;
 }) {
+    const [sidebarOpen, setSidebarOpen] = useState(false);
+
     return (
         <ProtectedRoute allowedRoles={['responsable']}>
-            <div className="flex min-h-screen bg-gray-50">
-                <Sidebar />
-                <main className="flex-1 overflow-auto">
-                    {children}
-                </main>
+            <div className="min-h-screen bg-gray-50 flex flex-col">
+                {/* Mobile top bar */}
+                <div className="md:hidden flex items-center justify-between px-4 py-3 border-b bg-white">
+                    <button
+                        type="button"
+                        onClick={() => setSidebarOpen((prev) => !prev)}
+                        className="inline-flex items-center justify-center rounded-md p-2 text-gray-700 hover:bg-gray-100 focus:outline-none focus:ring-2 focus:ring-primary-500"
+                    >
+                        <span className="sr-only">Ouvrir le menu</span>
+                        <svg
+                            className="h-6 w-6"
+                            viewBox="0 0 24 24"
+                            fill="none"
+                            stroke="currentColor"
+                            strokeWidth="2"
+                            strokeLinecap="round"
+                            strokeLinejoin="round"
+                        >
+                            <line x1="3" y1="6" x2="21" y2="6" />
+                            <line x1="3" y1="12" x2="21" y2="12" />
+                            <line x1="3" y1="18" x2="21" y2="18" />
+                        </svg>
+                    </button>
+                    <span className="text-sm font-semibold text-gray-900">ENSA-SHARE</span>
+                </div>
+
+                <div className="flex flex-1 min-h-0">
+                    {/* Mobile overlay sidebar */}
+                    {sidebarOpen && (
+                        <div className="fixed inset-0 z-40 flex md:hidden">
+                            <div
+                                className="fixed inset-0 bg-black/40"
+                                onClick={() => setSidebarOpen(false)}
+                            />
+                            <div className="relative z-50 w-64 h-full bg-white shadow-lg">
+                                <Sidebar />
+                            </div>
+                        </div>
+                    )}
+
+                    {/* Desktop sidebar */}
+                    <div className="hidden md:block">
+                        <Sidebar />
+                    </div>
+
+                    <main className="flex-1 overflow-auto w-full px-4 py-6 sm:px-6 lg:px-8">
+                        {children}
+                    </main>
+                </div>
             </div>
         </ProtectedRoute>
     );
