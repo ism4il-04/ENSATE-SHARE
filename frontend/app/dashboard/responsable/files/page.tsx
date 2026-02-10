@@ -32,7 +32,9 @@ export default function FilesPage() {
 
     const selectedCycle = structureData?.cycles?.find((c: any) => c.name === user?.assignedFiliere);
     const selectedYearData = selectedCycle?.years?.find((y: any) => y.code === user?.assignedYear);
-    const modules = [...new Set(selectedYearData?.semesters?.flatMap((s: any) => s.modules || []) || [])];
+    const modules = (
+        selectedYearData?.semesters?.flatMap((s: any) => (s.modules as string[]) || []) || []
+    ) as string[];
 
     // Fetch files
     const { data: filesData, isLoading } = useQuery({

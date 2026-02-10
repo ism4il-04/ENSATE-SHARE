@@ -94,7 +94,8 @@ export default function StructurePage() {
 
     const updateCycle = (cycleIndex: number, field: 'name' | 'cycle', value: string) => {
         const cycles = [...structureData!.cycles];
-        (cycles[cycleIndex] as Record<string, unknown>)[field] = value;
+        const current = cycles[cycleIndex];
+        cycles[cycleIndex] = { ...current, [field]: value };
         setStructureData({ ...structureData!, cycles });
     };
 

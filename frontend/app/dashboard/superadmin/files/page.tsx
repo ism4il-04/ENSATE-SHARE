@@ -74,7 +74,9 @@ export default function FilesPage() {
 
     const selectedCycleData = structureData?.cycles?.find((c: any) => c.name === selectedFiliere);
     const selectedYearData = selectedCycleData?.years?.find((y: any) => y.code === selectedYear);
-    const modulesForFilter = [...new Set(selectedYearData?.semesters?.flatMap((s: any) => s.modules || []) || [])];
+    const modulesForFilter = (
+        selectedYearData?.semesters?.flatMap((s: any) => (s.modules as string[]) || []) || []
+    ) as string[];
 
     return (
         <div className="p-8">
