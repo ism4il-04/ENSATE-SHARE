@@ -98,7 +98,7 @@ export const getFileById = async (req: AuthRequest, res: Response): Promise<void
     }
 };
 
-// @desc    Upload a file
+import { ensureDrivePath } from '../utils/driveUtils';
 // @route   POST /api/files
 // @access  Private (Responsable/Superadmin)
 export const uploadFile = async (req: AuthRequest, res: Response): Promise<void> => {
@@ -203,11 +203,20 @@ export const uploadFile = async (req: AuthRequest, res: Response): Promise<void>
         bufferStream.push(req.file.buffer);
         bufferStream.push(null);
 
+        // Ensure folder structure exists
+        const targetFolderId = await ensureDrivePath({
+            filiere,
+            year,
+            semester,
+            module,
+            fileCategory
+        });
+
         // Upload to Google Drive
         const driveResponse = await drive.files.create({
             requestBody: {
                 name: sanitizedFilename,
-                parents: [FOLDER_ID], // Upload to specific folder
+                parents: [targetFolderId], // Upload to the dynamically created folder
             },
             media: {
                 mimeType: req.file.mimetype,
@@ -225,6 +234,32 @@ export const uploadFile = async (req: AuthRequest, res: Response): Promise<void>
             },
         });
 
+        // Check if thumbnail exists, if not, wait and refetch (Drive takes time to generate it)
+        let thumbnailLink = driveResponse.data.thumbnailLink;
+
+        // Retry logic for thumbnails (PPTX often takes longer)
+        if (!thumbnailLink) {
+            let retries = 0;
+            const maxRetries = 3;
+
+            while (!thumbnailLink && retries < maxRetries) {
+                retries++;
+                // console.log(`Thumbnail missing, retrying (${retries}/${maxRetries})...`);
+                await new Promise(resolve => setTimeout(resolve, 2000)); // Wait 2s
+
+                try {
+                    const updatedFile = await drive.files.get({
+                        fileId: driveResponse.data.id!,
+                        fields: 'thumbnailLink',
+                    });
+                    thumbnailLink = updatedFile.data.thumbnailLink;
+                    if (thumbnailLink) break;
+                } catch (err) {
+                    console.error('Failed to refetch thumbnail:', err);
+                }
+            }
+        }
+
         // Create file document
         const file = await File.create({
             fileName: sanitizedFilename,
@@ -236,7 +271,7 @@ export const uploadFile = async (req: AuthRequest, res: Response): Promise<void>
             driveId: driveResponse.data.id,
             webViewLink: driveResponse.data.webViewLink,
             webContentLink: driveResponse.data.webContentLink,
-            thumbnailLink: driveResponse.data.thumbnailLink,
+            thumbnailLink: thumbnailLink,
             year,
             filiere,
             semester,
@@ -448,6 +483,72 @@ export const downloadFile = async (req: AuthRequest, res: Response): Promise<voi
         res.status(500).json({
             success: false,
             message: 'Error downloading file',
+            error: error.message,
+        });
+    }
+};
+
+// @desc    Sync thumbnails from Google Drive for files missing them
+// @route   GET /api/files/sync-thumbnails
+// @access  Private (Superadmin only) - for debugging/maintenance
+export const syncThumbnails = async (req: AuthRequest, res: Response): Promise<void> => {
+    const fs = require('fs');
+    const logPath = path.join(__dirname, '../../debug_sync.txt');
+    const log = (msg: string) => fs.appendFileSync(logPath, msg + '\n');
+
+    try {
+        log('--- Sync triggered --- ' + new Date().toISOString());
+
+        // Find files with driveId but no thumbnailLink
+        const filesToSync = await File.find({
+            driveId: { $exists: true, $ne: null },
+            $or: [
+                { thumbnailLink: { $exists: false } },
+                { thumbnailLink: null },
+                { thumbnailLink: '' }
+            ]
+        }).limit(50); // Process in batches
+
+        log(`Found ${filesToSync.length} files to sync.`);
+        const results = [];
+
+        for (const file of filesToSync) {
+            log(`Syncing thumbnail for ${file.fileName} (${file.driveId})...`);
+            try {
+                // Fetch file metadata from Drive
+                const driveFile = await drive.files.get({
+                    fileId: file.driveId!,
+                    fields: 'thumbnailLink, hasThumbnail, id, name, mimeType'
+                });
+
+                log(`Drive response for ${file.fileName}: ` + JSON.stringify(driveFile.data));
+
+                if (driveFile.data.thumbnailLink) {
+                    file.thumbnailLink = driveFile.data.thumbnailLink;
+                    await file.save();
+                    results.push({ id: file._id, name: file.fileName, status: 'Updated', link: 'Found' });
+                    log('Updated DB with thumbnailLink.');
+                } else {
+                    results.push({ id: file._id, name: file.fileName, status: 'Skipped', link: 'Not found in Drive' });
+                    log('No thumbnailLink in Drive response.');
+                }
+            } catch (err: any) {
+                console.error(`Error syncing file ${file.fileName}:`, err.message);
+                log(`Error syncing ${file.fileName}: ${err.message}`);
+                results.push({ id: file._id, name: file.fileName, status: 'Error', error: err.message });
+            }
+        }
+
+        res.status(200).json({
+            success: true,
+            count: filesToSync.length,
+            results
+        });
+
+    } catch (error: any) {
+        res.status(500).json({
+            success: false,
+            message: 'Error syncing thumbnails',
             error: error.message,
         });
     }

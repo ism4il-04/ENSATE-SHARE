@@ -7,6 +7,7 @@ import { filesAPI, structureAPI } from '@/lib/api';
 import { useAuthStore } from '@/store/authStore';
 import { FileText, Download, Edit, Trash2, Search, X, Image as ImageIcon } from 'lucide-react';
 import { generateThumbnailUrl, getFileCategoryColor } from '@/lib/utils/fileHelpers';
+import DocumentPreviewModal from '@/components/DocumentPreviewModal';
 
 export default function FilesPage() {
     const queryClient = useQueryClient();
@@ -17,6 +18,7 @@ export default function FilesPage() {
     const [selectedCategory, setSelectedCategory] = useState('');
     const [page, setPage] = useState(1);
     const [editingFile, setEditingFile] = useState<any>(null);
+    const [previewFile, setPreviewFile] = useState<any>(null);
     const [editFileName, setEditFileName] = useState('');
     const [editModule, setEditModule] = useState('');
     const [editFileCategory, setEditFileCategory] = useState<'Cours' | 'TD' | 'TP' | 'EXAM' | 'Autre'>('Autre');
@@ -208,38 +210,52 @@ export default function FilesPage() {
                                         const categoryColors = getFileCategoryColor(file.fileCategory || 'Autre');
                                         const thumbnailUrl = generateThumbnailUrl(file.fileUrl, file.fileType, file.thumbnailLink);
 
-                                        const viewerHref = `/viewer?id=${encodeURIComponent(
-                                            file._id
-                                        )}&url=${encodeURIComponent(file.fileUrl)}&name=${encodeURIComponent(
-                                            file.displayName || file.fileName
-                                        )}&type=${encodeURIComponent(file.fileType)}`;
+
 
                                         return (
                                             <tr key={file._id} className="border-b border-gray-100 hover:bg-gray-50">
                                                 <td className="py-3 px-4">
-                                                    <Link href={viewerHref} title="Ouvrir le document">
-                                                        {file.fileType === 'pdf' ? (
-                                                            <img
-                                                                src={thumbnailUrl}
-                                                                alt="Preview"
-                                                                className="w-12 h-12 object-cover rounded border border-gray-200"
-                                                                onError={(e) => {
-                                                                    (e.target as HTMLImageElement).style.display = 'none';
-                                                                }}
-                                                            />
-                                                        ) : (
-                                                            <div className="w-12 h-12 bg-gray-100 rounded flex items-center justify-center">
-                                                                <FileText size={24} className="text-gray-400" />
-                                                            </div>
-                                                        )}
-                                                    </Link>
+                                                    <button
+                                                        onClick={() => setPreviewFile({
+                                                            id: file._id,
+                                                            name: file.displayName || file.fileName,
+                                                            url: file.fileUrl,
+                                                            type: file.fileType
+                                                        })}
+                                                        className="block"
+                                                        title="Ouvrir le document"
+                                                    >
+                                                        <div className="relative w-12 h-12 bg-gray-100 rounded flex items-center justify-center overflow-hidden border border-gray-200">
+                                                            <FileText size={24} className="text-gray-400" />
+                                                            {thumbnailUrl && (
+                                                                <img
+                                                                    src={thumbnailUrl}
+                                                                    alt="Preview"
+                                                                    className="absolute inset-0 w-full h-full object-cover"
+                                                                    onError={(e) => {
+                                                                        (e.target as HTMLImageElement).style.display = 'none';
+                                                                    }}
+                                                                />
+                                                            )}
+                                                        </div>
+                                                    </button>
                                                 </td>
+
                                                 <td className="py-3 px-4">
-                                                    <Link href={viewerHref} title="Ouvrir le document">
+                                                    <button
+                                                        onClick={() => setPreviewFile({
+                                                            id: file._id,
+                                                            name: file.displayName || file.fileName,
+                                                            url: file.fileUrl,
+                                                            type: file.fileType
+                                                        })}
+                                                        className="text-left"
+                                                        title="Ouvrir le document"
+                                                    >
                                                         <div className="flex flex-col gap-1">
                                                             <div className="flex items-center gap-2">
                                                                 <FileText size={16} className="text-gray-400" />
-                                                                <span className="text-sm text-gray-900 font-medium">
+                                                                <span className="text-sm text-gray-900 font-medium hover:text-primary-600 transition-colors">
                                                                     {file.displayName || file.fileName}
                                                                 </span>
                                                             </div>
@@ -249,7 +265,7 @@ export default function FilesPage() {
                                                                 </span>
                                                             )}
                                                         </div>
-                                                    </Link>
+                                                    </button>
                                                 </td>
                                                 <td className="py-3 px-4">
                                                     <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${categoryColors.bg} ${categoryColors.text}`}>
@@ -326,77 +342,85 @@ export default function FilesPage() {
             </div>
 
             {/* Edit Modal */}
-            {editingFile && (
-                <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-                    <div className="bg-white rounded-lg p-6 max-w-md w-full mx-4">
-                        <div className="flex items-center justify-between mb-4">
-                            <h3 className="text-lg font-semibold text-gray-900">Modifier le fichier</h3>
-                            <button onClick={() => setEditingFile(null)} className="text-gray-400 hover:text-gray-600">
-                                <X size={24} />
-                            </button>
-                        </div>
-
-                        <div className="space-y-4">
-                            <div>
-                                <label className="block text-sm font-medium text-gray-700 mb-2">Nom du fichier</label>
-                                <input
-                                    type="text"
-                                    value={editFileName}
-                                    onChange={(e) => setEditFileName(e.target.value)}
-                                    className="input-field"
-                                />
+            {
+                editingFile && (
+                    <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+                        <div className="bg-white rounded-lg p-6 max-w-md w-full mx-4">
+                            <div className="flex items-center justify-between mb-4">
+                                <h3 className="text-lg font-semibold text-gray-900">Modifier le fichier</h3>
+                                <button onClick={() => setEditingFile(null)} className="text-gray-400 hover:text-gray-600">
+                                    <X size={24} />
+                                </button>
                             </div>
 
-                            <div>
-                                <label className="block text-sm font-medium text-gray-700 mb-2">Module</label>
-                                <select value={editModule} onChange={(e) => setEditModule(e.target.value)} className="input-field">
-                                    {modules.map((mod: string) => (
-                                        <option key={mod} value={mod}>
-                                            {mod}
-                                        </option>
-                                    ))}
-                                </select>
+                            <div className="space-y-4">
+                                <div>
+                                    <label className="block text-sm font-medium text-gray-700 mb-2">Nom du fichier</label>
+                                    <input
+                                        type="text"
+                                        value={editFileName}
+                                        onChange={(e) => setEditFileName(e.target.value)}
+                                        className="input-field"
+                                    />
+                                </div>
+
+                                <div>
+                                    <label className="block text-sm font-medium text-gray-700 mb-2">Module</label>
+                                    <select value={editModule} onChange={(e) => setEditModule(e.target.value)} className="input-field">
+                                        {modules.map((mod: string) => (
+                                            <option key={mod} value={mod}>
+                                                {mod}
+                                            </option>
+                                        ))}
+                                    </select>
+                                </div>
+
+                                <div>
+                                    <label className="block text-sm font-medium text-gray-700 mb-2">Type de fichier</label>
+                                    <select
+                                        value={editFileCategory}
+                                        onChange={(e) => setEditFileCategory(e.target.value as any)}
+                                        className="input-field"
+                                    >
+                                        <option value="Cours">Cours</option>
+                                        <option value="TD">TD</option>
+                                        <option value="TP">TP</option>
+                                        <option value="EXAM">EXAM</option>
+                                        <option value="Autre">Autre</option>
+                                    </select>
+                                </div>
+
+                                <div>
+                                    <label className="block text-sm font-medium text-gray-700 mb-2">Label personnalisé (optionnel)</label>
+                                    <input
+                                        type="text"
+                                        value={editFileLabel}
+                                        onChange={(e) => setEditFileLabel(e.target.value)}
+                                        placeholder='Ex: "Cours n°1", "TD Chapitre 3"'
+                                        className="input-field"
+                                        maxLength={100}
+                                    />
+                                </div>
                             </div>
 
-                            <div>
-                                <label className="block text-sm font-medium text-gray-700 mb-2">Type de fichier</label>
-                                <select
-                                    value={editFileCategory}
-                                    onChange={(e) => setEditFileCategory(e.target.value as any)}
-                                    className="input-field"
-                                >
-                                    <option value="Cours">Cours</option>
-                                    <option value="TD">TD</option>
-                                    <option value="TP">TP</option>
-                                    <option value="EXAM">EXAM</option>
-                                    <option value="Autre">Autre</option>
-                                </select>
+                            <div className="flex gap-3 mt-6">
+                                <button onClick={() => setEditingFile(null)} className="btn-outline flex-1">
+                                    Annuler
+                                </button>
+                                <button onClick={handleSaveEdit} disabled={updateMutation.isPending} className="btn-primary flex-1">
+                                    {updateMutation.isPending ? 'Enregistrement...' : 'Enregistrer'}
+                                </button>
                             </div>
-
-                            <div>
-                                <label className="block text-sm font-medium text-gray-700 mb-2">Label personnalisé (optionnel)</label>
-                                <input
-                                    type="text"
-                                    value={editFileLabel}
-                                    onChange={(e) => setEditFileLabel(e.target.value)}
-                                    placeholder='Ex: "Cours n°1", "TD Chapitre 3"'
-                                    className="input-field"
-                                    maxLength={100}
-                                />
-                            </div>
-                        </div>
-
-                        <div className="flex gap-3 mt-6">
-                            <button onClick={() => setEditingFile(null)} className="btn-outline flex-1">
-                                Annuler
-                            </button>
-                            <button onClick={handleSaveEdit} disabled={updateMutation.isPending} className="btn-primary flex-1">
-                                {updateMutation.isPending ? 'Enregistrement...' : 'Enregistrer'}
-                            </button>
                         </div>
                     </div>
-                </div>
-            )}
-        </div>
+                )
+            }
+
+            <DocumentPreviewModal
+                isOpen={!!previewFile}
+                onClose={() => setPreviewFile(null)}
+                file={previewFile}
+            />
+        </div >
     );
 }

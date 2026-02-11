@@ -6,6 +6,7 @@ import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { filesAPI, structureAPI } from '@/lib/api';
 import { FileText, Download, Trash2, Search, Filter } from 'lucide-react';
 import { generateThumbnailUrl, getFileCategoryColor } from '@/lib/utils/fileHelpers';
+import DocumentPreviewModal from '@/components/DocumentPreviewModal';
 
 export default function FilesPage() {
     const queryClient = useQueryClient();
@@ -16,6 +17,7 @@ export default function FilesPage() {
     const [selectedModule, setSelectedModule] = useState('');
     const [selectedCategory, setSelectedCategory] = useState('');
     const [page, setPage] = useState(1);
+    const [previewFile, setPreviewFile] = useState<any>(null);
 
     // Fetch academic structure
     const { data: structureData } = useQuery({
@@ -219,48 +221,64 @@ export default function FilesPage() {
                                         const categoryColors = getFileCategoryColor(file.fileCategory || 'Autre');
                                         const thumbnailUrl = generateThumbnailUrl(file.fileUrl, file.fileType, file.thumbnailLink);
 
-                                        const viewerHref = `/viewer?id=${encodeURIComponent(
-                                            file._id
-                                        )}&url=${encodeURIComponent(file.fileUrl)}&name=${encodeURIComponent(
-                                            file.displayName || file.fileName
-                                        )}&type=${encodeURIComponent(file.fileType)}`;
+
 
                                         return (
                                             <tr key={file._id} className="border-b border-gray-100 hover:bg-gray-50">
                                                 <td className="py-3 px-4">
-                                                    <Link href={viewerHref} title="Ouvrir le document">
-                                                        {file.fileType === 'pdf' ? (
-                                                            <img
-                                                                src={thumbnailUrl}
-                                                                alt="Preview"
-                                                                className="w-12 h-12 object-cover rounded border border-gray-200"
-                                                                onError={(e) => {
-                                                                    (e.target as HTMLImageElement).style.display = 'none';
-                                                                }}
-                                                            />
-                                                        ) : (
-                                                            <div className="w-12 h-12 bg-gray-100 rounded flex items-center justify-center">
-                                                                <FileText size={24} className="text-gray-400" />
-                                                            </div>
-                                                        )}
-                                                    </Link>
-                                                </td>
-                                                <td className="py-3 px-4">
-                                                    <Link href={viewerHref} title="Ouvrir le document">
-                                                        <div className="flex flex-col gap-1">
-                                                            <div className="flex items-center gap-2">
-                                                                <FileText size={16} className="text-gray-400" />
-                                                                <span className="text-sm text-gray-900 font-medium">
-                                                                    {file.displayName || file.fileName}
-                                                                </span>
-                                                            </div>
-                                                            {file.fileLabel && (
-                                                                <span className="text-xs text-gray-600 italic ml-6">
-                                                                    {file.fileLabel}
-                                                                </span>
+                                                    <button
+                                                        onClick={() => setPreviewFile({
+                                                            id: file._id,
+                                                            name: file.displayName || file.fileName,
+                                                            url: file.fileUrl,
+                                                            type: file.fileType
+                                                        })}
+                                                        className="block"
+                                                        title="Ouvrir le document"
+                                                    >
+                                                        <div className="relative w-12 h-12 bg-gray-100 rounded flex items-center justify-center overflow-hidden border border-gray-200">
+                                                            <FileText size={24} className="text-gray-400" />
+                                                            {thumbnailUrl && (
+                                                                <img
+                                                                    src={thumbnailUrl}
+                                                                    alt="Preview"
+                                                                    className="absolute inset-0 w-full h-full object-cover"
+                                                                    onError={(e) => {
+                                                                        (e.target as HTMLImageElement).style.display = 'none';
+                                                                    }}
+                                                                />
                                                             )}
                                                         </div>
-                                                    </Link>
+                                                    </button>
+                                                </td>
+
+                                                <td className="py-3 px-4">
+                                                    <td className="py-3 px-4">
+                                                        <button
+                                                            onClick={() => setPreviewFile({
+                                                                id: file._id,
+                                                                name: file.displayName || file.fileName,
+                                                                url: file.fileUrl,
+                                                                type: file.fileType
+                                                            })}
+                                                            className="text-left"
+                                                            title="Ouvrir le document"
+                                                        >
+                                                            <div className="flex flex-col gap-1">
+                                                                <div className="flex items-center gap-2">
+                                                                    <FileText size={16} className="text-gray-400" />
+                                                                    <span className="text-sm text-gray-900 font-medium hover:text-primary-600 transition-colors">
+                                                                        {file.displayName || file.fileName}
+                                                                    </span>
+                                                                </div>
+                                                                {file.fileLabel && (
+                                                                    <span className="text-xs text-gray-600 italic ml-6">
+                                                                        {file.fileLabel}
+                                                                    </span>
+                                                                )}
+                                                            </div>
+                                                        </button>
+                                                    </td>
                                                 </td>
                                                 <td className="py-3 px-4">
                                                     <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${categoryColors.bg} ${categoryColors.text}`}>
@@ -333,6 +351,12 @@ export default function FilesPage() {
                     </div>
                 )}
             </div>
+
+            <DocumentPreviewModal
+                isOpen={!!previewFile}
+                onClose={() => setPreviewFile(null)}
+                file={previewFile}
+            />
         </div>
     );
 }

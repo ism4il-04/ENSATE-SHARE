@@ -8,34 +8,40 @@
  * @returns Thumbnail URL for PDFs, original URL for others
  */
 export const generateThumbnailUrl = (cloudinaryUrl: string, fileType: string, thumbnailLink?: string): string => {
-    // If it's a Google Drive file with a thumbnail link, use it directly
+    // 1. Priority: Google Drive thumbnail link (works for all file types if generated)
     if (thumbnailLink) {
         return thumbnailLink;
     }
 
-    // Standard Cloudinary logic for images and PDFs
-    if (!['jpg', 'jpeg', 'png', 'gif', 'pdf'].includes(fileType.toLowerCase())) {
-        return '';
+    // 2. Fallback: Cloudinary logic (only for specific types)
+    // If it's a Cloudinary URL, we can use their transformation API
+    const isCloudinary = cloudinaryUrl.includes('cloudinary');
+
+    if (isCloudinary && ['jpg', 'jpeg', 'png', 'gif', 'pdf'].includes(fileType.toLowerCase())) {
+        // Default transformations
+        // w_200,h_200,c_fill,f_jpg,pg_1 = width 200, height 200, fill crop, jpg format, page 1
+        const transformations = 'w_200,h_200,c_fill,f_jpg,pg_1';
+
+        // Insert transformations into the URL
+        const uploadIndex = cloudinaryUrl.indexOf('/upload/');
+        if (uploadIndex === -1) return cloudinaryUrl;
+
+        let modifiedUrl = cloudinaryUrl;
+        // Legacy fix for PDF thumbnails in Cloudinary
+        if (fileType.toLowerCase() === 'pdf' && modifiedUrl.includes('/raw/upload/')) {
+            modifiedUrl = modifiedUrl.replace('/raw/upload/', '/image/upload/');
+        }
+
+        return modifiedUrl.slice(0, uploadIndex + 8) + transformations + '/' + modifiedUrl.slice(uploadIndex + 8);
     }
 
-    // Default transformations
-    // w_200,h_200,c_fill,f_jpg,pg_1 = width 200, height 200, fill crop, jpg format, page 1
-    const transformations = 'w_200,h_200,c_fill,f_jpg,pg_1';
-
-    // Insert transformations into the URL
-    const uploadIndex = cloudinaryUrl.indexOf('/upload/');
-    if (uploadIndex === -1) return cloudinaryUrl;
-
-    // For PDF thumbnails, we need to ensure resource type is image if possible, 
-    // but with the new Google Drive approach, this Cloudinary logic is legacy.
-    // However, for existing Cloudinary files, we keep this.
-    // Note: The previous fix for PDF thumbnails (changing /raw/ to /image/) is still valid for Cloudinary.
-    let modifiedUrl = cloudinaryUrl;
-    if (fileType.toLowerCase() === 'pdf' && modifiedUrl.includes('/raw/upload/')) {
-        modifiedUrl = modifiedUrl.replace('/raw/upload/', '/image/upload/');
+    // 3. Last Resort: Direct image URL (if it's a direct link to an image)
+    if (!isCloudinary && ['jpg', 'jpeg', 'png', 'gif'].includes(fileType.toLowerCase())) {
+        return cloudinaryUrl;
     }
 
-    return modifiedUrl.slice(0, uploadIndex + 8) + transformations + '/' + modifiedUrl.slice(uploadIndex + 8);
+    // If no thumbnail available, return empty string to trigger fallback icon
+    return '';
 };
 
 /**

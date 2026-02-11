@@ -9,6 +9,7 @@ import { BookOpen, ArrowLeft, FolderOpen } from 'lucide-react';
 import Link from 'next/link';
 import Image from 'next/image';
 import { FileCard } from '@/components/FileCard';
+import DocumentPreviewModal from '@/components/DocumentPreviewModal';
 
 const FILE_CATEGORY_ORDER: FileType['fileCategory'][] = ['Cours', 'TD', 'TP', 'EXAM', 'Autre'];
 
@@ -34,6 +35,7 @@ function ResourcesContent() {
     const semester = searchParams.get('semester') ?? '';
     const [selectedModule, setSelectedModule] = useState('');
     const [urlSynced, setUrlSynced] = useState(false);
+    const [previewFile, setPreviewFile] = useState<any>(null);
 
     useEffect(() => {
         setSelectedModule(searchParams.get('module') ?? '');
@@ -146,11 +148,10 @@ function ResourcesContent() {
                                 setSelectedModule(mod);
                                 replaceUrl(mod);
                             }}
-                            className={`rounded-xl px-4 py-3 text-sm font-medium transition-all ${
-                                selectedModule === mod
-                                    ? 'bg-atlas-700 text-cream-50 shadow-lg'
-                                    : 'glass-card text-atlas-700 hover:bg-atlas-100/80'
-                            }`}
+                            className={`rounded-xl px-4 py-3 text-sm font-medium transition-all ${selectedModule === mod
+                                ? 'bg-atlas-700 text-cream-50 shadow-lg'
+                                : 'glass-card text-atlas-700 hover:bg-atlas-100/80'
+                                }`}
                         >
                             {mod}
                         </button>
@@ -183,7 +184,16 @@ function ResourcesContent() {
                                                     animationFillMode: 'forwards',
                                                 }}
                                             >
-                                                <FileCard file={file} variant="default" />
+                                                <FileCard
+                                                    file={file}
+                                                    variant="default"
+                                                    onPreview={() => setPreviewFile({
+                                                        id: file._id,
+                                                        name: file.displayName || file.fileName,
+                                                        url: file.fileUrl,
+                                                        type: file.fileType
+                                                    })}
+                                                />
                                             </div>
                                         ))}
                                     </div>
@@ -206,6 +216,12 @@ function ResourcesContent() {
                     </p>
                 </div>
             </footer>
+
+            <DocumentPreviewModal
+                isOpen={!!previewFile}
+                onClose={() => setPreviewFile(null)}
+                file={previewFile}
+            />
         </div>
     );
 }
