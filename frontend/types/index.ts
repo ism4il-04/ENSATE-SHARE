@@ -17,6 +17,11 @@ export interface File {
     fileType: string;
     fileSize: number;
     fileUrl: string;
+    publicId?: string; // Optional for Drive files
+    driveId?: string;
+    webViewLink?: string;
+    webContentLink?: string;
+    thumbnailLink?: string;
     year: string;
     filiere: string;
     semester: string;

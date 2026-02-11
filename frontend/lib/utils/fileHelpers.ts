@@ -7,15 +7,18 @@
  * @param fileType - File extension (pdf, docx, xlsx, pptx, etc.)
  * @returns Thumbnail URL for PDFs, original URL for others
  */
-export const generateThumbnailUrl = (cloudinaryUrl: string, fileType: string): string => {
-    const normalizedType = fileType.toLowerCase();
-
-    // Only PDFs work reliably with Cloudinary's free tier transformations
-    if (normalizedType !== 'pdf') {
-        return cloudinaryUrl;
+export const generateThumbnailUrl = (cloudinaryUrl: string, fileType: string, thumbnailLink?: string): string => {
+    // If it's a Google Drive file with a thumbnail link, use it directly
+    if (thumbnailLink) {
+        return thumbnailLink;
     }
 
-    // Cloudinary transformation for PDF thumbnail
+    // Standard Cloudinary logic for images and PDFs
+    if (!['jpg', 'jpeg', 'png', 'gif', 'pdf'].includes(fileType.toLowerCase())) {
+        return '';
+    }
+
+    // Default transformations
     // w_200,h_200,c_fill,f_jpg,pg_1 = width 200, height 200, fill crop, jpg format, page 1
     const transformations = 'w_200,h_200,c_fill,f_jpg,pg_1';
 
@@ -23,7 +26,16 @@ export const generateThumbnailUrl = (cloudinaryUrl: string, fileType: string): s
     const uploadIndex = cloudinaryUrl.indexOf('/upload/');
     if (uploadIndex === -1) return cloudinaryUrl;
 
-    return cloudinaryUrl.slice(0, uploadIndex + 8) + transformations + '/' + cloudinaryUrl.slice(uploadIndex + 8);
+    // For PDF thumbnails, we need to ensure resource type is image if possible, 
+    // but with the new Google Drive approach, this Cloudinary logic is legacy.
+    // However, for existing Cloudinary files, we keep this.
+    // Note: The previous fix for PDF thumbnails (changing /raw/ to /image/) is still valid for Cloudinary.
+    let modifiedUrl = cloudinaryUrl;
+    if (fileType.toLowerCase() === 'pdf' && modifiedUrl.includes('/raw/upload/')) {
+        modifiedUrl = modifiedUrl.replace('/raw/upload/', '/image/upload/');
+    }
+
+    return modifiedUrl.slice(0, uploadIndex + 8) + transformations + '/' + modifiedUrl.slice(uploadIndex + 8);
 };
 
 /**

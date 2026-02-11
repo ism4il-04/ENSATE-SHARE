@@ -1,10 +1,12 @@
+
 import { Response } from 'express';
 import File from '../models/File.model';
 import ActivityLog from '../models/ActivityLog.model';
 import AcademicStructure from '../models/AcademicStructure.model';
-import cloudinary from '../config/cloudinary';
+import { drive, FOLDER_ID } from '../config/drive'; // Import Google Drive config
 import { AuthRequest } from '../middleware/auth.middleware';
 import path from 'path';
+import { Readable } from 'stream';
 
 // @desc    Get all files with filters
 // @route   GET /api/files
@@ -161,7 +163,7 @@ export const uploadFile = async (req: AuthRequest, res: Response): Promise<void>
                 if (!semesterData) {
                     res.status(400).json({
                         success: false,
-                        message: `Semester "${semester}" is not part of your assigned year (${year}). You can only upload to: ${yearData.semesters.map((s) => s.name).join(', ')}.`,
+                        message: `Semester "${semester}" is not part of your assigned year(${year}).You can only upload to: ${yearData.semesters.map((s) => s.name).join(', ')}.`,
                     });
                     return;
                 }
@@ -187,24 +189,41 @@ export const uploadFile = async (req: AuthRequest, res: Response): Promise<void>
             }
         }
 
-        // Upload to Cloudinary
-        const b64 = Buffer.from(req.file.buffer).toString('base64');
-        const dataURI = `data:${req.file.mimetype};base64,${b64}`;
-
-        // Sanitize filename for Cloudinary (remove special characters)
+        // Sanitize filename
         const sanitizedFilename = req.file.originalname
             .normalize('NFD')
             .replace(/[\u0300-\u036f]/g, '') // Remove accents
             .replace(/[^a-zA-Z0-9._-]/g, '_'); // Replace special chars with underscore
 
-        const result = await cloudinary.uploader.upload(dataURI, {
-            folder: `ensa-share/${year}/${filiere}/${semester}/${module}`,
-            resource_type: 'auto',
-            public_id: sanitizedFilename.replace(/\.[^/.]+$/, ''), // Remove extension from public_id
+        // Get file extension (without dot)
+        const ext = path.extname(req.file.originalname).toLowerCase().replace('.', '');
+
+        // Create a readable stream from the buffer
+        const bufferStream = new Readable();
+        bufferStream.push(req.file.buffer);
+        bufferStream.push(null);
+
+        // Upload to Google Drive
+        const driveResponse = await drive.files.create({
+            requestBody: {
+                name: sanitizedFilename,
+                parents: [FOLDER_ID], // Upload to specific folder
+            },
+            media: {
+                mimeType: req.file.mimetype,
+                body: bufferStream,
+            },
+            fields: 'id, name, webViewLink, webContentLink, thumbnailLink',
         });
 
-        // Get file extension
-        const ext = path.extname(req.file.originalname).toLowerCase().replace('.', '');
+        // Make file public
+        await drive.permissions.create({
+            fileId: driveResponse.data.id!,
+            requestBody: {
+                role: 'reader',
+                type: 'anyone',
+            },
+        });
 
         // Create file document
         const file = await File.create({
@@ -213,8 +232,11 @@ export const uploadFile = async (req: AuthRequest, res: Response): Promise<void>
             displayName: req.file.originalname, // Preserve accents for display
             fileType: ext,
             fileSize: req.file.size,
-            fileUrl: result.secure_url,
-            publicId: result.public_id,
+            fileUrl: driveResponse.data.webViewLink, // Link to view in Drive
+            driveId: driveResponse.data.id,
+            webViewLink: driveResponse.data.webViewLink,
+            webContentLink: driveResponse.data.webContentLink,
+            thumbnailLink: driveResponse.data.thumbnailLink,
             year,
             filiere,
             semester,
@@ -228,7 +250,7 @@ export const uploadFile = async (req: AuthRequest, res: Response): Promise<void>
         await ActivityLog.create({
             userId: req.user._id,
             action: 'upload',
-            details: `Uploaded ${file.fileName} to ${year} - ${filiere} - ${semester} - ${module}`,
+            details: `Uploaded ${file.fileName} to ${year} - ${filiere} - ${semester} - ${module} `,
         });
 
         res.status(201).json({
@@ -237,6 +259,7 @@ export const uploadFile = async (req: AuthRequest, res: Response): Promise<void>
             file,
         });
     } catch (error: any) {
+        console.error('Upload Error:', error);
         res.status(500).json({
             success: false,
             message: 'Error uploading file',
@@ -352,8 +375,16 @@ export const deleteFile = async (req: AuthRequest, res: Response): Promise<void>
             return;
         }
 
-        // Delete from Cloudinary
-        await cloudinary.uploader.destroy(file.publicId);
+        // Delete from Drive (if driveId exists)
+        if (file.driveId) {
+            try {
+                await drive.files.delete({ fileId: file.driveId });
+            } catch (err: any) {
+                console.error('Error deleting from Drive:', err);
+                // Continue to delete from DB even if Drive fails (e.g., file already gone)
+            }
+        }
+        // No legacy Cloudinary delete here, as the instruction implies a full switch.
 
         // Delete from database
         await file.deleteOne();
@@ -384,7 +415,7 @@ export const deleteFile = async (req: AuthRequest, res: Response): Promise<void>
     }
 };
 
-// @desc    Download a file (redirect to Cloudinary URL)
+// @desc    Download a file
 // @route   GET /api/files/:id/download
 // @access  Public
 export const downloadFile = async (req: AuthRequest, res: Response): Promise<void> => {
@@ -399,8 +430,20 @@ export const downloadFile = async (req: AuthRequest, res: Response): Promise<voi
             return;
         }
 
-        // Redirect to Cloudinary URL
-        res.redirect(file.fileUrl);
+        // If it's a Google Drive file, redirect to the webContentLink
+        if (file.webContentLink) {
+            res.redirect(file.webContentLink);
+            return;
+        }
+
+        // Legacy Cloudinary fallback
+        if (file.fileUrl) {
+            res.redirect(file.fileUrl);
+            return;
+        }
+
+        res.status(404).json({ success: false, message: 'File URL not found' });
+
     } catch (error: any) {
         res.status(500).json({
             success: false,

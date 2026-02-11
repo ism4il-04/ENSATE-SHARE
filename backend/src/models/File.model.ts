@@ -7,7 +7,12 @@ export interface IFile extends Document {
     fileType: string;
     fileSize: number;
     fileUrl: string;
-    publicId: string; // Cloudinary public ID for deletion
+    publicId?: string; // Cloudinary public ID (optional now)
+    // Google Drive fields
+    driveId?: string;
+    webViewLink?: string;
+    webContentLink?: string;
+    thumbnailLink?: string;
     year: string;
     filiere: string;
     semester: string; // "S1" to "S10"
@@ -51,7 +56,24 @@ const fileSchema = new Schema<IFile>(
         },
         publicId: {
             type: String,
-            required: [true, 'Public ID is required'],
+            required: false, // Changed to false for Google Drive support
+        },
+        // Google Drive fields
+        driveId: {
+            type: String,
+            required: false,
+        },
+        webViewLink: {
+            type: String,
+            required: false,
+        },
+        webContentLink: {
+            type: String,
+            required: false,
+        },
+        thumbnailLink: {
+            type: String,
+            required: false,
         },
         year: {
             type: String,

@@ -1,5 +1,6 @@
 'use client';
 
+import Link from 'next/link';
 import { useState } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { filesAPI, structureAPI } from '@/lib/api';
@@ -205,40 +206,50 @@ export default function FilesPage() {
                                 <tbody>
                                     {filesData.files.map((file: any) => {
                                         const categoryColors = getFileCategoryColor(file.fileCategory || 'Autre');
-                                        const thumbnailUrl = generateThumbnailUrl(file.fileUrl, file.fileType);
+                                        const thumbnailUrl = generateThumbnailUrl(file.fileUrl, file.fileType, file.thumbnailLink);
+
+                                        const viewerHref = `/viewer?id=${encodeURIComponent(
+                                            file._id
+                                        )}&url=${encodeURIComponent(file.fileUrl)}&name=${encodeURIComponent(
+                                            file.displayName || file.fileName
+                                        )}&type=${encodeURIComponent(file.fileType)}`;
 
                                         return (
                                             <tr key={file._id} className="border-b border-gray-100 hover:bg-gray-50">
                                                 <td className="py-3 px-4">
-                                                    {file.fileType === 'pdf' ? (
-                                                        <img
-                                                            src={thumbnailUrl}
-                                                            alt="Preview"
-                                                            className="w-12 h-12 object-cover rounded border border-gray-200"
-                                                            onError={(e) => {
-                                                                (e.target as HTMLImageElement).style.display = 'none';
-                                                            }}
-                                                        />
-                                                    ) : (
-                                                        <div className="w-12 h-12 bg-gray-100 rounded flex items-center justify-center">
-                                                            <FileText size={24} className="text-gray-400" />
-                                                        </div>
-                                                    )}
+                                                    <Link href={viewerHref} title="Ouvrir le document">
+                                                        {file.fileType === 'pdf' ? (
+                                                            <img
+                                                                src={thumbnailUrl}
+                                                                alt="Preview"
+                                                                className="w-12 h-12 object-cover rounded border border-gray-200"
+                                                                onError={(e) => {
+                                                                    (e.target as HTMLImageElement).style.display = 'none';
+                                                                }}
+                                                            />
+                                                        ) : (
+                                                            <div className="w-12 h-12 bg-gray-100 rounded flex items-center justify-center">
+                                                                <FileText size={24} className="text-gray-400" />
+                                                            </div>
+                                                        )}
+                                                    </Link>
                                                 </td>
                                                 <td className="py-3 px-4">
-                                                    <div className="flex flex-col gap-1">
-                                                        <div className="flex items-center gap-2">
-                                                            <FileText size={16} className="text-gray-400" />
-                                                            <span className="text-sm text-gray-900 font-medium">
-                                                                {file.displayName || file.fileName}
-                                                            </span>
+                                                    <Link href={viewerHref} title="Ouvrir le document">
+                                                        <div className="flex flex-col gap-1">
+                                                            <div className="flex items-center gap-2">
+                                                                <FileText size={16} className="text-gray-400" />
+                                                                <span className="text-sm text-gray-900 font-medium">
+                                                                    {file.displayName || file.fileName}
+                                                                </span>
+                                                            </div>
+                                                            {file.fileLabel && (
+                                                                <span className="text-xs text-gray-600 italic ml-6">
+                                                                    {file.fileLabel}
+                                                                </span>
+                                                            )}
                                                         </div>
-                                                        {file.fileLabel && (
-                                                            <span className="text-xs text-gray-600 italic ml-6">
-                                                                {file.fileLabel}
-                                                            </span>
-                                                        )}
-                                                    </div>
+                                                    </Link>
                                                 </td>
                                                 <td className="py-3 px-4">
                                                     <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${categoryColors.bg} ${categoryColors.text}`}>
@@ -255,7 +266,7 @@ export default function FilesPage() {
                                                             target="_blank"
                                                             rel="noopener noreferrer"
                                                             className="text-primary-500 hover:text-primary-600 p-2"
-                                                            title="Télécharger"
+                                                            title="Ouvrir dans un nouvel onglet"
                                                         >
                                                             <Download size={18} />
                                                         </a>

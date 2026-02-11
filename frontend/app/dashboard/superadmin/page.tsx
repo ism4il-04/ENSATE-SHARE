@@ -200,7 +200,7 @@ export default function SuperadminDashboard() {
                         <div className="space-y-3">
                             {statsData.recentUploads.map((file: any) => {
                                 const categoryColors = getFileCategoryColor(file.fileCategory || 'Autre');
-                                const thumbnailUrl = generateThumbnailUrl(file.fileUrl, file.fileType);
+                                const thumbnailUrl = generateThumbnailUrl(file.fileUrl, file.fileType, file.thumbnailLink);
 
                                 return (
                                     <div key={file._id} className="flex items-start gap-3 p-3 bg-cream-50 rounded-lg hover:bg-cream-100 transition-colors border border-cream-300/40">
@@ -228,9 +228,9 @@ export default function SuperadminDashboard() {
                                                 </span>
                                             </div>
                                             {file.fileLabel && (
-                                            <p className="text-xs text-atlas-600 italic mb-1">
-                                                {file.fileLabel}
-                                            </p>
+                                                <p className="text-xs text-atlas-600 italic mb-1">
+                                                    {file.fileLabel}
+                                                </p>
                                             )}
                                             <p className="text-xs text-atlas-600">
                                                 {file.year} - {file.filiere} - {file.module}

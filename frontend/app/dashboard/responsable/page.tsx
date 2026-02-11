@@ -152,7 +152,7 @@ export default function ResponsableDashboard() {
                             <tbody>
                                 {recentFiles.map((file: any) => {
                                     const categoryColors = getFileCategoryColor(file.fileCategory || 'Autre');
-                                    const thumbnailUrl = generateThumbnailUrl(file.fileUrl, file.fileType);
+                                    const thumbnailUrl = generateThumbnailUrl(file.fileUrl, file.fileType, file.thumbnailLink);
 
                                     return (
                                         <tr key={file._id} className="border-b border-gray-100 hover:bg-gray-50">

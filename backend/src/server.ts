@@ -1,5 +1,9 @@
 import express, { Application } from 'express';
 import dotenv from 'dotenv';
+import path from 'path';
+// Load environment variables immediately
+dotenv.config({ path: path.join(__dirname, '../../.env') });
+
 import cors from 'cors';
 import helmet from 'helmet';
 import cookieParser from 'cookie-parser';
@@ -13,9 +17,6 @@ import fileRoutes from './routes/file.routes';
 import userRoutes from './routes/user.routes';
 import structureRoutes from './routes/structure.routes';
 import statsRoutes from './routes/stats.routes';
-
-// Load environment variables
-dotenv.config();
 
 // Create Express app
 const app: Application = express();
