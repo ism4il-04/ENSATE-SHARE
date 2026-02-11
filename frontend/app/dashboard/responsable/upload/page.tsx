@@ -133,29 +133,29 @@ export default function UploadPage() {
 
     return (
         <div className="p-8 max-w-4xl mx-auto">
-            {/* Header */}
+{/* Header */}
             <div className="mb-8">
-                <h1 className="text-3xl font-bold text-gray-900">Uploader un fichier</h1>
-                <p className="text-gray-600 mt-2">
+                <h1 className="text-3xl font-bold text-atlas-800">Uploader un fichier</h1>
+                <p className="text-atlas-600 mt-2">
                     Ajouter une ressource pour {user?.assignedYear} - {user?.assignedFiliere}
                 </p>
             </div>
 
             <form onSubmit={handleSubmit} className="space-y-6">
                 {/* Dropzone */}
-                <div className="card">
-                    <label className="block text-sm font-medium text-gray-700 mb-3">
+                <div className="card border border-cream-300/60">
+                    <label className="block text-sm font-medium text-atlas-700 mb-3">
                         Fichier <span className="text-red-500">*</span>
                     </label>
 
                     <div
                         {...getRootProps()}
-                        className={`border-2 border-dashed rounded-lg p-12 text-center cursor-pointer transition-colors ${isDragActive
-                            ? 'border-primary-500 bg-primary-50'
+                        className={`border-2 border-dashed rounded-xl p-12 text-center cursor-pointer transition-colors ${isDragActive
+                            ? 'border-accent-500 bg-accent-50'
                             : selectedFile
                                 ? 'border-green-500 bg-green-50'
-                                : 'border-gray-300 hover:border-primary-400'
-                            }`}
+                                : 'border-cream-300 hover:border-accent-400'
+                        }`}
                     >
                         <input {...getInputProps()} />
 
@@ -163,8 +163,8 @@ export default function UploadPage() {
                             <div className="flex items-center justify-center gap-4">
                                 <FileText className="text-green-600" size={48} />
                                 <div className="text-left">
-                                    <p className="font-medium text-gray-900">{selectedFile.name}</p>
-                                    <p className="text-sm text-gray-600">{formatFileSize(selectedFile.size)}</p>
+                                    <p className="font-medium text-atlas-900">{selectedFile.name}</p>
+                                    <p className="text-sm text-atlas-600">{formatFileSize(selectedFile.size)}</p>
                                 </div>
                                 <button
                                     type="button"
@@ -179,14 +179,14 @@ export default function UploadPage() {
                             </div>
                         ) : (
                             <div>
-                                <Upload className="mx-auto text-gray-400 mb-4" size={48} />
-                                <p className="text-lg font-medium text-gray-900 mb-2">
+                                <Upload className="mx-auto text-atlas-400 mb-4" size={48} />
+                                <p className="text-lg font-medium text-atlas-900 mb-2">
                                     {isDragActive ? 'Déposez le fichier ici' : 'Glissez-déposez un fichier'}
                                 </p>
-                                <p className="text-sm text-gray-600">
+                                <p className="text-sm text-atlas-600">
                                     ou cliquez pour sélectionner
                                 </p>
-                                <p className="text-xs text-gray-500 mt-2">
+                                <p className="text-xs text-atlas-500 mt-2">
                                     PDF, DOCX, PPTX, XLS, XLSX, ZIP, Images (max 50MB)
                                 </p>
                             </div>
@@ -195,11 +195,11 @@ export default function UploadPage() {
                 </div>
 
                 {/* Semester Selection - all semesters of the responsable's assigned year */}
-                <div className="card">
-                    <label htmlFor="semester" className="block text-sm font-medium text-gray-700 mb-3">
+                <div className="card border border-cream-300/60">
+                    <label htmlFor="semester" className="block text-sm font-medium text-atlas-700 mb-3">
                         Semestre <span className="text-red-500">*</span>
                     </label>
-                    <p className="text-xs text-gray-500 mb-2">
+                    <p className="text-xs text-atlas-500 mb-2">
                         Vous pouvez déposer des ressources dans tous les semestres de votre année ({user?.assignedYear}).
                     </p>
                     <select
@@ -226,8 +226,8 @@ export default function UploadPage() {
                 </div>
 
                 {/* Module Selection */}
-                <div className="card">
-                    <label htmlFor="module" className="block text-sm font-medium text-gray-700 mb-3">
+                <div className="card border border-cream-300/60">
+                    <label htmlFor="module" className="block text-sm font-medium text-atlas-700 mb-3">
                         Module <span className="text-red-500">*</span>
                     </label>
                     <select
@@ -248,8 +248,8 @@ export default function UploadPage() {
                 </div>
 
                 {/* File Category Selection */}
-                <div className="card">
-                    <label htmlFor="fileCategory" className="block text-sm font-medium text-gray-700 mb-3">
+                <div className="card border border-cream-300/60">
+                    <label htmlFor="fileCategory" className="block text-sm font-medium text-atlas-700 mb-3">
                         Type de fichier <span className="text-red-500">*</span>
                     </label>
                     <select
@@ -268,8 +268,8 @@ export default function UploadPage() {
                 </div>
 
                 {/* File Label Input */}
-                <div className="card">
-                    <label htmlFor="fileLabel" className="block text-sm font-medium text-gray-700 mb-3">
+                <div className="card border border-cream-300/60">
+                    <label htmlFor="fileLabel" className="block text-sm font-medium text-atlas-700 mb-3">
                         Label personnalisé (optionnel)
                     </label>
                     <input
@@ -281,7 +281,7 @@ export default function UploadPage() {
                         className="input-field"
                         maxLength={100}
                     />
-                    <p className="text-xs text-gray-500 mt-1">
+                    <p className="text-xs text-atlas-500 mt-1">
                         Ajoutez un titre personnalisé pour identifier facilement ce fichier
                     </p>
                 </div>
@@ -296,16 +296,16 @@ export default function UploadPage() {
 
                 {/* Upload Progress */}
                 {uploadStatus === 'uploading' && (
-                    <div className="card">
+                    <div className="card border border-cream-300/60">
                         <div className="flex items-center justify-between mb-2">
-                            <span className="text-sm font-medium text-gray-700">Upload en cours...</span>
-                            <span className="text-sm text-gray-600">{uploadProgress}%</span>
+                            <span className="text-sm font-medium text-atlas-700">Upload en cours...</span>
+                            <span className="text-sm text-atlas-600">{uploadProgress}%</span>
                         </div>
-                        <div className="w-full bg-gray-200 rounded-full h-2">
+                        <div className="w-full bg-cream-200 rounded-full h-2">
                             <div
-                                className="bg-primary-500 h-2 rounded-full transition-all duration-300"
+                                className="bg-accent-500 h-2 rounded-full transition-all duration-300"
                                 style={{ width: `${uploadProgress}%` }}
-                            ></div>
+                            />
                         </div>
                     </div>
                 )}

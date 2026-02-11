@@ -118,18 +118,18 @@ export default function FilesPage() {
         <div className="space-y-6">
             {/* Header */}
             <div className="mb-8">
-                <h1 className="text-3xl font-bold text-gray-900">Mes fichiers</h1>
-                <p className="text-gray-600 mt-2">
+                <h1 className="text-3xl font-bold text-atlas-800">Mes fichiers</h1>
+                <p className="text-atlas-600 mt-2">
                     Gérer vos ressources pour {user?.assignedYear} - {user?.assignedFiliere}
                 </p>
             </div>
 
             {/* Filters */}
-            <div className="card">
+            <div className="card border border-cream-300/60">
                 <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                     {/* Search */}
                     <div>
-                        <label className="block text-sm font-medium text-gray-700 mb-2">Recherche</label>
+                        <label className="block text-sm font-medium text-atlas-700 mb-2">Recherche</label>
                         <div className="relative">
                             <input
                                 type="text"
@@ -138,13 +138,13 @@ export default function FilesPage() {
                                 placeholder="Nom du fichier..."
                                 className="input-field pl-10"
                             />
-                            <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" size={20} />
+                            <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-atlas-400" size={20} />
                         </div>
                     </div>
 
                     {/* Module Filter */}
                     <div>
-                        <label className="block text-sm font-medium text-gray-700 mb-2">Module</label>
+                        <label className="block text-sm font-medium text-atlas-700 mb-2">Module</label>
                         <select
                             value={selectedModule}
                             onChange={(e) => setSelectedModule(e.target.value)}
@@ -161,7 +161,7 @@ export default function FilesPage() {
 
                     {/* Category Filter */}
                     <div>
-                        <label className="block text-sm font-medium text-gray-700 mb-2">Type</label>
+                        <label className="block text-sm font-medium text-atlas-700 mb-2">Type</label>
                         <select
                             value={selectedCategory}
                             onChange={(e) => setSelectedCategory(e.target.value)}
@@ -179,30 +179,30 @@ export default function FilesPage() {
             </div>
 
             {/* Files Table */}
-            <div className="card">
+            <div className="card border border-cream-300/60">
                 <div className="flex items-center justify-between mb-4">
-                    <h2 className="text-lg font-semibold text-gray-900">
+                    <h2 className="text-lg font-semibold text-atlas-800">
                         {filesData?.total || 0} fichier(s)
                     </h2>
                 </div>
 
                 {isLoading ? (
                     <div className="text-center py-12">
-                        <div className="inline-block animate-spin rounded-full h-12 w-12 border-b-2 border-primary-500"></div>
+                        <div className="inline-block animate-spin rounded-full h-12 w-12 border-2 border-cream-300 border-t-accent-500" />
                     </div>
                 ) : filesData?.files && filesData.files.length > 0 ? (
                     <>
                         <div className="overflow-x-auto">
                             <table className="w-full">
                                 <thead>
-                                    <tr className="border-b border-gray-200">
-                                        <th className="text-left py-3 px-4 text-sm font-medium text-gray-600">Aperçu</th>
-                                        <th className="text-left py-3 px-4 text-sm font-medium text-gray-600">Fichier</th>
-                                        <th className="text-left py-3 px-4 text-sm font-medium text-gray-600">Type</th>
-                                        <th className="text-left py-3 px-4 text-sm font-medium text-gray-600">Module</th>
-                                        <th className="text-left py-3 px-4 text-sm font-medium text-gray-600">Taille</th>
-                                        <th className="text-left py-3 px-4 text-sm font-medium text-gray-600">Date</th>
-                                        <th className="text-right py-3 px-4 text-sm font-medium text-gray-600">Actions</th>
+                                    <tr className="border-b border-cream-300 bg-cream-50/80">
+                                        <th className="text-left py-3 px-4 text-sm font-medium text-atlas-600">Aperçu</th>
+                                        <th className="text-left py-3 px-4 text-sm font-medium text-atlas-600">Fichier</th>
+                                        <th className="text-left py-3 px-4 text-sm font-medium text-atlas-600">Type</th>
+                                        <th className="text-left py-3 px-4 text-sm font-medium text-atlas-600">Module</th>
+                                        <th className="text-left py-3 px-4 text-sm font-medium text-atlas-600">Taille</th>
+                                        <th className="text-left py-3 px-4 text-sm font-medium text-atlas-600">Date</th>
+                                        <th className="text-right py-3 px-4 text-sm font-medium text-atlas-600">Actions</th>
                                     </tr>
                                 </thead>
                                 <tbody>
@@ -213,7 +213,7 @@ export default function FilesPage() {
 
 
                                         return (
-                                            <tr key={file._id} className="border-b border-gray-100 hover:bg-gray-50">
+                                            <tr key={file._id} className="border-b border-cream-200 hover:bg-cream-50/50">
                                                 <td className="py-3 px-4">
                                                     <button
                                                         onClick={() => setPreviewFile({
@@ -225,8 +225,8 @@ export default function FilesPage() {
                                                         className="block"
                                                         title="Ouvrir le document"
                                                     >
-                                                        <div className="relative w-12 h-12 bg-gray-100 rounded flex items-center justify-center overflow-hidden border border-gray-200">
-                                                            <FileText size={24} className="text-gray-400" />
+                                                        <div className="relative w-12 h-12 bg-cream-100 rounded flex items-center justify-center overflow-hidden border border-cream-300">
+                                                            <FileText size={24} className="text-atlas-400" />
                                                             {thumbnailUrl && (
                                                                 <img
                                                                     src={thumbnailUrl}
@@ -254,13 +254,13 @@ export default function FilesPage() {
                                                     >
                                                         <div className="flex flex-col gap-1">
                                                             <div className="flex items-center gap-2">
-                                                                <FileText size={16} className="text-gray-400" />
-                                                                <span className="text-sm text-gray-900 font-medium hover:text-primary-600 transition-colors">
+                                                                <FileText size={16} className="text-atlas-400" />
+                                                                <span className="text-sm text-atlas-900 font-medium hover:text-accent-600 transition-colors">
                                                                     {file.displayName || file.fileName}
                                                                 </span>
                                                             </div>
                                                             {file.fileLabel && (
-                                                                <span className="text-xs text-gray-600 italic ml-6">
+                                                                <span className="text-xs text-atlas-600 italic ml-6">
                                                                     {file.fileLabel}
                                                                 </span>
                                                             )}
@@ -272,23 +272,23 @@ export default function FilesPage() {
                                                         {file.fileCategory || 'Autre'}
                                                     </span>
                                                 </td>
-                                                <td className="py-3 px-4 text-sm text-gray-600">{file.module}</td>
-                                                <td className="py-3 px-4 text-sm text-gray-600">{formatFileSize(file.fileSize)}</td>
-                                                <td className="py-3 px-4 text-sm text-gray-600">{formatDate(file.createdAt)}</td>
+                                                <td className="py-3 px-4 text-sm text-atlas-600">{file.module}</td>
+                                                <td className="py-3 px-4 text-sm text-atlas-600">{formatFileSize(file.fileSize)}</td>
+                                                <td className="py-3 px-4 text-sm text-atlas-600">{formatDate(file.createdAt)}</td>
                                                 <td className="py-3 px-4">
                                                     <div className="flex items-center justify-end gap-2">
                                                         <a
                                                             href={file.fileUrl}
                                                             target="_blank"
                                                             rel="noopener noreferrer"
-                                                            className="text-primary-500 hover:text-primary-600 p-2"
+                                                            className="text-accent-600 hover:text-accent-700 p-2"
                                                             title="Ouvrir dans un nouvel onglet"
                                                         >
                                                             <Download size={18} />
                                                         </a>
                                                         <button
                                                             onClick={() => handleEdit(file)}
-                                                            className="text-blue-500 hover:text-blue-600 p-2"
+                                                            className="text-atlas-500 hover:text-accent-600 p-2"
                                                             title="Modifier"
                                                         >
                                                             <Edit size={18} />
@@ -335,8 +335,8 @@ export default function FilesPage() {
                     </>
                 ) : (
                     <div className="text-center py-12">
-                        <FileText className="mx-auto text-gray-300 mb-4" size={48} />
-                        <p className="text-gray-600">Aucun fichier trouvé</p>
+                        <FileText className="mx-auto text-atlas-300 mb-4" size={48} />
+                        <p className="text-atlas-600">Aucun fichier trouvé</p>
                     </div>
                 )}
             </div>
@@ -344,18 +344,18 @@ export default function FilesPage() {
             {/* Edit Modal */}
             {
                 editingFile && (
-                    <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-                        <div className="bg-white rounded-lg p-6 max-w-md w-full mx-4">
+                    <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
+                        <div className="bg-white rounded-xl shadow-lg border border-cream-300/60 p-6 max-w-md w-full">
                             <div className="flex items-center justify-between mb-4">
-                                <h3 className="text-lg font-semibold text-gray-900">Modifier le fichier</h3>
-                                <button onClick={() => setEditingFile(null)} className="text-gray-400 hover:text-gray-600">
+                                <h3 className="text-lg font-semibold text-atlas-800">Modifier le fichier</h3>
+                                <button onClick={() => setEditingFile(null)} className="text-atlas-400 hover:text-atlas-600 p-1 rounded-lg hover:bg-cream-100">
                                     <X size={24} />
                                 </button>
                             </div>
 
                             <div className="space-y-4">
                                 <div>
-                                    <label className="block text-sm font-medium text-gray-700 mb-2">Nom du fichier</label>
+                                    <label className="block text-sm font-medium text-atlas-700 mb-2">Nom du fichier</label>
                                     <input
                                         type="text"
                                         value={editFileName}
@@ -365,7 +365,7 @@ export default function FilesPage() {
                                 </div>
 
                                 <div>
-                                    <label className="block text-sm font-medium text-gray-700 mb-2">Module</label>
+                                    <label className="block text-sm font-medium text-atlas-700 mb-2">Module</label>
                                     <select value={editModule} onChange={(e) => setEditModule(e.target.value)} className="input-field">
                                         {modules.map((mod: string) => (
                                             <option key={mod} value={mod}>
@@ -376,7 +376,7 @@ export default function FilesPage() {
                                 </div>
 
                                 <div>
-                                    <label className="block text-sm font-medium text-gray-700 mb-2">Type de fichier</label>
+                                    <label className="block text-sm font-medium text-atlas-700 mb-2">Type de fichier</label>
                                     <select
                                         value={editFileCategory}
                                         onChange={(e) => setEditFileCategory(e.target.value as any)}
@@ -391,7 +391,7 @@ export default function FilesPage() {
                                 </div>
 
                                 <div>
-                                    <label className="block text-sm font-medium text-gray-700 mb-2">Label personnalisé (optionnel)</label>
+                                    <label className="block text-sm font-medium text-atlas-700 mb-2">Label personnalisé (optionnel)</label>
                                     <input
                                         type="text"
                                         value={editFileLabel}
@@ -421,6 +421,6 @@ export default function FilesPage() {
                 onClose={() => setPreviewFile(null)}
                 file={previewFile}
             />
-        </div >
+        </div>
     );
 }

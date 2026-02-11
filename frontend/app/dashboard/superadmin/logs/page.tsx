@@ -168,14 +168,14 @@ export default function LogsPage() {
                                                     </span>
                                                 </div>
                                             </td>
-                                            <td className="py-3 px-4 text-sm text-gray-900">
+                                            <td className="py-3 px-4 text-sm text-atlas-900">
                                                 {log.userId ? (
                                                     <div>
                                                         <p className="font-medium">{(log.userId as any).firstName} {(log.userId as any).lastName}</p>
-                                                        <p className="text-xs text-gray-500">{(log.userId as any).email}</p>
+                                                        <p className="text-xs text-atlas-500">{(log.userId as any).email}</p>
                                                     </div>
                                                 ) : (
-                                                    <span className="text-gray-400">N/A</span>
+                                                    <span className="text-atlas-400">N/A</span>
                                                 )}
                                             </td>
                                             <td className="py-3 px-4 text-sm text-atlas-600 max-w-xs truncate" title={typeof log.details === 'string' ? log.details : JSON.stringify(log.details || '')}>

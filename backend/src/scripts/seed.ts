@@ -7,6 +7,20 @@ import { logger } from '../utils/logger';
 
 dotenv.config();
 
+import { users as exampleUsers } from '../config/users.example';
+
+let users = exampleUsers;
+try {
+    // Try to load actual users config if it exists
+    const config = require('../config/users');
+    if (config.users) {
+        users = config.users;
+    }
+} catch (error) {
+    // Ignore error, use example users
+    // console.warn('Using example users for seeding. Create src/config/users.ts for custom users.');
+}
+
 const seedDatabase = async () => {
     try {
         logger.info('Starting database seeding...');
@@ -14,23 +28,18 @@ const seedDatabase = async () => {
         // Connect to database
         await connectDB();
 
-        // Create superadmin account
-        const superadminEmail = 'admin@ensa.ac.ma';
-        const existingSuperadmin = await User.findOne({ email: superadminEmail });
-
-        if (!existingSuperadmin) {
-            await User.create({
-                email: superadminEmail,
-                password: 'Admin@123', // Change this in production!
-                role: 'superadmin',
-                firstName: 'Super',
-                lastName: 'Admin',
-            });
-            logger.success('✅ Superadmin account created');
-            logger.info(`   Email: ${superadminEmail}`);
-            logger.info(`   Password: Admin@123 (CHANGE THIS!)`);
-        } else {
-            logger.info('ℹ️  Superadmin account already exists');
+        // Seed Users
+        for (const user of users) {
+            const existingUser = await User.findOne({ email: user.email });
+            if (!existingUser) {
+                await User.create({
+                    ...user,
+                    password: user.password // Hash this if your model hooks don't handle it, usually they do
+                });
+                logger.success(`✅ ${user.role} account created: ${user.email}`);
+            } else {
+                logger.info(`ℹ️  ${user.role} account already exists: ${user.email}`);
+            }
         }
 
         // Delete existing academic structure and create from embedded data

@@ -68,7 +68,7 @@ export const STRUCTURE_CYCLES: ICycle[] = [
         ],
     },
     {
-        name: 'Cycle Ingénieur - Génie Informatique',
+        name: 'Génie Informatique',
         cycle: 'CI',
         years: [
             {
@@ -162,7 +162,7 @@ export const STRUCTURE_CYCLES: ICycle[] = [
         ],
     },
     {
-        name: 'Cycle Ingénieur - Génie des Systèmes de Télécommunications et Réseaux',
+        name: 'Génie des Systèmes de Télécommunications et Réseaux',
         cycle: 'CI',
         years: [
             {
@@ -256,7 +256,7 @@ export const STRUCTURE_CYCLES: ICycle[] = [
         ],
     },
     {
-        name: 'Cycle Ingénieur - Supply Chain Management',
+        name: 'Supply Chain Management',
         cycle: 'CI',
         years: [
             {
@@ -350,7 +350,7 @@ export const STRUCTURE_CYCLES: ICycle[] = [
         ],
     },
     {
-        name: 'Cycle Ingénieur - Génie Système Embarqué et Cyber Security',
+        name: 'Génie Système Embarqué et Cyber Security',
         cycle: 'CI',
         years: [
             {
@@ -432,7 +432,7 @@ export const STRUCTURE_CYCLES: ICycle[] = [
         ],
     },
     {
-        name: 'Cycle Ingénieur - Génie Mécanique',
+        name: 'Génie Mécanique',
         cycle: 'CI',
         years: [
             {
@@ -505,7 +505,7 @@ export const STRUCTURE_CYCLES: ICycle[] = [
         ],
     },
     {
-        name: 'Cycle Ingénieur - Big Data et Intelligence Artificielle',
+        name: 'Big Data et Intelligence Artificielle',
         cycle: 'CI',
         years: [
             {
@@ -572,7 +572,7 @@ export const STRUCTURE_CYCLES: ICycle[] = [
         ],
     },
     {
-        name: 'Cycle Ingénieur - Génie Civil',
+        name: 'Génie Civil',
         cycle: 'CI',
         years: [
             {

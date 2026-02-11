@@ -130,34 +130,7 @@ export default function LoginPage() {
                     </div>
                 </div>
 
-                <div
-                    className="mt-6 rounded-xl p-4 border border-white/10"
-                    style={{ background: 'rgba(25,36,54,0.6)', backdropFilter: 'blur(12px)' }}
-                >
-                    <p className="font-semibold mb-3 text-white/90 text-sm">Connexion rapide (test) :</p>
-                    <div className="flex gap-3">
-                        <button
-                            type="button"
-                            onClick={() => {
-                                setEmail('admin@ensa.ac.ma');
-                                setPassword('Admin@123');
-                            }}
-                            className="flex-1 py-2.5 rounded-lg text-sm font-medium text-white/90 transition-colors border border-white/20 hover:bg-white/10"
-                        >
-                            Admin
-                        </button>
-                        <button
-                            type="button"
-                            onClick={() => {
-                                setEmail('lyamani.ismail@etu.uae.ac.ma');
-                                setPassword('12345678');
-                            }}
-                            className="flex-1 py-2.5 rounded-lg text-sm font-medium text-white/90 transition-colors border border-white/20 hover:bg-white/10"
-                        >
-                            Responsable
-                        </button>
-                    </div>
-                </div>
+
             </div>
         </div>
     );

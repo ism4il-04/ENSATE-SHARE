@@ -13,13 +13,13 @@ export default function ResponsableDashboardLayout({
 
     return (
         <ProtectedRoute allowedRoles={['responsable']}>
-            <div className="min-h-screen bg-gray-50 flex flex-col">
+            <div className="min-h-screen bg-cream-100 flex flex-col">
                 {/* Mobile top bar */}
-                <div className="md:hidden flex items-center justify-between px-4 py-3 border-b bg-white">
+                <div className="md:hidden flex items-center justify-between px-4 py-3 border-b border-cream-300/60 bg-white/80">
                     <button
                         type="button"
                         onClick={() => setSidebarOpen((prev) => !prev)}
-                        className="inline-flex items-center justify-center rounded-md p-2 text-gray-700 hover:bg-gray-100 focus:outline-none focus:ring-2 focus:ring-primary-500"
+                        className="inline-flex items-center justify-center rounded-md p-2 text-atlas-700 hover:bg-cream-100 focus:outline-none focus:ring-2 focus:ring-accent-500"
                     >
                         <span className="sr-only">Ouvrir le menu</span>
                         <svg
@@ -36,7 +36,7 @@ export default function ResponsableDashboardLayout({
                             <line x1="3" y1="18" x2="21" y2="18" />
                         </svg>
                     </button>
-                    <span className="text-sm font-semibold text-gray-900">ENSA-SHARE</span>
+                    <span className="text-sm font-semibold text-atlas-900">ENSA-SHARE Admin</span>
                 </div>
 
                 <div className="flex flex-1 min-h-0">

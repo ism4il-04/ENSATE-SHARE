@@ -15,7 +15,7 @@ export default function SuperadminDashboardLayout({
         <ProtectedRoute allowedRoles={['superadmin']}>
             <div className="min-h-screen bg-cream-100 flex flex-col">
                 {/* Mobile top bar */}
-                <div className="md:hidden flex items-center justify-between px-4 py-3 border-b bg-white/80">
+                <div className="md:hidden flex items-center justify-between px-4 py-3 border-b border-cream-300/60 bg-white/80">
                     <button
                         type="button"
                         onClick={() => setSidebarOpen((prev) => !prev)}

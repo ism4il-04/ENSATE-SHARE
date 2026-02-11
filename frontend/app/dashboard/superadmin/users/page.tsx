@@ -19,6 +19,8 @@ export default function UsersPage() {
         assignedFiliere: '',
     });
     const [showPassword, setShowPassword] = useState(false);
+    const [searchTerm, setSearchTerm] = useState('');
+    const [selectedFiliere, setSelectedFiliere] = useState('');
 
     // Fetch users
     const { data: usersData, isLoading } = useQuery({
@@ -50,9 +52,10 @@ export default function UsersPage() {
     // Update mutation
     const updateMutation = useMutation({
         mutationFn: ({ id, data }: { id: string; data: any }) => usersAPI.updateUser(id, data),
-        onSuccess: () => {
+        onSuccess: (_data, variables) => {
             queryClient.invalidateQueries({ queryKey: ['users'] });
-            closeModal();
+            // Only close modal when it was an edit form submit (variables have more than isActive)
+            if (Object.keys(variables.data).length > 1) closeModal();
         },
     });
 
@@ -62,6 +65,37 @@ export default function UsersPage() {
         onSuccess: () => {
             queryClient.invalidateQueries({ queryKey: ['users'] });
         },
+    });
+
+
+    // Filter and Group Users
+    const filteredUsers = usersData?.filter((user: any) => {
+        const matchesSearch =
+            (user.firstName?.toLowerCase() || '').includes(searchTerm.toLowerCase()) ||
+            (user.lastName?.toLowerCase() || '').includes(searchTerm.toLowerCase()) ||
+            (user.email?.toLowerCase() || '').includes(searchTerm.toLowerCase());
+
+        const matchesFiliere = selectedFiliere ? user.assignedFiliere === selectedFiliere : true;
+
+        // Filter out superadmin from display if wanted, observing user.role === 'responsable'
+        // For now we show all, but typically this page is for managing responsables
+        const isResponsable = user.role === 'responsable';
+
+        return matchesSearch && matchesFiliere && isResponsable;
+    }) || [];
+
+    const groupedUsers = filteredUsers.reduce((acc: any, user: any) => {
+        const filiere = user.assignedFiliere || 'Non assigné';
+        if (!acc[filiere]) {
+            acc[filiere] = [];
+        }
+        acc[filiere].push(user);
+        return acc;
+    }, {});
+
+    // Sort users within groups by Year Code
+    Object.keys(groupedUsers).forEach(key => {
+        groupedUsers[key].sort((a: any, b: any) => a.assignedYear?.localeCompare(b.assignedYear));
     });
 
     const openCreateModal = () => {
@@ -124,6 +158,17 @@ export default function UsersPage() {
         }
     };
 
+    const handleToggleActive = (user: any) => {
+        const willBeActive = !user.isActive;
+        if (willBeActive) {
+            updateMutation.mutate({ id: user._id, data: { isActive: true } });
+        } else {
+            if (confirm(`Désactiver le compte de ${user.firstName} ${user.lastName} ? L'utilisateur ne pourra plus se connecter.`)) {
+                updateMutation.mutate({ id: user._id, data: { isActive: false } });
+            }
+        }
+    };
+
     const selectedCycleData = structureData?.cycles?.find((c: any) => c.name === formData.assignedFiliere);
 
     return (
@@ -131,8 +176,8 @@ export default function UsersPage() {
             {/* Header */}
             <div className="flex items-center justify-between mb-8">
                 <div>
-                    <h1 className="text-3xl font-bold text-gray-900">Gestion des utilisateurs</h1>
-                    <p className="text-gray-600 mt-2">Gérer les comptes responsables</p>
+                    <h1 className="text-3xl font-bold text-atlas-800">Gestion des utilisateurs</h1>
+                    <p className="text-atlas-600 mt-2">Gérer les comptes responsables</p>
                 </div>
                 <button onClick={openCreateModal} className="btn-primary flex items-center gap-2">
                     <UserPlus size={20} />
@@ -140,85 +185,138 @@ export default function UsersPage() {
                 </button>
             </div>
 
-            {/* Users Table */}
-            <div className="card">
+            {/* Filters */}
+            <div className="card border border-cream-300/60 mb-6 flex flex-col md:flex-row gap-4">
+                <div className="flex-1">
+                    <input
+                        type="text"
+                        placeholder="Rechercher par nom ou email..."
+                        className="input-field w-full"
+                        value={searchTerm}
+                        onChange={(e) => setSearchTerm(e.target.value)}
+                    />
+                </div>
+                <div className="md:w-1/3">
+                    <select
+                        className="input-field w-full"
+                        value={selectedFiliere}
+                        onChange={(e) => setSelectedFiliere(e.target.value)}
+                    >
+                        <option value="">Toutes les filières</option>
+                        {structureData?.cycles?.map((c: any) => (
+                            <option key={c.name} value={c.name}>
+                                {c.name}
+                            </option>
+                        ))}
+                    </select>
+                </div>
+            </div>
+
+            {/* Users Groups */}
+            <div className="space-y-6">
                 {isLoading ? (
-                    <div className="text-center py-12">
-                        <div className="inline-block animate-spin rounded-full h-12 w-12 border-b-2 border-primary-500"></div>
+                    <div className="text-center py-12 card border border-cream-300/60">
+                        <div className="inline-block animate-spin rounded-full h-12 w-12 border-2 border-cream-300 border-t-accent-500" />
                     </div>
-                ) : usersData && usersData.length > 0 ? (
-                    <div className="overflow-x-auto">
-                        <table className="w-full">
-                            <thead>
-                                <tr className="border-b border-gray-200">
-                                    <th className="text-left py-3 px-4 text-sm font-medium text-gray-600">Nom</th>
-                                    <th className="text-left py-3 px-4 text-sm font-medium text-gray-600">Email</th>
-                                    <th className="text-left py-3 px-4 text-sm font-medium text-gray-600">Année / Filière</th>
-                                    <th className="text-left py-3 px-4 text-sm font-medium text-gray-600">Statut</th>
-                                    <th className="text-right py-3 px-4 text-sm font-medium text-gray-600">Actions</th>
-                                </tr>
-                            </thead>
-                            <tbody>
-                                {usersData.map((user: any) => (
-                                    <tr key={user._id} className="border-b border-gray-100 hover:bg-gray-50">
-                                        <td className="py-3 px-4">
-                                            <span className="text-sm font-medium text-gray-900">
-                                                {user.firstName} {user.lastName}
-                                            </span>
-                                        </td>
-                                        <td className="py-3 px-4 text-sm text-gray-600">{user.email}</td>
-                                        <td className="py-3 px-4">
-                                            <div className="text-sm">
-                                                <div className="font-medium text-gray-900">{user.assignedYear}</div>
-                                                <div className="text-gray-600">{user.assignedFiliere}</div>
-                                            </div>
-                                        </td>
-                                            <td className="py-3 px-4">
-                                                <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${user.isActive ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'
-                                                    }`}>
-                                                    {user.isActive ? 'Actif' : 'Inactif'}
-                                                </span>
-                                            </td>
-                                            <td className="py-3 px-4">
-                                                <div className="flex items-center justify-end gap-2">
-                                                    <button
-                                                        onClick={() => openEditModal(user)}
-                                                        className="text-blue-500 hover:text-blue-600 p-2"
-                                                        title="Modifier"
-                                                    >
-                                                        <Edit size={18} />
-                                                    </button>
-                                                    <button
-                                                        onClick={() => handleDelete(user)}
-                                                        className="text-red-500 hover:text-red-600 p-2"
-                                                        title="Supprimer"
-                                                        disabled={deleteMutation.isPending}
-                                                    >
-                                                        <Trash2 size={18} />
-                                                    </button>
-                                                </div>
-                                            </td>
+                ) : Object.keys(groupedUsers).length > 0 ? (
+                    Object.entries(groupedUsers).map(([filiere, users]: [string, any]) => (
+                        <div key={filiere} className="card border border-cream-300/60 overflow-hidden">
+                            <div className="bg-cream-50/80 px-6 py-3 border-b border-cream-300/60 flex justify-between items-center">
+                                <h3 className="font-semibold text-atlas-800 flex items-center gap-2">
+                                    <span className="w-2 h-8 bg-accent-500 rounded-full inline-block" />
+                                    {filiere}
+                                    <span className="text-xs font-normal text-atlas-600 bg-white px-2 py-1 rounded-full border border-cream-300 ml-2">
+                                        {users.length} responsable{users.length > 1 ? 's' : ''}
+                                    </span>
+                                </h3>
+                            </div>
+                            <div className="overflow-x-auto">
+                                <table className="w-full">
+                                    <thead className="bg-cream-50/50">
+                                        <tr>
+                                            <th className="text-left py-3 px-6 text-xs font-semibold text-atlas-600 uppercase tracking-wider">Année</th>
+                                            <th className="text-left py-3 px-6 text-xs font-semibold text-atlas-600 uppercase tracking-wider">Responsable</th>
+                                            <th className="text-left py-3 px-6 text-xs font-semibold text-atlas-600 uppercase tracking-wider">Email</th>
+                                            <th className="text-left py-3 px-6 text-xs font-semibold text-atlas-600 uppercase tracking-wider">Statut</th>
+                                            <th className="text-right py-3 px-6 text-xs font-semibold text-atlas-600 uppercase tracking-wider">Actions</th>
                                         </tr>
-                                ))}
-                            </tbody>
-                        </table>
-                    </div>
+                                    </thead>
+                                    <tbody className="divide-y divide-cream-200">
+                                        {users.map((user: any) => (
+                                            <tr key={user._id} className="hover:bg-cream-50/50 transition-colors">
+                                                <td className="py-3 px-6">
+                                                    <span className="inline-flex items-center justify-center px-2.5 py-1 rounded-md text-sm font-bold bg-atlas-100 text-atlas-800 min-w-[3rem]">
+                                                        {user.assignedYear}
+                                                    </span>
+                                                </td>
+                                                <td className="py-3 px-6">
+                                                    <div className="font-medium text-atlas-900">{user.firstName} {user.lastName}</div>
+                                                </td>
+                                                <td className="py-3 px-6 text-sm text-atlas-600 font-mono">{user.email}</td>
+                                                <td className="py-3 px-6">
+                                                    <button
+                                                        type="button"
+                                                        onClick={() => handleToggleActive(user)}
+                                                        disabled={updateMutation.isPending && (updateMutation.variables as { id: string })?.id === user._id}
+                                                        title={user.isActive ? "Cliquer pour désactiver le compte (l'utilisateur ne pourra plus se connecter)" : 'Cliquer pour réactiver le compte'}
+                                                        className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium cursor-pointer transition-opacity focus:outline-none focus:ring-2 focus:ring-accent-500 focus:ring-offset-1 disabled:opacity-60 ${user.isActive ? 'bg-green-100 text-green-800 hover:bg-green-200' : 'bg-red-100 text-red-800 hover:bg-red-200'}`}
+                                                    >
+                                                        <span className={`w-1.5 h-1.5 rounded-full mr-1.5 ${user.isActive ? 'bg-green-600' : 'bg-red-600'}`} />
+                                                        {user.isActive ? 'Actif' : 'Inactif'}
+                                                    </button>
+                                                </td>
+                                                <td className="py-3 px-6">
+                                                    <div className="flex items-center justify-end gap-2">
+                                                        <button
+                                                            onClick={() => openEditModal(user)}
+                                                            className="text-atlas-500 hover:text-accent-600 p-1.5 rounded-lg hover:bg-accent-50 transition-colors"
+                                                            title="Modifier"
+                                                        >
+                                                            <Edit size={16} />
+                                                        </button>
+                                                        <button
+                                                            onClick={() => handleDelete(user)}
+                                                            className="text-atlas-500 hover:text-red-600 p-1.5 rounded-lg hover:bg-red-50 transition-colors"
+                                                            title="Supprimer"
+                                                            disabled={deleteMutation.isPending}
+                                                        >
+                                                            <Trash2 size={16} />
+                                                        </button>
+                                                    </div>
+                                                </td>
+                                            </tr>
+                                        ))}
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+                    ))
                 ) : (
-                    <div className="text-center py-12">
-                        <p className="text-gray-600">Aucun responsable trouvé</p>
+                    <div className="text-center py-16 card border border-dashed border-cream-300">
+                        <div className="mx-auto flex items-center justify-center h-12 w-12 rounded-full bg-cream-200 mb-4">
+                            <UserPlus className="h-6 w-6 text-atlas-400" />
+                        </div>
+                        <h3 className="text-lg font-medium text-atlas-800">Aucun responsable trouvé</h3>
+                        <p className="mt-1 text-sm text-atlas-600">Essayez de modifier vos filtres ou créez un nouveau compte.</p>
+                        <div className="mt-6">
+                            <button onClick={openCreateModal} className="btn-primary inline-flex items-center">
+                                <UserPlus size={18} className="mr-2" />
+                                Nouveau responsable
+                            </button>
+                        </div>
                     </div>
                 )}
             </div>
 
             {/* Create/Edit Modal */}
             {showModal && (
-                <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
-                    <div className="bg-white rounded-lg p-6 max-w-2xl w-full max-h-[90vh] overflow-y-auto">
+                <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
+                    <div className="bg-white rounded-xl shadow-lg border border-cream-300/60 p-6 max-w-2xl w-full max-h-[90vh] overflow-y-auto">
                         <div className="flex items-center justify-between mb-6">
-                            <h3 className="text-xl font-semibold text-gray-900">
+                            <h3 className="text-xl font-semibold text-atlas-800">
                                 {editingUser ? 'Modifier le responsable' : 'Nouveau responsable'}
                             </h3>
-                            <button onClick={closeModal} className="text-gray-400 hover:text-gray-600">
+                            <button onClick={closeModal} className="text-atlas-400 hover:text-atlas-600 p-1 rounded-lg hover:bg-cream-100">
                                 <X size={24} />
                             </button>
                         </div>
@@ -226,7 +324,7 @@ export default function UsersPage() {
                         <form onSubmit={handleSubmit} className="space-y-4">
                             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                                 <div>
-                                    <label className="block text-sm font-medium text-gray-700 mb-2">
+                                    <label className="block text-sm font-medium text-atlas-700 mb-2">
                                         Prénom <span className="text-red-500">*</span>
                                     </label>
                                     <input
@@ -239,7 +337,7 @@ export default function UsersPage() {
                                 </div>
 
                                 <div>
-                                    <label className="block text-sm font-medium text-gray-700 mb-2">
+                                    <label className="block text-sm font-medium text-atlas-700 mb-2">
                                         Nom <span className="text-red-500">*</span>
                                     </label>
                                     <input
@@ -253,7 +351,7 @@ export default function UsersPage() {
                             </div>
 
                             <div>
-                                <label className="block text-sm font-medium text-gray-700 mb-2">
+                                <label className="block text-sm font-medium text-atlas-700 mb-2">
                                     Email <span className="text-red-500">*</span>
                                 </label>
                                 <input
@@ -266,9 +364,9 @@ export default function UsersPage() {
                             </div>
 
                             <div>
-                                <label className="block text-sm font-medium text-gray-700 mb-2">
+                                <label className="block text-sm font-medium text-atlas-700 mb-2">
                                     Mot de passe {!editingUser && <span className="text-red-500">*</span>}
-                                    {editingUser && <span className="text-gray-500 text-xs">(laisser vide pour ne pas changer)</span>}
+                                    {editingUser && <span className="text-atlas-500 text-xs">(laisser vide pour ne pas changer)</span>}
                                 </label>
                                 <div className="relative">
                                     <input
@@ -281,7 +379,7 @@ export default function UsersPage() {
                                     <button
                                         type="button"
                                         onClick={() => setShowPassword(!showPassword)}
-                                        className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400 hover:text-gray-600"
+                                        className="absolute right-3 top-1/2 transform -translate-y-1/2 text-atlas-400 hover:text-atlas-600"
                                     >
                                         {showPassword ? <EyeOff size={20} /> : <Eye size={20} />}
                                     </button>
@@ -290,7 +388,7 @@ export default function UsersPage() {
 
                             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                                 <div>
-                                    <label className="block text-sm font-medium text-gray-700 mb-2">
+                                    <label className="block text-sm font-medium text-atlas-700 mb-2">
                                         Filière (cycle) <span className="text-red-500">*</span>
                                     </label>
                                     <select
@@ -309,7 +407,7 @@ export default function UsersPage() {
                                 </div>
 
                                 <div>
-                                    <label className="block text-sm font-medium text-gray-700 mb-2">
+                                    <label className="block text-sm font-medium text-atlas-700 mb-2">
                                         Année (code) <span className="text-red-500">*</span>
                                     </label>
                                     <select

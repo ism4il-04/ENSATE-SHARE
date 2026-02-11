@@ -5,3 +5,4 @@ dist/
 .DS_Store
 uploads/
 service-account.json
+src/config/users.ts
