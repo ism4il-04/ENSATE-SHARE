@@ -163,11 +163,11 @@ function WelcomeContent() {
 
     return (
         <div className="min-h-screen bg-cream-100 scroll-smooth">
-            {/* Hero: full screen. For hero-bg.png, 1920×1080 (16:9) is recommended for sharp full-screen display. */}
+            {/* Hero: full screen. For hero-bg.jpeg, 1920×1080 (16:9) is recommended for sharp full-screen display. */}
             <header
                 className="relative min-h-screen flex flex-col overflow-hidden bg-atlas-900"
                 style={{
-                    backgroundImage: 'linear-gradient(to bottom, rgba(15,24,40,0.78) 0%, rgba(8,13,20,0.92) 100%), url(/hero-bg.png)',
+                    backgroundImage: 'linear-gradient(to bottom, rgba(15,24,40,0.78) 0%, rgba(8,13,20,0.92) 100%), url(/hero-bg.jpeg)',
                     backgroundSize: 'cover',
                     backgroundPosition: 'center',
                 }}
@@ -232,9 +232,8 @@ function WelcomeContent() {
                     style={{ scrollMarginTop: '2rem' }}
                 >
                     <div
-                        className={`max-w-4xl mx-auto transition-all duration-500 ${
-                            parcoursVisible ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-6'
-                        }`}
+                        className={`max-w-4xl mx-auto transition-all duration-500 ${parcoursVisible ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-6'
+                            }`}
                     >
                         <h2 className="text-2xl sm:text-3xl font-bold text-atlas-800 text-center mb-8">
                             Choisissez votre parcours

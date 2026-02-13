@@ -28,8 +28,11 @@ export function FileCard({ file, variant = 'default', animationDelay = 0, onPrev
 
     const thumbHeight = variant === 'compact' ? 'h-28' : variant === 'featured' ? 'h-56' : 'h-44';
 
-
-
+    const mainTitle = file.fileLabel || file.displayName || file.fileName;
+    const secondaryTitle =
+        file.fileLabel && (file.displayName || file.fileName)
+            ? (file.displayName || file.fileName)
+            : null;
     const apiBase = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000/api';
     const downloadHref = `${apiBase}/files/${file._id}/download`;
 
@@ -83,14 +86,16 @@ export function FileCard({ file, variant = 'default', animationDelay = 0, onPrev
 
             {/* Content */}
             <div className="p-4">
-                <h3 className="font-semibold text-atlas-900 truncate pr-8 group-hover:text-atlas-800" title={file.displayName || file.fileName}>
-                    {file.displayName || file.fileName}
+                <h3
+                    className="font-semibold text-atlas-900 truncate pr-8 group-hover:text-atlas-800"
+                    title={mainTitle}
+                >
+                    {mainTitle}
                 </h3>
-                {file.fileLabel && variant !== 'compact' && (
-                    <p className="text-sm text-atlas-600/90 italic mt-0.5 line-clamp-1">{file.fileLabel}</p>
-                )}
-                {variant !== 'compact' && (
-                    <p className="text-sm text-atlas-600 mt-1">{file.module}</p>
+                {secondaryTitle && variant !== 'compact' && (
+                    <p className="text-xs text-atlas-600 mt-0.5 line-clamp-1">
+                        {secondaryTitle}
+                    </p>
                 )}
                 <div className="flex items-center justify-between mt-3 gap-2">
                     <span className="text-xs text-atlas-500">{formatFileSize(file.fileSize)}</span>
@@ -115,7 +120,7 @@ export function FileCard({ file, variant = 'default', animationDelay = 0, onPrev
                 type="button"
                 onClick={() => onPreview(file)}
                 className="block w-full text-left focus:outline-none"
-                title={file.displayName || file.fileName}
+                title={mainTitle}
             >
                 {CardContent}
             </button>
@@ -123,7 +128,13 @@ export function FileCard({ file, variant = 'default', animationDelay = 0, onPrev
     }
 
     return (
-        <a href={file.fileUrl} target="_blank" rel="noopener noreferrer" className="block focus:outline-none" title={file.displayName || file.fileName}>
+        <a
+            href={file.fileUrl}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="block focus:outline-none"
+            title={mainTitle}
+        >
             {CardContent}
         </a>
     );

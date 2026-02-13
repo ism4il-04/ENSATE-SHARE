@@ -37,7 +37,7 @@ export default function LoginPage() {
         <div
             className="min-h-screen flex items-center justify-center px-4 relative overflow-hidden"
             style={{
-                backgroundImage: `linear-gradient(160deg, ${LOGIN_GRADIENT_LIGHT}99 0%, ${LOGIN_BG} 40%, ${LOGIN_GRADIENT_DARK} 100%), url(/hero-bg.png)`,
+                backgroundImage: `linear-gradient(160deg, ${LOGIN_GRADIENT_LIGHT}99 0%, ${LOGIN_BG} 40%, ${LOGIN_GRADIENT_DARK} 100%), url(/hero-bg.jpeg)`,
                 backgroundSize: 'cover',
                 backgroundPosition: 'center',
             }}

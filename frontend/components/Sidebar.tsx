@@ -44,7 +44,7 @@ export default function Sidebar() {
     const links = user?.role === 'superadmin' ? superadminLinks : responsableLinks;
 
     return (
-        <aside className="w-full md:w-64 bg-white border-b md:border-b-0 md:border-r border-cream-300/60 md:min-h-screen flex flex-col">
+        <aside className="w-full md:w-64 bg-white border-b md:border-b-0 md:border-r border-cream-300/60 md:h-screen md:sticky md:top-0 flex flex-col md:overflow-y-auto">
             {/* Logo */}
             <div className="p-6 border-b border-cream-300/60">
                 <Link href="/" className="block">

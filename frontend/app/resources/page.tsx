@@ -10,6 +10,7 @@ import Link from 'next/link';
 import Image from 'next/image';
 import { FileCard } from '@/components/FileCard';
 import DocumentPreviewModal from '@/components/DocumentPreviewModal';
+import { getFileCategoryColor } from '@/lib/utils/fileHelpers';
 
 const FILE_CATEGORY_ORDER: FileType['fileCategory'][] = ['Cours', 'TD', 'TP', 'EXAM', 'Autre'];
 
@@ -171,34 +172,51 @@ function ResourcesContent() {
                                 <p className="mt-3 text-atlas-600">Chargement…</p>
                             </div>
                         ) : filesByCategory.length > 0 ? (
-                            filesByCategory.map(({ category, files: categoryFiles }, sectionIndex) => (
-                                <div key={category} className="mb-8">
-                                    <h4 className="text-base font-semibold text-atlas-800 mb-3">{category}</h4>
-                                    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 md:gap-5">
-                                        {categoryFiles.map((file: FileType, index: number) => (
-                                            <div
-                                                key={file._id}
-                                                className="animate-slide-up opacity-0"
-                                                style={{
-                                                    animationDelay: `${Math.min(sectionIndex * 80 + index * 50, 400)}ms`,
-                                                    animationFillMode: 'forwards',
-                                                }}
-                                            >
-                                                <FileCard
-                                                    file={file}
-                                                    variant="default"
-                                                    onPreview={() => setPreviewFile({
-                                                        id: file._id,
-                                                        name: file.displayName || file.fileName,
-                                                        url: file.fileUrl,
-                                                        type: file.fileType
-                                                    })}
-                                                />
+                            filesByCategory.map(({ category, files: categoryFiles }, sectionIndex) => {
+                                const categoryColors = getFileCategoryColor(category || 'Autre');
+                                return (
+                                    <div key={category} className="mb-10 border-t border-cream-300/70 pt-5">
+                                        <div className="flex items-center justify-between mb-3">
+                                            <div className="flex items-center gap-3">
+                                                <span
+                                                    className={`inline-flex items-center px-3 py-1.5 rounded-full text-xs font-semibold shadow-sm ${categoryColors.bg} ${categoryColors.text}`}
+                                                >
+                                                    {category}
+                                                </span>
+                                                <span className="text-xs text-atlas-500">
+                                                    {categoryFiles.length} document
+                                                    {categoryFiles.length > 1 ? 's' : ''}
+                                                </span>
                                             </div>
-                                        ))}
+                                        </div>
+                                        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 md:gap-5">
+                                            {categoryFiles.map((file: FileType, index: number) => (
+                                                <div
+                                                    key={file._id}
+                                                    className="animate-slide-up opacity-0"
+                                                    style={{
+                                                        animationDelay: `${Math.min(sectionIndex * 80 + index * 50, 400)}ms`,
+                                                        animationFillMode: 'forwards',
+                                                    }}
+                                                >
+                                                    <FileCard
+                                                        file={file}
+                                                        variant="default"
+                                                        onPreview={() =>
+                                                            setPreviewFile({
+                                                                id: file._id,
+                                                                name: file.displayName || file.fileName,
+                                                                url: file.fileUrl,
+                                                                type: file.fileType,
+                                                            })
+                                                        }
+                                                    />
+                                                </div>
+                                            ))}
+                                        </div>
                                     </div>
-                                </div>
-                            ))
+                                );
+                            })
                         ) : (
                             <div className="glass-card text-center py-12 px-6">
                                 <BookOpen className="mx-auto text-atlas-300 mb-3" size={48} />

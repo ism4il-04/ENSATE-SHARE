@@ -98,7 +98,7 @@ export const getFileById = async (req: AuthRequest, res: Response): Promise<void
     }
 };
 
-import { ensureDrivePath } from '../utils/driveUtils';
+import { ensureDrivePath, deleteCategoryFolderIfEmpty, deleteModuleFolderAndPruneAncestors } from '../utils/driveUtils';
 // @route   POST /api/files
 // @access  Private (Responsable/Superadmin)
 export const uploadFile = async (req: AuthRequest, res: Response): Promise<void> => {
@@ -410,6 +410,8 @@ export const deleteFile = async (req: AuthRequest, res: Response): Promise<void>
             return;
         }
 
+        const { year, filiere, semester, module, fileCategory } = file;
+
         // Delete from Drive (if driveId exists)
         if (file.driveId) {
             try {
@@ -423,6 +425,29 @@ export const deleteFile = async (req: AuthRequest, res: Response): Promise<void>
 
         // Delete from database
         await file.deleteOne();
+
+        // After deletion, if there are no more files in this (year, filiere, semester, module, category),
+        // try to clean up the corresponding Drive folders.
+        const remainingInCategory = await File.countDocuments({
+            year,
+            filiere,
+            semester,
+            module,
+            fileCategory,
+        });
+        if (remainingInCategory === 0) {
+            await deleteCategoryFolderIfEmpty({ filiere, year, semester, module, fileCategory });
+        }
+
+        const remainingInModule = await File.countDocuments({
+            year,
+            filiere,
+            semester,
+            module,
+        });
+        if (remainingInModule === 0) {
+            await deleteModuleFolderAndPruneAncestors({ filiere, year, semester, module });
+        }
 
         // Log activity
         await ActivityLog.create({

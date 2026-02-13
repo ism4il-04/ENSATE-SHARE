@@ -3,7 +3,8 @@
 import { useState, useEffect } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { structureAPI } from '@/lib/api';
-import { Plus, Edit, Trash2, X, Save, ChevronDown, ChevronRight, Layers, GraduationCap, BookOpen } from 'lucide-react';
+import { Plus, Edit, Trash2, X, Save, ChevronDown, ChevronRight, Layers, GraduationCap, BookOpen, Info } from 'lucide-react';
+import Link from 'next/link';
 import type { Cycle, YearLevel, Semester } from '@/types';
 
 type CycleWithOpen = Cycle & { _open?: boolean; _yearsOpen?: Record<number, boolean> };
@@ -195,6 +196,14 @@ export default function StructurePage() {
                         </div>
                     </div>
                     <div className="flex gap-3 shrink-0">
+                        <Link
+                            href="/dashboard/superadmin/structure/guidelines"
+                            className="inline-flex items-center gap-2 px-4 py-2.5 rounded-xl font-medium text-atlas-700 bg-cream-100 hover:bg-cream-200 border border-cream-300 transition-colors"
+                            title="Guide d'édition de la structure"
+                        >
+                            <Info size={18} />
+                            <span className="hidden sm:inline">Guide</span>
+                        </Link>
                         {editMode ? (
                             <>
                                 <button

@@ -267,12 +267,12 @@ export default function FilesPage() {
                                                             <div className="flex items-center gap-2">
                                                                 <FileText size={16} className="text-atlas-400" />
                                                                 <span className="text-sm text-atlas-900 font-medium hover:text-accent-600 transition-colors">
-                                                                    {file.displayName || file.fileName}
+                                                                    {file.fileLabel || file.displayName || file.fileName}
                                                                 </span>
                                                             </div>
-                                                            {file.fileLabel && (
-                                                                <span className="text-xs text-atlas-600 italic ml-6">
-                                                                    {file.fileLabel}
+                                                            {(file.fileLabel && (file.displayName || file.fileName)) && (
+                                                                <span className="text-xs text-atlas-600 ml-6">
+                                                                    {file.displayName || file.fileName}
                                                                 </span>
                                                             )}
                                                         </div>

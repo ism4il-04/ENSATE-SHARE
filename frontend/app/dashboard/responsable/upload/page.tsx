@@ -13,11 +13,10 @@ export default function UploadPage() {
     const queryClient = useQueryClient();
     const { user } = useAuthStore();
 
-    const [selectedFile, setSelectedFile] = useState<File | null>(null);
+    const [selectedFiles, setSelectedFiles] = useState<{ file: File; label: string }[]>([]);
     const [semester, setSemester] = useState('');
     const [module, setModule] = useState('');
     const [fileCategory, setFileCategory] = useState<'Cours' | 'TD' | 'TP' | 'EXAM' | 'Autre'>('Autre');
-    const [fileLabel, setFileLabel] = useState('');
     const [uploadProgress, setUploadProgress] = useState(0);
     const [uploadStatus, setUploadStatus] = useState<'idle' | 'uploading' | 'success' | 'error'>('idle');
     const [errorMessage, setErrorMessage] = useState('');
@@ -40,26 +39,20 @@ export default function UploadPage() {
         ?.find((s: any) => s.name === semester)
         ?.modules || [];
 
-    // Upload mutation
+    // Upload mutation (supports multiple files)
     const uploadMutation = useMutation({
-        mutationFn: async (formData: FormData) => {
+        mutationFn: async ({ forms }: { forms: FormData[] }) => {
             setUploadStatus('uploading');
             setUploadProgress(0);
+            setErrorMessage('');
 
-            // Simulate progress (in real app, use axios onUploadProgress)
-            const progressInterval = setInterval(() => {
-                setUploadProgress((prev) => Math.min(prev + 10, 90));
-            }, 200);
-
-            try {
-                const response = await filesAPI.uploadFile(formData);
-                clearInterval(progressInterval);
-                setUploadProgress(100);
-                return response.data;
-            } catch (error) {
-                clearInterval(progressInterval);
-                throw error;
+            for (let i = 0; i < forms.length; i++) {
+                await filesAPI.uploadFile(forms[i]);
+                const progress = Math.round(((i + 1) / forms.length) * 100);
+                setUploadProgress(progress);
             }
+
+            return true;
         },
         onSuccess: () => {
             setUploadStatus('success');
@@ -87,10 +80,13 @@ export default function UploadPage() {
             'image/*': ['.jpg', '.jpeg', '.png', '.gif'],
         },
         maxSize: 50 * 1024 * 1024, // 50MB
-        multiple: false,
+        multiple: true,
         onDrop: (acceptedFiles) => {
             if (acceptedFiles.length > 0) {
-                setSelectedFile(acceptedFiles[0]);
+                setSelectedFiles((prev) => [
+                    ...prev,
+                    ...acceptedFiles.map((file) => ({ file, label: '' })),
+                ]);
                 setUploadStatus('idle');
                 setErrorMessage('');
             }
@@ -108,21 +104,24 @@ export default function UploadPage() {
     const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
 
-        if (!selectedFile || !semester || !module) {
-            setErrorMessage('Veuillez sélectionner un fichier, un semestre et un module');
+        if (!selectedFiles.length || !semester || !module) {
+            setErrorMessage('Veuillez sélectionner au moins un fichier, un semestre et un module');
             return;
         }
 
-        const formData = new FormData();
-        formData.append('file', selectedFile);
-        formData.append('semester', semester);
-        formData.append('module', module);
-        formData.append('fileCategory', fileCategory);
-        if (fileLabel.trim()) {
-            formData.append('fileLabel', fileLabel.trim());
-        }
+        const forms = selectedFiles.map(({ file, label }) => {
+            const formData = new FormData();
+            formData.append('file', file);
+            formData.append('semester', semester);
+            formData.append('module', module);
+            formData.append('fileCategory', fileCategory);
+            if (label.trim()) {
+                formData.append('fileLabel', label.trim());
+            }
+            return formData;
+        });
 
-        uploadMutation.mutate(formData);
+        uploadMutation.mutate({ forms });
     };
 
     const formatFileSize = (bytes: number) => {
@@ -152,30 +151,70 @@ export default function UploadPage() {
                         {...getRootProps()}
                         className={`border-2 border-dashed rounded-xl p-12 text-center cursor-pointer transition-colors ${isDragActive
                             ? 'border-accent-500 bg-accent-50'
-                            : selectedFile
+                            : selectedFiles.length
                                 ? 'border-green-500 bg-green-50'
                                 : 'border-cream-300 hover:border-accent-400'
                         }`}
                     >
                         <input {...getInputProps()} />
 
-                        {selectedFile ? (
-                            <div className="flex items-center justify-center gap-4">
-                                <FileText className="text-green-600" size={48} />
-                                <div className="text-left">
-                                    <p className="font-medium text-atlas-900">{selectedFile.name}</p>
-                                    <p className="text-sm text-atlas-600">{formatFileSize(selectedFile.size)}</p>
-                                </div>
-                                <button
-                                    type="button"
-                                    onClick={(e) => {
-                                        e.stopPropagation();
-                                        setSelectedFile(null);
-                                    }}
-                                    className="text-red-500 hover:text-red-600"
-                                >
-                                    <X size={24} />
-                                </button>
+                        {selectedFiles.length > 0 ? (
+                            <div className="space-y-4 text-left">
+                                {selectedFiles.map((item, index) => (
+                                    <div
+                                        key={`${item.file.name}-${item.file.lastModified}-${index}`}
+                                        className="flex flex-col md:flex-row md:items-center gap-3 md:gap-4"
+                                    >
+                                        <div className="flex items-center gap-3 md:min-w-[220px]">
+                                            <FileText className="text-green-600" size={40} />
+                                            <div>
+                                                <p className="font-medium text-atlas-900 line-clamp-1">
+                                                    {item.file.name}
+                                                </p>
+                                                <p className="text-xs text-atlas-600">
+                                                    {formatFileSize(item.file.size)}
+                                                </p>
+                                            </div>
+                                        </div>
+                                        <div
+                                            className="flex-1"
+                                            onClick={(e) => e.stopPropagation()}
+                                        >
+                                            <input
+                                                type="text"
+                                                value={item.label}
+                                                onChange={(e) => {
+                                                    const next = [...selectedFiles];
+                                                    next[index] = {
+                                                        ...next[index],
+                                                        label: e.target.value,
+                                                    };
+                                                    setSelectedFiles(next);
+                                                }}
+                                                placeholder='Label pour ce fichier (ex: "Cours n°1", "Cours n°2")'
+                                                className="input-field"
+                                                maxLength={100}
+                                            />
+                                        </div>
+                                        <button
+                                            type="button"
+                                            onClick={(e) => {
+                                                e.stopPropagation();
+                                                setSelectedFiles((prev) =>
+                                                    prev.filter((_, i) => i !== index),
+                                                );
+                                            }}
+                                            title="Retirer ce fichier de la sélection"
+                                            className="self-start text-red-500 hover:text-red-600"
+                                        >
+                                            <X size={20} />
+                                        </button>
+                                    </div>
+                                ))}
+                                <p className="text-xs text-atlas-500">
+                                    Vous pouvez ajouter plusieurs fichiers pour le même module et type,
+                                    en donnant un label différent à chacun.
+                                </p>
                             </div>
                         ) : (
                             <div>
@@ -267,25 +306,6 @@ export default function UploadPage() {
                     </select>
                 </div>
 
-                {/* File Label Input */}
-                <div className="card border border-cream-300/60">
-                    <label htmlFor="fileLabel" className="block text-sm font-medium text-atlas-700 mb-3">
-                        Label personnalisé (optionnel)
-                    </label>
-                    <input
-                        id="fileLabel"
-                        type="text"
-                        value={fileLabel}
-                        onChange={(e) => setFileLabel(e.target.value)}
-                        placeholder='Ex: "Cours n°1", "TD Chapitre 3"'
-                        className="input-field"
-                        maxLength={100}
-                    />
-                    <p className="text-xs text-atlas-500 mt-1">
-                        Ajoutez un titre personnalisé pour identifier facilement ce fichier
-                    </p>
-                </div>
-
                 {/* Error Message */}
                 {errorMessage && (
                     <div className="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded-lg flex items-center gap-2">
@@ -322,7 +342,7 @@ export default function UploadPage() {
                 <div className="flex gap-4">
                     <button
                         type="submit"
-                        disabled={!selectedFile || !semester || !module || uploadStatus === 'uploading'}
+                        disabled={!selectedFiles.length || !semester || !module || uploadStatus === 'uploading'}
                         className="btn-primary disabled:opacity-50 disabled:cursor-not-allowed"
                     >
                         {uploadStatus === 'uploading' ? 'Upload en cours...' : 'Uploader'}
