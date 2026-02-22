@@ -55,7 +55,7 @@ export default function SuperadminDashboard() {
             {/* Header */}
             <div className="mb-8">
                 <h1 className="text-3xl font-bold text-atlas-800">Tableau de bord Superadmin</h1>
-                <p className="text-atlas-600 mt-2">Vue d'ensemble de la plateforme ENSA-SHARE</p>
+                <p className="text-atlas-600 mt-2">Vue d'ensemble de la plateforme ENSATE-SHARE</p>
             </div>
 
             {/* Stats Cards */}

@@ -36,7 +36,7 @@ export default function ResponsableDashboardLayout({
                             <line x1="3" y1="18" x2="21" y2="18" />
                         </svg>
                     </button>
-                    <span className="text-sm font-semibold text-atlas-900">ENSA-SHARE Admin</span>
+                    <span className="text-sm font-semibold text-atlas-900">ENSATE-SHARE Admin</span>
                 </div>
 
                 <div className="flex flex-1 min-h-0">

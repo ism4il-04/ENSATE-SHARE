@@ -1,7 +1,7 @@
 {
-  "name": "ensa-share-backend",
+  "name": "ensate-share-backend",
   "version": "1.0.0",
-  "description": "Backend API for ENSA-SHARE platform",
+  "description": "Backend API for ENSATE-SHARE platform",
   "main": "dist/server.js",
   "scripts": {
     "dev": "nodemon src/server.ts",

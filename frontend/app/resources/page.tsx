@@ -119,7 +119,7 @@ function ResourcesContent() {
                         <Link href="/" className="flex shrink-0">
                             <Image
                                 src="/ensa-share_logo_white.png"
-                                alt="ENSA-SHARE"
+                                alt="ENSATE-SHARE"
                                 width={220}
                                 height={82}
                                 className="h-14 w-auto drop-shadow-[0_0_12px_rgba(13,148,136,0.2)]"
@@ -230,7 +230,7 @@ function ResourcesContent() {
             <footer className="border-t border-cream-300/60 bg-cream-50/50 mt-12">
                 <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
                     <p className="text-center text-atlas-600 text-sm">
-                        © 2026 ENSA-SHARE — École Nationale des Sciences Appliquées
+                        © 2026 ENSATE-SHARE — École Nationale des Sciences Appliquées
                     </p>
                 </div>
             </footer>

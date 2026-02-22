@@ -54,7 +54,7 @@ export default function LoginPage() {
                         <Link href="/" className="block mb-5">
                             <Image
                                 src="/ensa-share_logo_white.png"
-                                alt="ENSA-SHARE"
+                                alt="ENSATE-SHARE"
                                 width={280}
                                 height={90}
                                 className="h-20 w-auto max-w-[280px]"

@@ -71,7 +71,7 @@ export const uploadFile = async (req: AuthRequest, res: Response): Promise<void>
         const dataURI = `data:${req.file.mimetype};base64,${b64}`;
 
         const result = await cloudinary.uploader.upload(dataURI, {
-            folder: `ensa-share/${year}/${filiere}/${module}`,
+            folder: `ensate-share/${year}/${filiere}/${module}`,
             resource_type: 'auto',
         });
         console.log('✅ Cloudinary upload successful:', result.public_id);

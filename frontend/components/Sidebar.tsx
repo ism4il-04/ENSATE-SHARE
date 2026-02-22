@@ -50,7 +50,7 @@ export default function Sidebar() {
                 <Link href="/" className="block">
                     <Image
                         src="/ensa-share_logo.png"
-                        alt="ENSA-SHARE"
+                        alt="ENSATE-SHARE"
                         width={180}
                         height={56}
                         className="h-9 w-auto"

@@ -188,7 +188,7 @@ function WelcomeContent() {
                         Plateforme ENSA
                     </div>
                     <h1 className="text-4xl sm:text-5xl lg:text-6xl font-bold text-cream-50 tracking-tight leading-tight">
-                        ENSA-SHARE
+                        ENSATE-SHARE
                     </h1>
                     <p className="mt-4 text-lg sm:text-xl text-cream-200/90 max-w-2xl leading-relaxed">
                         Les délégués déposent cours, TD, TP et examens ; vous les retrouvez par parcours et module, puis vous consultez et téléchargez en un clic.
@@ -395,14 +395,14 @@ function WelcomeContent() {
                     <Link href="/">
                         <Image
                             src="/ensa-share_logo.png"
-                            alt="ENSA-SHARE"
+                            alt="ENSATE-SHARE"
                             width={140}
                             height={44}
                             className="h-8 w-auto opacity-90 hover:opacity-100 transition-opacity"
                         />
                     </Link>
                     <p className="text-atlas-600 text-sm">
-                        © 2026 ENSA-SHARE — École Nationale des Sciences Appliquées
+                        © 2026 ENSATE-SHARE — École Nationale des Sciences Appliquées
                     </p>
                 </div>
             </footer>

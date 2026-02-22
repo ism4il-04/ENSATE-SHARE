@@ -1,10 +1,10 @@
-# ENSA-SHARE
+# ENSATE-SHARE
 
 Plateforme web de gestion et partage de ressources pédagogiques pour l'École Nationale des Sciences Appliquées.
 
 ## 📋 Description
 
-ENSA-SHARE est une application web moderne permettant aux représentants des étudiants de partager efficacement les ressources pédagogiques (cours, TD, TP) avec l'ensemble de la communauté étudiante. La plateforme offre un système de filtrage avancé, une gestion sécurisée des fichiers et des interfaces différenciées selon les rôles.
+ENSATE-SHARE est une application web moderne permettant aux représentants des étudiants de partager efficacement les ressources pédagogiques (cours, TD, TP) avec l'ensemble de la communauté étudiante. La plateforme offre un système de filtrage avancé, une gestion sécurisée des fichiers et des interfaces différenciées selon les rôles.
 
 ## 🎯 Fonctionnalités Principales
 
@@ -56,7 +56,7 @@ ENSA-SHARE est une application web moderne permettant aux représentants des ét
 ### 1. Cloner le repository
 ```bash
 git clone <repository-url>
-cd ENSA-SHARE
+cd ENSATE-SHARE
 ```
 
 ### 2. Configuration Backend
@@ -118,7 +118,7 @@ npm run dev
 ## 📁 Structure du Projet
 
 ```
-ENSA-SHARE/
+ENSATE-SHARE/
 ├── backend/
 │   ├── src/
 │   │   ├── models/          # Modèles Mongoose
