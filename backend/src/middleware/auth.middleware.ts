@@ -108,6 +108,35 @@ export const authorize = (...roles: string[]) => {
     };
 };
 
+// Optional auth - populate req.user if token exists, but don't reject if missing
+export const optionalAuth = async (
+    req: AuthRequest,
+    res: Response,
+    next: NextFunction
+): Promise<void> => {
+    try {
+        let token: string | undefined;
+        if (req.cookies?.token) {
+            token = req.cookies.token;
+        } else if (req.headers.authorization?.startsWith('Bearer')) {
+            token = req.headers.authorization.split(' ')[1];
+        }
+        if (token) {
+            const secret = process.env.JWT_SECRET;
+            if (secret) {
+                const decoded = jwt.verify(token, secret) as { id: string };
+                const user = await User.findById(decoded.id).select('-password');
+                if (user && user.isActive) {
+                    req.user = user;
+                }
+            }
+        }
+    } catch {
+        /* token invalid/expired — proceed as unauthenticated */
+    }
+    next();
+};
+
 // Middleware to require superadmin role
 export const requireSuperadmin = [protect, authorize('superadmin')];
 

@@ -8,13 +8,13 @@ import {
     downloadFile,
     syncThumbnails,
 } from '../controllers/file.controller';
-import { requireAuth } from '../middleware/auth.middleware';
+import { requireAuth, optionalAuth } from '../middleware/auth.middleware';
 import upload from '../middleware/upload.middleware';
 
 const router = Router();
 
-// Public routes
-router.get('/', getFiles);
+// Public routes (optionalAuth populates req.user for responsable filtering)
+router.get('/', optionalAuth, getFiles);
 router.get('/sync-thumbnails', syncThumbnails); // Debug route
 router.get('/:id', getFileById);
 router.get('/:id/download', downloadFile);
