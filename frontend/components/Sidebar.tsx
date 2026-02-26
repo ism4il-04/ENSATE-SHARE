@@ -24,7 +24,7 @@ export default function Sidebar() {
 
     const handleLogout = async () => {
         await logout();
-        router.push('/login');
+        router.push('/ensa-portal-9x7k');
     };
 
     const responsableLinks = [
@@ -114,8 +114,8 @@ export default function Sidebar() {
                 <Link
                     href={user?.role === 'superadmin' ? '/dashboard/superadmin/profile' : '/dashboard/responsable/profile'}
                     className={`flex items-center gap-3 px-4 py-3 rounded-lg transition-colors ${pathname.endsWith('/profile')
-                            ? 'bg-accent-50 text-accent-700 font-medium'
-                            : 'text-atlas-700 hover:bg-cream-100'
+                        ? 'bg-accent-50 text-accent-700 font-medium'
+                        : 'text-atlas-700 hover:bg-cream-100'
                         }`}
                 >
                     <UserCircle size={20} />

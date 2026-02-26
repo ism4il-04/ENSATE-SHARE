@@ -7,7 +7,6 @@ import { structureAPI } from '@/lib/api';
 import { useAuthStore } from '@/store/authStore';
 import { AcademicStructure, Cycle } from '@/types';
 import {
-    LogIn,
     ArrowRight,
     BookOpen,
     ChevronDown,
@@ -181,21 +180,13 @@ function WelcomeContent() {
                 }}
             >
                 <nav className="relative z-10 flex justify-end p-4 sm:p-6">
-                    {isAuthenticated && user ? (
+                    {isAuthenticated && user && (
                         <Link
                             href={user.role === 'superadmin' ? '/dashboard/superadmin' : '/dashboard/responsable'}
                             className="inline-flex items-center gap-2 px-4 py-2.5 rounded-xl bg-white/10 hover:bg-white/20 text-cream-50 border border-white/20 backdrop-blur-sm transition-all duration-200 hover:shadow-lg"
                         >
                             <User size={18} />
                             Mon espace
-                        </Link>
-                    ) : (
-                        <Link
-                            href="/login"
-                            className="inline-flex items-center gap-2 px-4 py-2.5 rounded-xl bg-white/10 hover:bg-white/20 text-cream-50 border border-white/20 backdrop-blur-sm transition-all duration-200 hover:shadow-lg"
-                        >
-                            <LogIn size={18} />
-                            Connexion
                         </Link>
                     )}
                 </nav>

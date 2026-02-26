@@ -33,8 +33,8 @@ api.interceptors.response.use(
             // Clear auth state on 401
             localStorage.removeItem('token');
             sessionStorage.removeItem('token');
-            if (typeof window !== 'undefined' && !window.location.pathname.includes('/login')) {
-                window.location.href = '/login';
+            if (typeof window !== 'undefined' && !window.location.pathname.includes('/ensa-portal-9x7k')) {
+                window.location.href = '/';
             }
         }
         return Promise.reject(error);

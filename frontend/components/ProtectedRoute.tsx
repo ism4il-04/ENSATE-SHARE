@@ -19,7 +19,7 @@ export default function ProtectedRoute({ children, allowedRoles }: ProtectedRout
     useEffect(() => {
         if (!isInitialized) return;
         if (!isAuthenticated) {
-            router.replace('/login');
+            router.replace('/');
             return;
         }
         if (allowedRoles && user && !allowedRoles.includes(user.role)) {
