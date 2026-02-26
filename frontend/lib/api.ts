@@ -14,7 +14,7 @@ const api = axios.create({
 // Add auth token to requests if available
 api.interceptors.request.use(
     (config) => {
-        const token = localStorage.getItem('token');
+        const token = localStorage.getItem('token') || sessionStorage.getItem('token');
         if (token) {
             config.headers.Authorization = `Bearer ${token}`;
         }
@@ -32,6 +32,7 @@ api.interceptors.response.use(
         if (error.response?.status === 401) {
             // Clear auth state on 401
             localStorage.removeItem('token');
+            sessionStorage.removeItem('token');
             if (typeof window !== 'undefined' && !window.location.pathname.includes('/login')) {
                 window.location.href = '/login';
             }
@@ -44,10 +45,11 @@ export default api;
 
 // Auth API
 export const authAPI = {
-    login: (email: string, password: string) =>
-        api.post('/auth/login', { email, password }),
+    login: (email: string, password: string, rememberMe: boolean = false) =>
+        api.post('/auth/login', { email, password, rememberMe }),
     logout: () => api.post('/auth/logout'),
     getMe: () => api.get('/auth/me'),
+    updateProfile: (data: any) => api.put('/auth/profile', data),
 };
 
 // Files API

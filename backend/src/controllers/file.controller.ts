@@ -50,10 +50,27 @@ export const getFiles = async (req: AuthRequest, res: Response): Promise<void> =
         // Get total count
         const total = await File.countDocuments(filter);
 
+        // Aggregate total size across ALL matching files (not just the paginated subset)
+        const sizeAgg = await File.aggregate([
+            { $match: filter },
+            { $group: { _id: null, totalSize: { $sum: '$fileSize' } } },
+        ]);
+        const totalSize = sizeAgg.length > 0 ? sizeAgg[0].totalSize : 0;
+
+        // Count files uploaded this month (matching the same filter)
+        const now = new Date();
+        const startOfMonth = new Date(now.getFullYear(), now.getMonth(), 1);
+        const thisMonthCount = await File.countDocuments({
+            ...filter,
+            createdAt: { $gte: startOfMonth },
+        });
+
         res.status(200).json({
             success: true,
             count: files.length,
             total,
+            totalSize,
+            thisMonthCount,
             page: pageNum,
             pages: Math.ceil(total / limitNum),
             files,

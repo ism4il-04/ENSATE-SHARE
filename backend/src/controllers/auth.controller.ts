@@ -5,12 +5,12 @@ import ActivityLog from '../models/ActivityLog.model';
 import { AuthRequest } from '../middleware/auth.middleware';
 
 // Generate JWT Token
-const generateToken = (id: string): string => {
+const generateToken = (id: string, expiresIn: string = '24h'): string => {
     const secret = process.env.JWT_SECRET;
     if (!secret) {
         throw new Error('JWT_SECRET is not defined in environment variables');
     }
-    return jwt.sign({ id }, secret, { expiresIn: '24h' });
+    return jwt.sign({ id }, secret, { expiresIn } as SignOptions);
 };
 
 // @desc    Login user
@@ -18,7 +18,7 @@ const generateToken = (id: string): string => {
 // @access  Public
 export const login = async (req: AuthRequest, res: Response): Promise<void> => {
     try {
-        const { email, password } = req.body;
+        const { email, password, rememberMe } = req.body;
 
         // Validate input
         if (!email || !password) {
@@ -60,8 +60,10 @@ export const login = async (req: AuthRequest, res: Response): Promise<void> => {
             return;
         }
 
-        // Generate token
-        const token = generateToken(user._id.toString());
+        // Generate token (30 days if rememberMe, else 24h)
+        const tokenExpiry = rememberMe ? '30d' : '24h';
+        const token = generateToken(user._id.toString(), tokenExpiry);
+        const cookieMaxAge = rememberMe ? 30 * 24 * 60 * 60 * 1000 : 24 * 60 * 60 * 1000;
 
         // Log activity
         await ActivityLog.create({
@@ -77,7 +79,7 @@ export const login = async (req: AuthRequest, res: Response): Promise<void> => {
                 httpOnly: true,
                 secure: process.env.NODE_ENV === 'production',
                 sameSite: 'strict',
-                maxAge: 24 * 60 * 60 * 1000, // 24 hours
+                maxAge: cookieMaxAge,
             })
             .json({
                 success: true,
@@ -166,5 +168,70 @@ export const getMe = async (req: AuthRequest, res: Response): Promise<void> => {
             message: 'Server error',
             error: error.message,
         });
+    }
+};
+
+// @desc    Update own profile
+// @route   PUT /api/auth/profile
+// @access  Private
+export const updateProfile = async (req: AuthRequest, res: Response): Promise<void> => {
+    try {
+        if (!req.user) {
+            res.status(401).json({ success: false, message: 'Not authorized' });
+            return;
+        }
+
+        const user = await User.findById(req.user._id).select('+password');
+        if (!user) {
+            res.status(404).json({ success: false, message: 'User not found' });
+            return;
+        }
+
+        const { firstName, lastName, email, currentPassword, newPassword } = req.body;
+
+        // Password change: verify current password first
+        if (newPassword) {
+            if (!currentPassword) {
+                res.status(400).json({ success: false, message: 'Le mot de passe actuel est requis' });
+                return;
+            }
+            const isMatch = await user.comparePassword(currentPassword);
+            if (!isMatch) {
+                res.status(400).json({ success: false, message: 'Mot de passe actuel incorrect' });
+                return;
+            }
+            if (newPassword.length < 6) {
+                res.status(400).json({ success: false, message: 'Le nouveau mot de passe doit contenir au moins 6 caractères' });
+                return;
+            }
+            user.password = newPassword;
+        }
+
+        // Name updates (both roles)
+        if (firstName) user.firstName = firstName;
+        if (lastName) user.lastName = lastName;
+
+        // Email update (superadmin only)
+        if (email && req.user.role === 'superadmin') {
+            user.email = email;
+        }
+
+        await user.save();
+
+        res.status(200).json({
+            success: true,
+            message: 'Profil mis à jour',
+            user: {
+                id: user._id,
+                email: user.email,
+                role: user.role,
+                firstName: user.firstName,
+                lastName: user.lastName,
+                assignedYear: user.assignedYear,
+                assignedFiliere: user.assignedFiliere,
+            },
+        });
+    } catch (error: any) {
+        res.status(500).json({ success: false, message: 'Erreur serveur', error: error.message });
     }
 };

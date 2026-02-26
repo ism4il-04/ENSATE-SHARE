@@ -19,9 +19,10 @@ export default function ResponsableDashboard() {
         },
     });
 
-    // Calculate stats from files
+    // Use backend-computed stats (across ALL files, not just the 5 recent)
     const totalFiles = filesData?.total || 0;
-    const totalSize = filesData?.files?.reduce((acc: number, file: any) => acc + file.fileSize, 0) || 0;
+    const totalSize = filesData?.totalSize || 0;
+    const thisMonthCount = filesData?.thisMonthCount || 0;
     const recentFiles = filesData?.files || [];
 
     const formatFileSize = (bytes: number) => {
@@ -85,12 +86,7 @@ export default function ResponsableDashboard() {
                         <div>
                             <p className="text-sm text-atlas-600">Ce mois</p>
                             <p className="text-3xl font-bold text-atlas-800 mt-1">
-                                {recentFiles.filter((f: any) => {
-                                    const uploadDate = new Date(f.createdAt);
-                                    const now = new Date();
-                                    return uploadDate.getMonth() === now.getMonth() &&
-                                        uploadDate.getFullYear() === now.getFullYear();
-                                }).length}
+                                {thisMonthCount}
                             </p>
                         </div>
                         <div className="bg-green-100 p-3 rounded-xl">

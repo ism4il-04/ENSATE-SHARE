@@ -4,6 +4,7 @@ import { useState, useRef, useEffect, Suspense } from 'react';
 import { useRouter } from 'next/navigation';
 import { useQuery } from '@tanstack/react-query';
 import { structureAPI } from '@/lib/api';
+import { useAuthStore } from '@/store/authStore';
 import { AcademicStructure, Cycle } from '@/types';
 import {
     LogIn,
@@ -16,6 +17,7 @@ import {
     Sparkles,
     Upload,
     Download,
+    User,
 } from 'lucide-react';
 import Link from 'next/link';
 import Image from 'next/image';
@@ -32,6 +34,7 @@ const CYCLE_DESCRIPTIONS: Record<string, string> = {
 
 function WelcomeContent() {
     const router = useRouter();
+    const { isAuthenticated, user, checkAuth } = useAuthStore();
     const parcoursRef = useRef<HTMLElement>(null);
     const [cycle, setCycle] = useState<'CP' | 'CI' | ''>('');
     const [filiere, setFiliere] = useState('');
@@ -79,6 +82,7 @@ function WelcomeContent() {
         if (showYear) {
             if (cycle === 'CP') {
                 setCycle('');
+                setFiliere('');
                 setYear('');
                 setSemester('');
             } else {
@@ -94,6 +98,10 @@ function WelcomeContent() {
             setSemester('');
         }
     };
+
+    useEffect(() => {
+        checkAuth();
+    }, []);
 
     useEffect(() => {
         const el = parcoursRef.current;
@@ -173,13 +181,23 @@ function WelcomeContent() {
                 }}
             >
                 <nav className="relative z-10 flex justify-end p-4 sm:p-6">
-                    <Link
-                        href="/login"
-                        className="inline-flex items-center gap-2 px-4 py-2.5 rounded-xl bg-white/10 hover:bg-white/20 text-cream-50 border border-white/20 backdrop-blur-sm transition-all duration-200 hover:shadow-lg"
-                    >
-                        <LogIn size={18} />
-                        Connexion
-                    </Link>
+                    {isAuthenticated && user ? (
+                        <Link
+                            href={user.role === 'superadmin' ? '/dashboard/superadmin' : '/dashboard/responsable'}
+                            className="inline-flex items-center gap-2 px-4 py-2.5 rounded-xl bg-white/10 hover:bg-white/20 text-cream-50 border border-white/20 backdrop-blur-sm transition-all duration-200 hover:shadow-lg"
+                        >
+                            <User size={18} />
+                            Mon espace
+                        </Link>
+                    ) : (
+                        <Link
+                            href="/login"
+                            className="inline-flex items-center gap-2 px-4 py-2.5 rounded-xl bg-white/10 hover:bg-white/20 text-cream-50 border border-white/20 backdrop-blur-sm transition-all duration-200 hover:shadow-lg"
+                        >
+                            <LogIn size={18} />
+                            Connexion
+                        </Link>
+                    )}
                 </nav>
 
                 <div className="relative z-10 flex-1 flex flex-col justify-center px-4 sm:px-6 lg:px-8 max-w-4xl mx-auto w-full text-center sm:text-left pb-20">
@@ -299,11 +317,16 @@ function WelcomeContent() {
                         {/* Step: show only current choice */}
                         {showCycle && (
                             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 sm:gap-6">
-                                {(['CP', 'CI'] as const).map((c) => (
+                                {(['CP', 'CI'] as const).map((cycleOption) => (
                                     <button
-                                        key={c}
+                                        key={cycleOption}
                                         type="button"
-                                        onClick={() => setCycle(c)}
+                                        onClick={() => {
+                                            setFiliere('');
+                                            setYear('');
+                                            setSemester('');
+                                            setCycle(cycleOption);
+                                        }}
                                         className="group relative rounded-2xl p-6 sm:p-8 text-left transition-all duration-300 border-2 border-cream-300 bg-white hover:border-atlas-400 hover:shadow-glass-lg overflow-hidden"
                                     >
                                         <div className="absolute inset-0 opacity-0 group-hover:opacity-100 transition-opacity bg-gradient-to-br from-accent-500/5 to-transparent" />
@@ -312,10 +335,10 @@ function WelcomeContent() {
                                                 <BookOpen size={24} />
                                             </span>
                                             <h3 className="text-lg font-bold text-atlas-800">
-                                                {CYCLE_LABELS[c] || c}
+                                                {CYCLE_LABELS[cycleOption] || cycleOption}
                                             </h3>
                                             <p className="mt-1 text-sm text-atlas-600">
-                                                {CYCLE_DESCRIPTIONS[c] || ''}
+                                                {CYCLE_DESCRIPTIONS[cycleOption] || ''}
                                             </p>
                                         </div>
                                     </button>

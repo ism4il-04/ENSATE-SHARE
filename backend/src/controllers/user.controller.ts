@@ -125,9 +125,10 @@ export const updateUser = async (req: AuthRequest, res: Response): Promise<void>
         }
 
         // Update allowed fields
-        const { firstName, lastName, assignedYear, assignedFiliere, isActive, password } =
+        const { email, firstName, lastName, assignedYear, assignedFiliere, isActive, password } =
             req.body;
 
+        if (email) user.email = email;
         if (firstName) user.firstName = firstName;
         if (lastName) user.lastName = lastName;
         if (assignedYear) user.assignedYear = assignedYear;

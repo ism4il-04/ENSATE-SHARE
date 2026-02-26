@@ -2,6 +2,19 @@ import { create } from 'zustand';
 import { User } from '@/types';
 import { authAPI } from '@/lib/api';
 
+// Helper: get token from either storage
+const getStoredToken = (): string | null => {
+    if (typeof window === 'undefined') return null;
+    return localStorage.getItem('token') || sessionStorage.getItem('token');
+};
+
+// Helper: clear token from both storages
+const clearStoredToken = () => {
+    if (typeof window === 'undefined') return;
+    localStorage.removeItem('token');
+    sessionStorage.removeItem('token');
+};
+
 interface AuthState {
     user: User | null;
     token: string | null;
@@ -9,7 +22,7 @@ interface AuthState {
     isLoading: boolean;
     isInitialized: boolean; // true only after first checkAuth() has completed (prevents flash + wrong redirect)
     error: string | null;
-    login: (email: string, password: string) => Promise<void>;
+    login: (email: string, password: string, rememberMe?: boolean) => Promise<void>;
     logout: () => Promise<void>;
     checkAuth: () => Promise<void>;
     setUser: (user: User | null) => void;
@@ -24,14 +37,19 @@ export const useAuthStore = create<AuthState>((set) => ({
     isInitialized: false,
     error: null,
 
-    login: async (email: string, password: string) => {
+    login: async (email: string, password: string, rememberMe: boolean = false) => {
         set({ isLoading: true, error: null });
         try {
-            const response = await authAPI.login(email, password);
+            const response = await authAPI.login(email, password, rememberMe);
             const { user, token } = response.data;
 
-            // Store token in localStorage
-            localStorage.setItem('token', token);
+            // Store token based on rememberMe preference
+            clearStoredToken();
+            if (rememberMe) {
+                localStorage.setItem('token', token);
+            } else {
+                sessionStorage.setItem('token', token);
+            }
 
             set({
                 user,
@@ -56,7 +74,7 @@ export const useAuthStore = create<AuthState>((set) => ({
         } catch (error) {
             console.error('Logout error:', error);
         } finally {
-            localStorage.removeItem('token');
+            clearStoredToken();
             set({
                 user: null,
                 token: null,
@@ -68,7 +86,7 @@ export const useAuthStore = create<AuthState>((set) => ({
 
     checkAuth: async () => {
         if (typeof window === 'undefined') return;
-        const token = localStorage.getItem('token');
+        const token = getStoredToken();
         if (!token) {
             set({ isAuthenticated: false, user: null, isInitialized: true, isLoading: false });
             return;
@@ -85,7 +103,7 @@ export const useAuthStore = create<AuthState>((set) => ({
                 isInitialized: true,
             });
         } catch (error) {
-            localStorage.removeItem('token');
+            clearStoredToken();
             set({
                 user: null,
                 token: null,

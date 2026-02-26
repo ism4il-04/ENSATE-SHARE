@@ -13,7 +13,8 @@ import {
     LogOut,
     BarChart3,
     FolderTree,
-    Activity
+    Activity,
+    UserCircle,
 } from 'lucide-react';
 
 export default function Sidebar() {
@@ -95,8 +96,8 @@ export default function Sidebar() {
                                 <Link
                                     href={link.href}
                                     className={`flex items-center gap-3 px-4 py-3 rounded-lg transition-colors ${isActive
-                                            ? 'bg-accent-50 text-accent-700 font-medium'
-                                            : 'text-atlas-700 hover:bg-cream-100'
+                                        ? 'bg-accent-50 text-accent-700 font-medium'
+                                        : 'text-atlas-700 hover:bg-cream-100'
                                         }`}
                                 >
                                     <Icon size={20} />
@@ -108,8 +109,18 @@ export default function Sidebar() {
                 </ul>
             </nav>
 
-            {/* Logout */}
-            <div className="p-4 border-t border-cream-300/60">
+            {/* Profile & Logout */}
+            <div className="p-4 border-t border-cream-300/60 space-y-1">
+                <Link
+                    href={user?.role === 'superadmin' ? '/dashboard/superadmin/profile' : '/dashboard/responsable/profile'}
+                    className={`flex items-center gap-3 px-4 py-3 rounded-lg transition-colors ${pathname.endsWith('/profile')
+                            ? 'bg-accent-50 text-accent-700 font-medium'
+                            : 'text-atlas-700 hover:bg-cream-100'
+                        }`}
+                >
+                    <UserCircle size={20} />
+                    <span>Profil</span>
+                </Link>
                 <button
                     onClick={handleLogout}
                     className="flex items-center gap-3 px-4 py-3 rounded-lg text-red-600 hover:bg-red-50 w-full transition-colors"

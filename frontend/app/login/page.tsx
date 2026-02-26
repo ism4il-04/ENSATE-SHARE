@@ -15,13 +15,14 @@ export default function LoginPage() {
     const { login, error, isLoading, clearError } = useAuthStore();
     const [email, setEmail] = useState('');
     const [password, setPassword] = useState('');
+    const [rememberMe, setRememberMe] = useState(false);
 
     const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
         clearError();
 
         try {
-            await login(email, password);
+            await login(email, password, rememberMe);
             const user = useAuthStore.getState().user;
             if (user?.role === 'superadmin') {
                 router.push('/dashboard/superadmin');
@@ -98,6 +99,19 @@ export default function LoginPage() {
                                 className="w-full px-4 py-3 rounded-xl bg-white/10 border border-white/20 text-white placeholder-white/40 focus:outline-none focus:ring-2 focus:ring-white/30 focus:border-white/30 transition-all"
                                 placeholder="••••••••"
                             />
+                        </div>
+
+                        <div className="flex items-center gap-2">
+                            <input
+                                id="rememberMe"
+                                type="checkbox"
+                                checked={rememberMe}
+                                onChange={(e) => setRememberMe(e.target.checked)}
+                                className="w-4 h-4 rounded border-white/30 bg-white/10 text-accent-500 focus:ring-white/30 focus:ring-offset-0 cursor-pointer"
+                            />
+                            <label htmlFor="rememberMe" className="text-sm text-white/70 cursor-pointer select-none">
+                                Rester connecté
+                            </label>
                         </div>
 
                         <button

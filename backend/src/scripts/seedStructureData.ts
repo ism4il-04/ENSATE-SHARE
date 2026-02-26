@@ -432,7 +432,7 @@ export const STRUCTURE_CYCLES: ICycle[] = [
         ],
     },
     {
-        name: 'Génie Mécanique',
+        name: 'Génie Mécatronique',
         cycle: 'CI',
         years: [
             {
