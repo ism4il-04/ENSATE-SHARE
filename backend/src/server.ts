@@ -1,8 +1,8 @@
 import express, { Application } from 'express';
 import dotenv from 'dotenv';
-import path from 'path';
 // Load environment variables immediately
-dotenv.config({ path: path.join(__dirname, '../../.env') });
+// On Render, env vars are injected by the platform; locally, reads from backend/.env
+dotenv.config();
 
 import cors from 'cors';
 import helmet from 'helmet';
