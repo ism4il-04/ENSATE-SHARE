@@ -1,8 +1,4 @@
 import { google } from 'googleapis';
-import dotenv from 'dotenv';
-
-// Load environment variables if not already loaded
-dotenv.config();
 
 const CLIENT_ID = process.env.GOOGLE_CLIENT_ID;
 const CLIENT_SECRET = process.env.GOOGLE_CLIENT_SECRET;
