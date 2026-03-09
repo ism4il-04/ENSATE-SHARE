@@ -61,7 +61,7 @@ export default function DocumentPreviewModal({ isOpen, onClose, file }: Document
         viewerSrc = `https://docs.google.com/gview?url=${encodedUrl}&embedded=true`;
     }
 
-    const apiBase = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000/api';
+    const apiBase = process.env.NEXT_PUBLIC_API_URL || '/api';
     const downloadHref = id ? `${apiBase}/files/${id}/download` : url;
 
     return (

@@ -33,7 +33,7 @@ export function FileCard({ file, variant = 'default', animationDelay = 0, onPrev
         file.fileLabel && (file.displayName || file.fileName)
             ? (file.displayName || file.fileName)
             : null;
-    const apiBase = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000/api';
+    const apiBase = process.env.NEXT_PUBLIC_API_URL || '/api';
     const downloadHref = `${apiBase}/files/${file._id}/download`;
 
     const CardContent = (
