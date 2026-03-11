@@ -20,7 +20,7 @@ import {
 } from 'lucide-react';
 import Link from 'next/link';
 import Image from 'next/image';
-import { useSavedParcours } from '@/hooks/useSavedParcours';
+//import { useSavedParcours } from '@/hooks/useSavedParcours';
 import { SpeedInsights } from "@vercel/speed-insights/next"
 import { Analytics } from "@vercel/analytics/next"
 
