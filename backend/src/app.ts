@@ -19,9 +19,6 @@ import statsRoutes from './routes/stats.routes';
 // Create Express app
 const app: Application = express();
 
-// Connect to MongoDB (cached for serverless)
-connectDB();
-
 // Middleware
 app.use(helmet()); // Security headers
 app.use(
