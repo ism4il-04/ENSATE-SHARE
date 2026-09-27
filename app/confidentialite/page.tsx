@@ -17,7 +17,8 @@ export default function ConfidentialitePage() {
                     Cette politique explique quelles données personnelles ENSATE-SHARE collecte, pourquoi,
                     combien de temps elles sont conservées et quels sont vos droits, conformément à la
                     loi marocaine n° 09-08 relative à la protection des personnes physiques à l&apos;égard du
-                    traitement des données à caractère personnel.
+                    traitement des données à caractère personnel. Les règles d&apos;utilisation de la
+                    plateforme figurent dans les <Link href="/conditions">conditions d&apos;utilisation</Link>.
                 </p>
             </section>
 
@@ -79,29 +80,36 @@ export default function ConfidentialitePage() {
             <section>
                 <h2>Si vous êtes responsable ou administrateur</h2>
                 <p>
-                    Seuls les responsables de filière et les administrateurs ont un compte. Les comptes sont
-                    créés par un administrateur ; il n&apos;est pas possible de s&apos;inscrire soi-même.
+                    Les comptes des responsables et des administrateurs sont créés par un administrateur ; il
+                    n&apos;est pas possible de devenir responsable soi-même. Si vous aviez déjà un compte
+                    étudiant avec la même adresse, il devient votre compte responsable et vos parcours
+                    enregistrés sont conservés.
                 </p>
                 <h3>Données du compte</h3>
                 <ul>
                     <li>Nom, prénom et adresse email</li>
                     <li>Année et filière dont vous êtes responsable</li>
+                    <li>La date de votre dernière connexion avec Google</li>
                     <li>
-                        Mot de passe : il est stocké uniquement sous forme chiffrée (hachage bcrypt) et
-                        n&apos;est jamais lisible, même par les administrateurs
+                        Mot de passe, uniquement pour les comptes qui se connectent encore par mot de passe :
+                        il est stocké sous forme chiffrée (hachage bcrypt) et n&apos;est jamais lisible, même par
+                        les administrateurs. Les responsables se connectent normalement avec Google et
+                        n&apos;ont pas de mot de passe.
                     </li>
                 </ul>
                 <h3>Journal d&apos;activité</h3>
                 <p>
                     Pour la sécurité et la traçabilité du service, les actions effectuées depuis un compte
                     sont enregistrées : connexions et déconnexions (date, adresse IP, méthode de connexion),
-                    dépôts, modifications et suppressions de documents, et modifications des comptes et de la
-                    structure des filières. Ce journal n&apos;est consultable que par les administrateurs.
+                    dépôts, modifications et suppressions de documents, modifications des comptes et de la
+                    structure des filières, et gestion de la liste des étudiants autorisés. Ce journal
+                    n&apos;est consultable que par les administrateurs. Les connexions des étudiants n&apos;y
+                    sont pas enregistrées.
                 </p>
                 <h3>Tentatives de connexion échouées</h3>
                 <p>
                     Pour bloquer les tentatives de piratage, l&apos;adresse email saisie et l&apos;adresse IP
-                    sont enregistrées après un échec de connexion. Ces données sont supprimées automatiquement
+                    sont enregistrées après un échec de connexion par mot de passe. Ces données sont supprimées automatiquement
                     au bout de 15 minutes.
                 </p>
                 <h3>Connexion avec Google</h3>
@@ -112,9 +120,15 @@ export default function ConfidentialitePage() {
                 </p>
                 <h3>Documents déposés</h3>
                 <p>
-                    Les documents déposés sont publics : ils sont stockés sur Google Drive et accessibles à
-                    toute personne disposant du lien. Le nom et le prénom de la personne qui a déposé un
-                    document peuvent y être associés.
+                    Les documents sont envoyés directement depuis votre navigateur vers Google Drive, sans
+                    passer par nos serveurs. Pendant l&apos;envoi, nous conservons les informations de
+                    l&apos;upload en cours (nom et taille du fichier, destination, compte qui l&apos;envoie) ;
+                    elles sont supprimées dès que le document est enregistré, et au plus tard après 24 heures.
+                </p>
+                <p>
+                    Une fois déposés, les documents sont accessibles aux étudiants connectés et, sur Google
+                    Drive, à toute personne disposant du lien. Le nom et le prénom de la personne qui a déposé
+                    un document peuvent y être associés.
                 </p>
             </section>
 
@@ -141,7 +155,10 @@ export default function ConfidentialitePage() {
                 </p>
                 <ul>
                     <li><strong>Vercel Inc.</strong> : hébergement du site et du serveur</li>
-                    <li><strong>MongoDB, Inc.</strong> (MongoDB Atlas) : base de données des comptes, des parcours enregistrés et du journal</li>
+                    <li>
+                        <strong>MongoDB, Inc.</strong> (MongoDB Atlas) : base de données des comptes, des
+                        parcours enregistrés, de la liste des étudiants autorisés et du journal
+                    </li>
                     <li><strong>Google LLC</strong> : stockage des documents (Google Drive) et connexion avec Google</li>
                 </ul>
             </section>
@@ -154,6 +171,11 @@ export default function ConfidentialitePage() {
                         elles sont effacées quand le compte est supprimé, sur simple demande
                     </li>
                     <li>Tentatives de connexion échouées : 15 minutes</li>
+                    <li>Informations d&apos;un upload en cours : jusqu&apos;à l&apos;enregistrement du document, 24 heures au maximum</li>
+                    <li>
+                        Liste des étudiants autorisés : tant qu&apos;elle est utilisée pour réserver
+                        l&apos;accès ; elle est mise à jour par l&apos;ADE, par exemple à chaque rentrée
+                    </li>
                     <li>
                         Session de connexion : 30 jours pour les étudiants ; pour les responsables, jusqu&apos;à
                         la fermeture du navigateur (24 heures maximum), ou 30 jours s&apos;ils cochent « Rester
@@ -187,9 +209,10 @@ export default function ConfidentialitePage() {
             <section>
                 <h2>Sécurité</h2>
                 <p>
-                    Les échanges avec le site sont chiffrés (HTTPS), les mots de passe sont hachés, les
-                    tentatives de connexion sont limitées et l&apos;accès aux fonctions d&apos;administration
-                    est réservé aux comptes autorisés.
+                    Les échanges avec le site sont chiffrés (HTTPS). La connexion se fait principalement avec
+                    Google ; les éventuels mots de passe sont hachés et les tentatives de connexion sont
+                    limitées. Chaque dépôt de document est vérifié avant d&apos;être enregistré, et l&apos;accès
+                    aux fonctions d&apos;administration est réservé aux comptes autorisés.
                 </p>
             </section>
 

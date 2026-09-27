@@ -48,7 +48,13 @@ export default function MentionsLegalesPage() {
             <section>
                 <h2>Objet du site</h2>
                 <p>
-                    ENSATE-SHARE permet aux étudiants de l&apos;ENSA Tétouan de consulter et de télécharger
+                    ENSATE-SHARE a pour but de faciliter le partage des documents pédagogiques entre étudiants
+                    de l&apos;ENSA Tétouan, en les rassemblant au même endroit et en les classant, plutôt
+                    qu&apos;ils circulent de façon dispersée dans des groupes de messagerie ou d&apos;autres
+                    applications.
+                </p>
+                <p>
+                    La plateforme permet aux étudiants de l&apos;ENSA Tétouan de consulter et de télécharger
                     des documents pédagogiques (cours, TD, TP, examens) classés par filière, année, semestre
                     et module. Les documents sont déposés par des responsables désignés par l&apos;ADE.
                     La consultation est réservée aux étudiants, qui se connectent avec leur compte Google
@@ -90,9 +96,11 @@ export default function MentionsLegalesPage() {
             </section>
 
             <section>
-                <h2>Données personnelles</h2>
+                <h2>Conditions d&apos;utilisation et données personnelles</h2>
                 <p>
-                    Le traitement des données personnelles est décrit dans la{' '}
+                    Les règles d&apos;utilisation de la plateforme sont précisées dans les{' '}
+                    <Link href="/conditions">conditions d&apos;utilisation</Link>. Le traitement des données
+                    personnelles est décrit dans la{' '}
                     <Link href="/confidentialite">politique de confidentialité</Link>.
                 </p>
             </section>

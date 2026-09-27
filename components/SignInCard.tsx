@@ -1,6 +1,7 @@
 'use client';
 
 import { useState } from 'react';
+import Link from 'next/link';
 import { ChevronDown, GraduationCap } from 'lucide-react';
 import { useAuthStore } from '@/store/authStore';
 import GoogleSignInButton from '@/components/GoogleSignInButton';
@@ -59,6 +60,17 @@ export default function SignInCard() {
                     <p className="text-sm text-atlas-500">La connexion Google n&apos;est pas encore configurée.</p>
                 )}
                 {isLoading && <p className="mt-3 text-sm text-atlas-500">Connexion en cours…</p>}
+                <p className="mt-4 text-xs text-atlas-500">
+                    En vous connectant, vous acceptez les{' '}
+                    <Link href="/conditions" className="underline hover:text-accent-600">
+                        conditions d&apos;utilisation
+                    </Link>{' '}
+                    et la{' '}
+                    <Link href="/confidentialite" className="underline hover:text-accent-600">
+                        politique de confidentialité
+                    </Link>
+                    .
+                </p>
             </div>
 
             <div className="mt-6 pt-5 border-t border-cream-200">
