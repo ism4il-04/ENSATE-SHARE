@@ -15,9 +15,9 @@ import { neonConfig, Pool } from '@neondatabase/serverless';
 import { drizzle } from 'drizzle-orm/neon-serverless';
 import { count, sql } from 'drizzle-orm';
 import * as s from '../lib/db/schema';
-import { resolveTarget } from './db-target';
+import { hasFlag, resolveTarget } from './db-target';
 
-const reset = process.argv.includes('--reset');
+const reset = hasFlag(process.argv, 'reset');
 const CHUNK = 200;
 
 const chunks = <T>(items: T[]) => {
