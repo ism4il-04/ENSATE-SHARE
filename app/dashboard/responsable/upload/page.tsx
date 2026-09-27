@@ -4,7 +4,8 @@ import { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { useAuthStore } from '@/store/authStore';
-import { filesAPI, structureAPI } from '@/lib/api';
+import { structureAPI } from '@/lib/api';
+import { uploadFileDirect } from '@/lib/directUpload';
 import { useDropzone } from 'react-dropzone';
 import { Upload, X, FileText, CheckCircle, AlertCircle } from 'lucide-react';
 
@@ -39,17 +40,29 @@ export default function UploadPage() {
         ?.find((s: any) => s.name === semester)
         ?.modules || [];
 
-    // Upload mutation (supports multiple files)
+    // Upload mutation (supports multiple files): each file goes straight to Google Drive
     const uploadMutation = useMutation({
-        mutationFn: async ({ forms }: { forms: FormData[] }) => {
+        mutationFn: async ({ items }: { items: { file: File; label: string }[] }) => {
             setUploadStatus('uploading');
             setUploadProgress(0);
             setErrorMessage('');
 
-            for (let i = 0; i < forms.length; i++) {
-                await filesAPI.uploadFile(forms[i]);
-                const progress = Math.round(((i + 1) / forms.length) * 100);
-                setUploadProgress(progress);
+            const totalBytes = items.reduce((sum, { file }) => sum + file.size, 0) || 1;
+            let doneBytes = 0;
+
+            for (const { file, label } of items) {
+                try {
+                    await uploadFileDirect(
+                        file,
+                        { semester, module, fileCategory, fileLabel: label.trim() || undefined },
+                        (loaded) => setUploadProgress(Math.min(99, Math.round(((doneBytes + loaded) / totalBytes) * 100)))
+                    );
+                } catch (error: any) {
+                    const reason = error.response?.data?.message || error.message || "Erreur lors de l'upload";
+                    throw new Error(`${file.name} : ${reason}`);
+                }
+                doneBytes += file.size;
+                setUploadProgress(Math.round((doneBytes / totalBytes) * 100));
             }
 
             return true;
@@ -63,16 +76,15 @@ export default function UploadPage() {
         },
         onError: (error: any) => {
             setUploadStatus('error');
-            setErrorMessage(error.response?.data?.message || 'Erreur lors de l\'upload');
+            setErrorMessage(error.message || 'Erreur lors de l\'upload');
+            queryClient.invalidateQueries({ queryKey: ['responsable-files'] });
         },
     });
 
     const { getRootProps, getInputProps, isDragActive } = useDropzone({
         accept: {
             'application/pdf': ['.pdf'],
-            'application/msword': ['.doc'],
             'application/vnd.openxmlformats-officedocument.wordprocessingml.document': ['.docx'],
-            'application/vnd.ms-powerpoint': ['.ppt'],
             'application/vnd.openxmlformats-officedocument.presentationml.presentation': ['.pptx'],
             'application/vnd.ms-excel': ['.xls'],
             'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet': ['.xlsx'],
@@ -109,19 +121,7 @@ export default function UploadPage() {
             return;
         }
 
-        const forms = selectedFiles.map(({ file, label }) => {
-            const formData = new FormData();
-            formData.append('file', file);
-            formData.append('semester', semester);
-            formData.append('module', module);
-            formData.append('fileCategory', fileCategory);
-            if (label.trim()) {
-                formData.append('fileLabel', label.trim());
-            }
-            return formData;
-        });
-
-        uploadMutation.mutate({ forms });
+        uploadMutation.mutate({ items: selectedFiles });
     };
 
     const formatFileSize = (bytes: number) => {

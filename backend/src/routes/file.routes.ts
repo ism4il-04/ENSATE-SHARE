@@ -2,14 +2,14 @@ import { Router } from 'express';
 import {
     getFiles,
     getFileById,
-    uploadFile,
+    createUploadSession,
+    completeUpload,
     updateFile,
     deleteFile,
     downloadFile,
     syncThumbnails,
 } from '../controllers/file.controller';
 import { requireAuth, requireLogin, requireSuperadmin } from '../middleware/auth.middleware';
-import upload from '../middleware/upload.middleware';
 
 const router = Router();
 
@@ -20,7 +20,9 @@ router.get('/:id', requireLogin, getFileById);
 router.get('/:id/download', requireLogin, downloadFile);
 
 // Managing documents requires a responsable or superadmin
-router.post('/', requireAuth, upload.single('file'), uploadFile);
+// Uploads go straight from the browser to Google Drive (Vercel caps request bodies at 4.5 MB)
+router.post('/upload-session', requireAuth, createUploadSession);
+router.post('/upload-complete', requireAuth, completeUpload);
 router.put('/:id', requireAuth, updateFile);
 router.delete('/:id', requireAuth, deleteFile);
 

@@ -20,4 +20,4 @@ oauth2Client.setCredentials({ refresh_token: REFRESH_TOKEN });
 // Create the drive service
 const drive = google.drive({ version: 'v3', auth: oauth2Client });
 
-export { drive, FOLDER_ID };
+export { drive, oauth2Client, FOLDER_ID };

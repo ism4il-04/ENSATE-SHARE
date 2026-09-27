@@ -3,11 +3,19 @@ import { Response } from 'express';
 import File from '../models/File.model';
 import ActivityLog from '../models/ActivityLog.model';
 import AcademicStructure from '../models/AcademicStructure.model';
-import { drive, FOLDER_ID } from '../config/drive'; // Import Google Drive config
+import mongoose from 'mongoose';
+import PendingUpload from '../models/PendingUpload.model';
+import { drive, oauth2Client } from '../config/drive';
+import { ensureDrivePath, deleteCategoryFolderIfEmpty, deleteModuleFolderAndPruneAncestors } from '../utils/driveUtils';
+import {
+    allowedExtensionsLabel,
+    getExtension,
+    MAX_UPLOAD_BYTES,
+    mimeTypeFor,
+    sanitizeFileName,
+} from '../utils/uploadRules';
 import { AuthRequest } from '../middleware/auth.middleware';
 import { isNonEmptyString } from '../utils/authHelpers';
-import path from 'path';
-import { Readable } from 'stream';
 
 // @desc    Get all files with filters
 // @route   GET /api/files
@@ -111,214 +119,244 @@ export const getFileById = async (req: AuthRequest, res: Response): Promise<void
     }
 };
 
-import { ensureDrivePath, deleteCategoryFolderIfEmpty, deleteModuleFolderAndPruneAncestors } from '../utils/driveUtils';
-// @route   POST /api/files
+const FILE_CATEGORIES = ['Cours', 'TD', 'TP', 'EXAM', 'Autre'];
+const PENDING_UPLOAD_TTL_MS = 24 * 60 * 60 * 1000;
+
+type UploadTarget = { year: string; filiere: string; semester: string; module: string; fileCategory: string; fileLabel?: string };
+
+// Where an upload goes, and whether this user may put it there. Returns an error message when not allowed.
+const resolveUploadTarget = async (req: AuthRequest): Promise<UploadTarget | string> => {
+    const { semester, module, fileCategory = 'Autre', fileLabel } = req.body;
+
+    for (const [field, value] of Object.entries({ semester, module, fileCategory, year: req.body.year, filiere: req.body.filiere })) {
+        if (value !== undefined && value !== '' && !isNonEmptyString(value)) return `Champ invalide : ${field}`;
+    }
+    if (fileLabel !== undefined && fileLabel !== '' && !isNonEmptyString(fileLabel, 100)) return 'Label invalide';
+    if (!semester) return 'Le semestre est requis';
+    if (!module) return 'Le module est requis';
+    if (!FILE_CATEGORIES.includes(fileCategory)) return 'Type de fichier invalide';
+
+    let year: string;
+    let filiere: string;
+
+    if (req.user!.role === 'responsable') {
+        // Responsable: only their assigned year/filière, and only semesters/modules of the structure
+        year = req.user!.assignedYear!;
+        filiere = req.user!.assignedFiliere!;
+
+        const structure = await AcademicStructure.findOne();
+        const cycleData = structure?.cycles.find((c) => c.name === filiere);
+        const yearData = cycleData?.years.find((y) => y.code === year);
+        const semesterData = yearData?.semesters.find((s) => s.name === semester);
+
+        if (!cycleData || !yearData) {
+            return "Votre année ou filière n'est pas dans la structure académique. Contactez l'administrateur.";
+        }
+        if (!semesterData) {
+            return `Le semestre "${semester}" ne fait pas partie de votre année (${year}). Semestres possibles : ${yearData.semesters.map((s) => s.name).join(', ')}.`;
+        }
+        if (!semesterData.modules.includes(module)) {
+            return `Le module "${module}" n'est pas dans le semestre ${semester}.`;
+        }
+    } else {
+        // Superadmin: must provide year and filière
+        year = req.body.year;
+        filiere = req.body.filiere;
+        if (!year || !filiere) return "L'année et la filière sont requises";
+    }
+
+    return { year, filiere, semester, module, fileCategory, fileLabel: fileLabel || undefined };
+};
+
+// Origin the browser uploads from: Google only accepts the browser's upload (CORS) from this origin
+const uploadOrigin = (req: AuthRequest): string => {
+    const origin = req.headers.origin;
+    const allowed = [process.env.FRONTEND_URL, `${req.protocol}://${req.get('host')}`].filter(Boolean);
+    return origin && allowed.includes(origin) ? origin : process.env.FRONTEND_URL || `${req.protocol}://${req.get('host')}`;
+};
+
+// @desc    Authorize an upload and get a one-time Google Drive upload link for the browser
+// @route   POST /api/files/upload-session  { fileName, size, semester, module, fileCategory, fileLabel?, year?, filiere? }
 // @access  Private (Responsable/Superadmin)
-export const uploadFile = async (req: AuthRequest, res: Response): Promise<void> => {
+export const createUploadSession = async (req: AuthRequest, res: Response): Promise<void> => {
     try {
-        if (!req.file) {
+        const { fileName, size } = req.body;
+
+        if (!isNonEmptyString(fileName, 255)) {
+            res.status(400).json({ success: false, message: 'Nom de fichier invalide' });
+            return;
+        }
+        if (typeof size !== 'number' || !Number.isInteger(size) || size <= 0) {
+            res.status(400).json({ success: false, message: 'Taille de fichier invalide' });
+            return;
+        }
+        if (size > MAX_UPLOAD_BYTES) {
             res.status(400).json({
                 success: false,
-                message: 'Please upload a file',
+                message: `Fichier trop volumineux (max ${Math.round(MAX_UPLOAD_BYTES / 1024 / 1024)} Mo)`,
             });
             return;
         }
 
-        if (!req.user) {
-            res.status(401).json({
-                success: false,
-                message: 'Not authorized',
-            });
-            return;
-        }
-
-        const { semester, module, fileCategory = 'Autre', fileLabel } = req.body;
-
-        const invalidField = Object.entries({ semester, module, fileCategory, fileLabel, year: req.body.year, filiere: req.body.filiere })
-            .find(([, v]) => v !== undefined && v !== '' && !isNonEmptyString(v));
-        if (invalidField) {
-            res.status(400).json({ success: false, message: `Invalid ${invalidField[0]}` });
-            return;
-        }
-
-        if (!semester) {
+        const fileType = getExtension(fileName);
+        const mimeType = mimeTypeFor(fileType);
+        if (!mimeType) {
             res.status(400).json({
                 success: false,
-                message: 'Semester is required',
+                message: `Type de fichier non autorisé. Types acceptés : ${allowedExtensionsLabel()}`,
             });
             return;
         }
 
-        if (!module) {
-            res.status(400).json({
-                success: false,
-                message: 'Module is required',
-            });
+        const target = await resolveUploadTarget(req);
+        if (typeof target === 'string') {
+            res.status(400).json({ success: false, message: target });
             return;
         }
 
-        // Determine year and filiere
-        let year: string;
-        let filiere: string;
+        const folderId = await ensureDrivePath(target);
+        const sanitizedName = sanitizeFileName(fileName);
 
-        if (req.user.role === 'responsable') {
-            // Responsable: use assigned year/filiere
-            year = req.user.assignedYear!;
-            filiere = req.user.assignedFiliere!;
-
-            // Ensure the responsable can only upload to semesters of their assigned year (filiere = cycle name, year = year code)
-            const structure = await AcademicStructure.findOne();
-            if (structure?.cycles) {
-                const cycleData = structure.cycles.find((c) => c.name === filiere);
-                const yearData = cycleData?.years.find((y) => y.code === year);
-                const semesterData = yearData?.semesters.find((s) => s.name === semester);
-
-                if (!cycleData || !yearData) {
-                    res.status(400).json({
-                        success: false,
-                        message: 'Your assigned year or filière is not in the academic structure. Contact the administrator.',
-                    });
-                    return;
-                }
-                if (!semesterData) {
-                    res.status(400).json({
-                        success: false,
-                        message: `Semester "${semester}" is not part of your assigned year(${year}).You can only upload to: ${yearData.semesters.map((s) => s.name).join(', ')}.`,
-                    });
-                    return;
-                }
-                if (!semesterData.modules.includes(module)) {
-                    res.status(400).json({
-                        success: false,
-                        message: `Module "${module}" is not in semester ${semester}. Allowed modules: ${semesterData.modules.join(', ')}.`,
-                    });
-                    return;
-                }
-            }
-        } else {
-            // Superadmin: must provide year and filiere
-            year = req.body.year;
-            filiere = req.body.filiere;
-
-            if (!year || !filiere) {
-                res.status(400).json({
-                    success: false,
-                    message: 'Year and filiere are required for superadmin',
-                });
-                return;
-            }
-        }
-
-        // Sanitize filename
-        const sanitizedFilename = req.file.originalname
-            .normalize('NFD')
-            .replace(/[\u0300-\u036f]/g, '') // Remove accents
-            .replace(/[^a-zA-Z0-9._-]/g, '_'); // Replace special chars with underscore
-
-        // Get file extension (without dot)
-        const ext = path.extname(req.file.originalname).toLowerCase().replace('.', '');
-
-        // Create a readable stream from the buffer
-        const bufferStream = new Readable();
-        bufferStream.push(req.file.buffer);
-        bufferStream.push(null);
-
-        // Ensure folder structure exists
-        const targetFolderId = await ensureDrivePath({
-            filiere,
-            year,
-            semester,
-            module,
-            fileCategory
+        const pending = await PendingUpload.create({
+            userId: req.user!._id,
+            folderId,
+            fileName: sanitizedName,
+            originalName: fileName,
+            fileType,
+            mimeType,
+            size,
+            ...target,
+            expiresAt: new Date(Date.now() + PENDING_UPLOAD_TTL_MS),
         });
 
-        // Upload to Google Drive
-        const driveResponse = await drive.files.create({
-            requestBody: {
-                name: sanitizedFilename,
-                parents: [targetFolderId], // Upload to the dynamically created folder
-            },
-            media: {
-                mimeType: req.file.mimetype,
-                body: bufferStream,
-            },
-            fields: 'id, name, webViewLink, webContentLink, thumbnailLink',
-        });
+        // Start a resumable upload on Drive; the returned session URL accepts exactly this one file
+        const { token } = await oauth2Client.getAccessToken();
+        const driveResponse = await fetch(
+            'https://www.googleapis.com/upload/drive/v3/files?uploadType=resumable&fields=id',
+            {
+                method: 'POST',
+                headers: {
+                    Authorization: `Bearer ${token}`,
+                    'Content-Type': 'application/json; charset=UTF-8',
+                    'X-Upload-Content-Type': mimeType,
+                    'X-Upload-Content-Length': String(size),
+                    Origin: uploadOrigin(req),
+                },
+                body: JSON.stringify({
+                    name: sanitizedName,
+                    parents: [folderId],
+                    mimeType,
+                    appProperties: { ensaUploadId: String(pending._id) },
+                }),
+            }
+        );
 
-        // Make file public
+        const uploadUrl = driveResponse.headers.get('location');
+        if (!driveResponse.ok || !uploadUrl) {
+            console.error('Drive resumable session failed:', driveResponse.status, await driveResponse.text());
+            await pending.deleteOne();
+            res.status(502).json({ success: false, message: "Google Drive n'a pas accepté l'upload, réessayez" });
+            return;
+        }
+
+        res.status(200).json({ success: true, uploadId: String(pending._id), uploadUrl, mimeType });
+    } catch (error: any) {
+        console.error('Upload session error:', error);
+        res.status(500).json({ success: false, message: "Erreur lors de la préparation de l'upload" });
+    }
+};
+
+// @desc    Register a file the browser finished uploading to Drive
+// @route   POST /api/files/upload-complete  { uploadId, driveFileId }
+// @access  Private (Responsable/Superadmin)
+export const completeUpload = async (req: AuthRequest, res: Response): Promise<void> => {
+    try {
+        const { uploadId, driveFileId } = req.body;
+
+        if (!isNonEmptyString(uploadId, 50) || !mongoose.isValidObjectId(uploadId) || !isNonEmptyString(driveFileId, 200)) {
+            res.status(400).json({ success: false, message: 'Requête invalide' });
+            return;
+        }
+
+        const pending = await PendingUpload.findOne({ _id: uploadId, userId: req.user!._id });
+        if (!pending) {
+            res.status(404).json({ success: false, message: 'Upload introuvable ou expiré' });
+            return;
+        }
+
+        // The Drive file must be the one this session created: our upload id, our folder, the announced size
+        let driveFile;
+        try {
+            driveFile = (
+                await drive.files.get({
+                    fileId: driveFileId,
+                    fields: 'id, size, parents, appProperties, webViewLink, webContentLink, thumbnailLink',
+                })
+            ).data;
+        } catch {
+            driveFile = null;
+        }
+
+        if (!driveFile || driveFile.appProperties?.ensaUploadId !== uploadId) {
+            res.status(400).json({ success: false, message: 'Fichier Drive invalide pour cet upload' });
+            return;
+        }
+        if (!driveFile.parents?.includes(pending.folderId) || Number(driveFile.size) !== pending.size) {
+            await drive.files.delete({ fileId: driveFileId }).catch(() => undefined);
+            await pending.deleteOne();
+            res.status(400).json({ success: false, message: "Le fichier reçu ne correspond pas à l'upload annoncé" });
+            return;
+        }
+
+        // Make file public (readable by link, used by previews and downloads)
         await drive.permissions.create({
-            fileId: driveResponse.data.id!,
-            requestBody: {
-                role: 'reader',
-                type: 'anyone',
-            },
+            fileId: driveFileId,
+            requestBody: { role: 'reader', type: 'anyone' },
         });
 
-        // Check if thumbnail exists, if not, wait and refetch (Drive takes time to generate it)
-        let thumbnailLink = driveResponse.data.thumbnailLink;
-
-        // Retry logic for thumbnails (PPTX often takes longer)
-        if (!thumbnailLink) {
-            let retries = 0;
-            const maxRetries = 3;
-
-            while (!thumbnailLink && retries < maxRetries) {
-                retries++;
-                // console.log(`Thumbnail missing, retrying (${retries}/${maxRetries})...`);
-                await new Promise(resolve => setTimeout(resolve, 2000)); // Wait 2s
-
-                try {
-                    const updatedFile = await drive.files.get({
-                        fileId: driveResponse.data.id!,
-                        fields: 'thumbnailLink',
-                    });
-                    thumbnailLink = updatedFile.data.thumbnailLink;
-                    if (thumbnailLink) break;
-                } catch (err) {
-                    console.error('Failed to refetch thumbnail:', err);
-                }
+        // Drive generates thumbnails a few seconds after upload (PPTX often takes longer)
+        let thumbnailLink = driveFile.thumbnailLink;
+        for (let retries = 0; !thumbnailLink && retries < 3; retries++) {
+            await new Promise((resolve) => setTimeout(resolve, 2000));
+            try {
+                thumbnailLink = (await drive.files.get({ fileId: driveFileId, fields: 'thumbnailLink' })).data.thumbnailLink;
+            } catch (err) {
+                console.error('Failed to refetch thumbnail:', err);
             }
         }
 
-        // Create file document
         const file = await File.create({
-            fileName: sanitizedFilename,
-            originalName: req.file.originalname,
-            displayName: req.file.originalname, // Preserve accents for display
-            fileType: ext,
-            fileSize: req.file.size,
-            fileUrl: driveResponse.data.webViewLink, // Link to view in Drive
-            driveId: driveResponse.data.id,
-            webViewLink: driveResponse.data.webViewLink,
-            webContentLink: driveResponse.data.webContentLink,
-            thumbnailLink: thumbnailLink,
-            year,
-            filiere,
-            semester,
-            module,
-            fileCategory,
-            fileLabel: fileLabel || undefined,
-            uploadedBy: req.user._id,
+            fileName: pending.fileName,
+            originalName: pending.originalName,
+            displayName: pending.originalName, // Preserve accents for display
+            fileType: pending.fileType,
+            fileSize: pending.size,
+            fileUrl: driveFile.webViewLink, // Link to view in Drive
+            driveId: driveFileId,
+            webViewLink: driveFile.webViewLink,
+            webContentLink: driveFile.webContentLink,
+            thumbnailLink,
+            year: pending.year,
+            filiere: pending.filiere,
+            semester: pending.semester,
+            module: pending.module,
+            fileCategory: pending.fileCategory,
+            fileLabel: pending.fileLabel,
+            uploadedBy: req.user!._id,
         });
+        await pending.deleteOne();
 
         // Log activity
         await ActivityLog.create({
-            userId: req.user._id,
+            userId: req.user!._id,
             action: 'upload',
-            details: `Uploaded ${file.fileName} to ${year} - ${filiere} - ${semester} - ${module} `,
+            details: `Uploaded ${file.fileName} to ${file.year} - ${file.filiere} - ${file.semester} - ${file.module}`,
         });
 
-        res.status(201).json({
-            success: true,
-            message: 'File uploaded successfully',
-            file,
-        });
+        res.status(201).json({ success: true, message: 'Fichier ajouté', file });
     } catch (error: any) {
-        console.error('Upload Error:', error);
-        res.status(500).json({
-            success: false,
-            message: 'Error uploading file',
-        });
+        console.error('Upload completion error:', error);
+        res.status(500).json({ success: false, message: "Erreur lors de l'enregistrement du fichier" });
     }
 };
 

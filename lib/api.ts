@@ -45,10 +45,9 @@ export const authAPI = {
 export const filesAPI = {
     getFiles: (params?: any) => api.get('/files', { params }),
     getFileById: (id: string) => api.get(`/files/${id}`),
-    uploadFile: (formData: FormData) =>
-        api.post('/files', formData, {
-            headers: { 'Content-Type': 'multipart/form-data' },
-        }),
+    // Direct-to-Drive upload, see lib/directUpload.ts
+    createUploadSession: (data: Record<string, unknown>) => api.post('/files/upload-session', data),
+    completeUpload: (data: { uploadId: string; driveFileId: string }) => api.post('/files/upload-complete', data),
     updateFile: (id: string, data: any) => api.put(`/files/${id}`, data),
     deleteFile: (id: string) => api.delete(`/files/${id}`),
     downloadFile: (id: string) => api.get(`/files/${id}/download`),
