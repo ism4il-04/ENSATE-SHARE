@@ -1,6 +1,7 @@
 import { Request, Response, NextFunction } from 'express';
 import jwt from 'jsonwebtoken';
 import User, { IUser } from '../models/User.model';
+import { isStudentAllowed } from '../utils/studentAccess';
 
 // Extend Express Request type to include user
 export interface AuthRequest extends Request {
@@ -38,6 +39,11 @@ const resolveUser = async (token: string): Promise<IUser | null> => {
     }
 
     if (user.passwordChangedAt && (decoded.iat ?? 0) < Math.floor(user.passwordChangedAt.getTime() / 1000)) {
+        return null;
+    }
+
+    // A student removed from the list loses access immediately, not when their session expires
+    if (user.role === 'student' && !(await isStudentAllowed(user.email))) {
         return null;
     }
 
@@ -128,3 +134,6 @@ export const requireSuperadmin = [protect, authorize('superadmin')];
 
 // Middleware to require responsable or superadmin role
 export const requireAuth = [protect, authorize('responsable', 'superadmin')];
+
+// Middleware to require any signed-in account (students included)
+export const requireLogin = [protect];

@@ -1,7 +1,7 @@
 export interface User {
     id: string;
     email: string;
-    role: 'responsable' | 'superadmin';
+    role: 'student' | 'responsable' | 'superadmin';
     firstName: string;
     lastName: string;
     assignedYear?: string;
@@ -114,4 +114,12 @@ export interface PaginatedResponse<T> {
     page: number;
     pages: number;
     data: T[];
+}
+
+export interface SavedParcours {
+    id: string;
+    cycle: 'CP' | 'CI';
+    filiere: string;
+    year: string;
+    semester: string;
 }

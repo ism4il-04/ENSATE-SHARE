@@ -68,6 +68,22 @@ export const structureAPI = {
     updateStructure: (data: { cycles: unknown[] }) => api.put('/structure', data),
 };
 
+// Saved parcours API (any signed-in user)
+export const parcoursAPI = {
+    getSaved: () => api.get('/parcours'),
+    save: (data: { cycle: string; filiere: string; year: string; semester: string }) =>
+        api.post('/parcours', data),
+    remove: (id: string) => api.delete(`/parcours/${id}`),
+};
+
+// Student allowlist API (Superadmin only)
+export const studentsAPI = {
+    getList: (params: { search?: string; page?: number }) => api.get('/students', { params }),
+    importEmails: (emails: string[]) => api.post('/students/import', { emails }),
+    remove: (id: string) => api.delete(`/students/${id}`),
+    clearAll: () => api.delete('/students', { params: { all: 'true' } }),
+};
+
 // Stats API (Superadmin only)
 export const statsAPI = {
     getDashboardStats: () => api.get('/stats/dashboard'),

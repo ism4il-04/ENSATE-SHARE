@@ -14,7 +14,7 @@ export default function ResponsableDashboard() {
     const { data: filesData } = useQuery({
         queryKey: ['responsable-files'],
         queryFn: async () => {
-            const response = await filesAPI.getFiles({ limit: 5 });
+            const response = await filesAPI.getFiles({ limit: 5, scope: 'mine' });
             return response.data;
         },
     });

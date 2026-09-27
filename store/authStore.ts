@@ -10,6 +10,8 @@ interface AuthState {
     isLoading: boolean;
     isInitialized: boolean; // true only after first checkAuth() has completed (prevents flash + wrong redirect)
     error: string | null;
+    justSignedIn: boolean; // true right after an explicit sign-in, until acknowledged (not on session restore)
+    acknowledgeSignIn: () => void;
     login: (email: string, password: string, rememberMe?: boolean) => Promise<void>;
     loginWithGoogle: (credential: string, rememberMe?: boolean) => Promise<void>;
     logout: () => Promise<void>;
@@ -31,6 +33,7 @@ const signIn = async (set: SetState, request: () => Promise<{ data: { user: User
             isLoading: false,
             isInitialized: true,
             error: null,
+            justSignedIn: true,
         });
     } catch (error: any) {
         set({
@@ -48,6 +51,9 @@ export const useAuthStore = create<AuthState>((set) => ({
     isLoading: false,
     isInitialized: false,
     error: null,
+    justSignedIn: false,
+
+    acknowledgeSignIn: () => set({ justSignedIn: false }),
 
     login: async (email: string, password: string, rememberMe: boolean = false) => {
         await signIn(set, () => authAPI.login(email, password, rememberMe));
@@ -67,6 +73,7 @@ export const useAuthStore = create<AuthState>((set) => ({
                 user: null,
                 isAuthenticated: false,
                 error: null,
+                justSignedIn: false,
             });
         }
     },

@@ -51,7 +51,8 @@ export default function MentionsLegalesPage() {
                     ENSATE-SHARE permet aux étudiants de l&apos;ENSA Tétouan de consulter et de télécharger
                     des documents pédagogiques (cours, TD, TP, examens) classés par filière, année, semestre
                     et module. Les documents sont déposés par des responsables désignés par l&apos;ADE.
-                    La consultation est libre et ne nécessite pas de compte.
+                    La consultation est réservée aux étudiants, qui se connectent avec leur compte Google
+                    universitaire (@etu.uae.ac.ma).
                 </p>
                 <p>
                     ENSATE-SHARE est une initiative étudiante. Ce n&apos;est pas un service officiel de

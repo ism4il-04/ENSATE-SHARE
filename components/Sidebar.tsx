@@ -15,6 +15,8 @@ import {
     FolderTree,
     Activity,
     UserCircle,
+    GraduationCap,
+    Library,
 } from 'lucide-react';
 
 export default function Sidebar() {
@@ -24,7 +26,7 @@ export default function Sidebar() {
 
     const handleLogout = async () => {
         await logout();
-        router.push('/ensa-portal-9x7k');
+        router.push('/');
     };
 
     const responsableLinks = [
@@ -37,6 +39,7 @@ export default function Sidebar() {
         { href: '/dashboard/superadmin', icon: LayoutDashboard, label: 'Tableau de bord' },
         { href: '/dashboard/superadmin/files', icon: FileText, label: 'Tous les fichiers' },
         { href: '/dashboard/superadmin/users', icon: Users, label: 'Utilisateurs' },
+        { href: '/dashboard/superadmin/students', icon: GraduationCap, label: 'Étudiants' },
         { href: '/dashboard/superadmin/structure', icon: FolderTree, label: 'Structure' },
         { href: '/dashboard/superadmin/stats', icon: BarChart3, label: 'Statistiques' },
         { href: '/dashboard/superadmin/logs', icon: Activity, label: 'Logs' },
@@ -109,8 +112,15 @@ export default function Sidebar() {
                 </ul>
             </nav>
 
-            {/* Profile & Logout */}
+            {/* Public site, Profile & Logout */}
             <div className="p-4 border-t border-cream-300/60 space-y-1">
+                <Link
+                    href="/#parcours"
+                    className="flex items-center gap-3 px-4 py-3 rounded-lg text-atlas-700 hover:bg-cream-100 transition-colors"
+                >
+                    <Library size={20} />
+                    <span>Consulter les documents</span>
+                </Link>
                 <Link
                     href={user?.role === 'superadmin' ? '/dashboard/superadmin/profile' : '/dashboard/responsable/profile'}
                     className={`flex items-center gap-3 px-4 py-3 rounded-lg transition-colors ${pathname.endsWith('/profile')

@@ -16,6 +16,8 @@ import fileRoutes from './routes/file.routes';
 import userRoutes from './routes/user.routes';
 import structureRoutes from './routes/structure.routes';
 import statsRoutes from './routes/stats.routes';
+import parcoursRoutes from './routes/parcours.routes';
+import studentsRoutes from './routes/students.routes';
 
 // Create Express app
 const app: Application = express();
@@ -44,6 +46,8 @@ app.use('/api/files', fileRoutes);
 app.use('/api/users', userRoutes);
 app.use('/api/structure', structureRoutes);
 app.use('/api/stats', statsRoutes);
+app.use('/api/parcours', parcoursRoutes);
+app.use('/api/students', studentsRoutes);
 
 // Health check endpoint
 app.get('/api/health', (req, res) => {

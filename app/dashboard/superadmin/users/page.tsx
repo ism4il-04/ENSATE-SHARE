@@ -3,7 +3,7 @@
 import { useState } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { usersAPI, structureAPI } from '@/lib/api';
-import { UserPlus, Edit, Trash2, X, Eye, EyeOff } from 'lucide-react';
+import { UserPlus, Edit, Trash2, X, AlertCircle, CheckCircle, Info } from 'lucide-react';
 
 export default function UsersPage() {
     const queryClient = useQueryClient();
@@ -12,13 +12,12 @@ export default function UsersPage() {
     const [editingUser, setEditingUser] = useState<any>(null);
     const [formData, setFormData] = useState({
         email: '',
-        password: '',
         firstName: '',
         lastName: '',
         assignedYear: '',
         assignedFiliere: '',
     });
-    const [showPassword, setShowPassword] = useState(false);
+    const [notice, setNotice] = useState('');
     const [searchTerm, setSearchTerm] = useState('');
     const [selectedFiliere, setSelectedFiliere] = useState('');
 
@@ -43,8 +42,9 @@ export default function UsersPage() {
     // Create mutation
     const createMutation = useMutation({
         mutationFn: (data: any) => usersAPI.createUser(data),
-        onSuccess: () => {
+        onSuccess: (response) => {
             queryClient.invalidateQueries({ queryKey: ['users'] });
+            setNotice(response.data.message);
             closeModal();
         },
     });
@@ -55,7 +55,10 @@ export default function UsersPage() {
         onSuccess: (_data, variables) => {
             queryClient.invalidateQueries({ queryKey: ['users'] });
             // Only close modal when it was an edit form submit (variables have more than isActive)
-            if (Object.keys(variables.data).length > 1) closeModal();
+            if (Object.keys(variables.data).length > 1) {
+                setNotice('Responsable mis à jour');
+                closeModal();
+            }
         },
     });
 
@@ -100,9 +103,11 @@ export default function UsersPage() {
 
     const openCreateModal = () => {
         setEditingUser(null);
+        createMutation.reset();
+        updateMutation.reset();
+        setNotice('');
         setFormData({
             email: '',
-            password: '',
             firstName: '',
             lastName: '',
             assignedYear: '',
@@ -113,9 +118,11 @@ export default function UsersPage() {
 
     const openEditModal = (user: any) => {
         setEditingUser(user);
+        createMutation.reset();
+        updateMutation.reset();
+        setNotice('');
         setFormData({
             email: user.email,
-            password: '',
             firstName: user.firstName,
             lastName: user.lastName,
             assignedYear: user.assignedYear || '',
@@ -127,7 +134,6 @@ export default function UsersPage() {
     const closeModal = () => {
         setShowModal(false);
         setEditingUser(null);
-        setShowPassword(false);
     };
 
     const handleSubmit = (e: React.FormEvent) => {
@@ -141,14 +147,10 @@ export default function UsersPage() {
             assignedFiliere: formData.assignedFiliere,
         };
 
-        if (formData.password) {
-            submitData.password = formData.password;
-        }
-
         if (editingUser) {
             updateMutation.mutate({ id: editingUser._id, data: submitData });
         } else {
-            createMutation.mutate({ ...submitData, password: formData.password });
+            createMutation.mutate(submitData);
         }
     };
 
@@ -171,6 +173,13 @@ export default function UsersPage() {
 
     const selectedCycleData = structureData?.cycles?.find((c: any) => c.name === formData.assignedFiliere);
 
+    const apiError = (error: unknown) =>
+        (error as any)?.response?.data?.message || (error ? 'Une erreur est survenue' : '');
+    const formError = apiError(createMutation.error || updateMutation.error);
+    const pageError = showModal ? '' : apiError(updateMutation.error || deleteMutation.error);
+    const emailChanged =
+        !!editingUser && formData.email.trim().toLowerCase() !== (editingUser.email || '').toLowerCase();
+
     return (
         <div className="p-8">
             {/* Header */}
@@ -184,6 +193,19 @@ export default function UsersPage() {
                     Nouveau responsable
                 </button>
             </div>
+
+            {notice && (
+                <div className="mb-6 flex items-center gap-2 px-4 py-3 rounded-xl bg-green-50 border border-green-200 text-green-700 text-sm">
+                    <CheckCircle size={16} />
+                    {notice}
+                </div>
+            )}
+            {pageError && (
+                <div className="mb-6 flex items-center gap-2 px-4 py-3 rounded-xl bg-red-50 border border-red-200 text-red-600 text-sm">
+                    <AlertCircle size={16} />
+                    {pageError}
+                </div>
+            )}
 
             {/* Filters */}
             <div className="card border border-cream-300/60 mb-6 flex flex-col md:flex-row gap-4">
@@ -322,6 +344,12 @@ export default function UsersPage() {
                         </div>
 
                         <form onSubmit={handleSubmit} className="space-y-4">
+                            {formError && (
+                                <div className="flex items-center gap-2 px-4 py-3 rounded-xl bg-red-50 border border-red-200 text-red-600 text-sm">
+                                    <AlertCircle size={16} className="shrink-0" />
+                                    {formError}
+                                </div>
+                            )}
                             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                                 <div>
                                     <label className="block text-sm font-medium text-atlas-700 mb-2">
@@ -363,27 +391,14 @@ export default function UsersPage() {
                                 />
                             </div>
 
-                            <div>
-                                <label className="block text-sm font-medium text-atlas-700 mb-2">
-                                    Mot de passe {!editingUser && <span className="text-red-500">*</span>}
-                                    {editingUser && <span className="text-atlas-500 text-xs">(laisser vide pour ne pas changer)</span>}
-                                </label>
-                                <div className="relative">
-                                    <input
-                                        type={showPassword ? 'text' : 'password'}
-                                        value={formData.password}
-                                        onChange={(e) => setFormData({ ...formData, password: e.target.value })}
-                                        className="input-field pr-10"
-                                        required={!editingUser}
-                                    />
-                                    <button
-                                        type="button"
-                                        onClick={() => setShowPassword(!showPassword)}
-                                        className="absolute right-3 top-1/2 transform -translate-y-1/2 text-atlas-400 hover:text-atlas-600"
-                                    >
-                                        {showPassword ? <EyeOff size={20} /> : <Eye size={20} />}
-                                    </button>
-                                </div>
+                            <div className="flex items-start gap-2 rounded-xl bg-cream-50 border border-cream-300/60 px-4 py-3 text-sm text-atlas-600">
+                                <Info size={16} className="shrink-0 mt-0.5 text-atlas-500" />
+                                <p>
+                                    Pas de mot de passe : le responsable se connecte avec « Se connecter avec Google »
+                                    en utilisant exactement cette adresse (Gmail ou @etu.uae.ac.ma).
+                                    {emailChanged &&
+                                        " En changeant l'adresse, l'ancien mot de passe est supprimé et les sessions ouvertes sont fermées."}
+                                </p>
                             </div>
 
                             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">

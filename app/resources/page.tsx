@@ -11,6 +11,8 @@ import Image from 'next/image';
 import { FileCard } from '@/components/FileCard';
 import DocumentPreviewModal from '@/components/DocumentPreviewModal';
 import LegalFooterLinks from '@/components/LegalFooterLinks';
+import SaveParcoursButton from '@/components/SaveParcoursButton';
+import { useAuthStore } from '@/store/authStore';
 import { getFileCategoryColor } from '@/lib/utils/fileHelpers';
 
 const FILE_CATEGORY_ORDER: FileType['fileCategory'][] = ['Cours', 'TD', 'TP', 'EXAM', 'Autre'];
@@ -38,6 +40,7 @@ function ResourcesContent() {
     const [selectedModule, setSelectedModule] = useState('');
     const [urlSynced, setUrlSynced] = useState(false);
     const [previewFile, setPreviewFile] = useState<any>(null);
+    const { isAuthenticated, isInitialized } = useAuthStore();
 
     useEffect(() => {
         setSelectedModule(searchParams.get('module') ?? '');
@@ -82,7 +85,7 @@ function ResourcesContent() {
             const response = await filesAPI.getFiles(params);
             return response.data;
         },
-        enabled: Boolean(urlSynced && hasValidContext && selectedModule.length > 0),
+        enabled: Boolean(isAuthenticated && urlSynced && hasValidContext && selectedModule.length > 0),
     });
 
     useEffect(() => {
@@ -91,6 +94,15 @@ function ResourcesContent() {
             replaceUrl(modules[0]);
         }
     }, [urlSynced, hasValidContext, modules, selectedModule, replaceUrl]);
+
+    // Documents are reserved to signed-in students: send visitors to the sign-in on the home page
+    if (isInitialized && !isAuthenticated) {
+        router.replace('/#parcours');
+        return null;
+    }
+    if (!isInitialized) {
+        return <ResourcesFallback />;
+    }
 
     if (urlSynced && !hasValidContext) {
         router.replace('/');
@@ -126,10 +138,15 @@ function ResourcesContent() {
                                 className="h-14 w-auto drop-shadow-[0_0_12px_rgba(13,148,136,0.2)]"
                             />
                         </Link>
-                        <div className="text-cream-50 text-sm w-full sm:w-auto text-center sm:text-right order-last sm:order-none">
-                            <span className="font-medium">{year}</span>
-                            {filiere && <span className="text-cream-200/90"> · {filiere}</span>}
-                            <span className="text-cream-200/90"> · {semester}</span>
+                        <div className="text-cream-50 text-sm w-full sm:w-auto flex flex-col items-center sm:items-end gap-2 order-last sm:order-none">
+                            <div className="text-center sm:text-right">
+                                <span className="font-medium">{year}</span>
+                                {filiere && <span className="text-cream-200/90"> · {filiere}</span>}
+                                <span className="text-cream-200/90"> · {semester}</span>
+                            </div>
+                            {(cycle === 'CP' || cycle === 'CI') && (
+                                <SaveParcoursButton parcours={{ cycle, filiere, year, semester }} variant="dark" />
+                            )}
                         </div>
                     </div>
                 </div>

@@ -29,8 +29,9 @@ export const getFiles = async (req: AuthRequest, res: Response): Promise<void> =
             filter.$text = { $search: search.slice(0, 200) };
         }
 
-        // If user is a responsable, filter by their assigned year/filiere
-        if (req.user && req.user.role === 'responsable') {
+        // Responsable dashboard (?scope=mine): only their assigned year/filière.
+        // On the public site everyone, responsables included, sees every document.
+        if (req.user && req.user.role === 'responsable' && req.query.scope === 'mine') {
             filter.year = req.user.assignedYear;
             filter.filiere = req.user.assignedFiliere;
         }

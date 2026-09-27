@@ -43,7 +43,7 @@ export default function FilesPage() {
     const { data: filesData, isLoading } = useQuery({
         queryKey: ['responsable-files', searchQuery, selectedModule, selectedCategory, page],
         queryFn: async () => {
-            const params: any = { page, limit: 10 };
+            const params: any = { page, limit: 10, scope: 'mine' };
             if (searchQuery) params.search = searchQuery;
             if (selectedModule) params.module = selectedModule;
             if (selectedCategory) params.fileCategory = selectedCategory;

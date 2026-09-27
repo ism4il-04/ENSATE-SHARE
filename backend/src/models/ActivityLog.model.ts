@@ -27,6 +27,8 @@ const activityLogSchema = new Schema<IActivityLog>(
                 'USER_UPDATE',
                 'USER_DELETE',
                 'STRUCTURE_UPDATE',
+                'STUDENT_LIST_IMPORT',
+                'STUDENT_LIST_DELETE',
                 'LOGIN',
                 'LOGOUT',
                 // Lowercase versions used by controllers

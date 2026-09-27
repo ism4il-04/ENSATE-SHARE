@@ -8,18 +8,18 @@ import {
     downloadFile,
     syncThumbnails,
 } from '../controllers/file.controller';
-import { requireAuth, requireSuperadmin, optionalAuth } from '../middleware/auth.middleware';
+import { requireAuth, requireLogin, requireSuperadmin } from '../middleware/auth.middleware';
 import upload from '../middleware/upload.middleware';
 
 const router = Router();
 
-// Public routes (optionalAuth populates req.user for responsable filtering)
-router.get('/', optionalAuth, getFiles);
+// Reading documents requires any signed-in account (students, responsables, admins)
+router.get('/', requireLogin, getFiles);
 router.get('/sync-thumbnails', requireSuperadmin, syncThumbnails);
-router.get('/:id', getFileById);
-router.get('/:id/download', downloadFile);
+router.get('/:id', requireLogin, getFileById);
+router.get('/:id/download', requireLogin, downloadFile);
 
-// Protected routes
+// Managing documents requires a responsable or superadmin
 router.post('/', requireAuth, upload.single('file'), uploadFile);
 router.put('/:id', requireAuth, updateFile);
 router.delete('/:id', requireAuth, deleteFile);

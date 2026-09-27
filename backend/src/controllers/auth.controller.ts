@@ -6,6 +6,7 @@ import User from '../models/User.model';
 import ActivityLog from '../models/ActivityLog.model';
 import { AuthRequest } from '../middleware/auth.middleware';
 import { clearLoginFailures, getLoginBlock, recordLoginFailure } from '../utils/loginThrottle';
+import { isStudentAllowed, isStudentGoogleAccount, STUDENT_EMAIL_DOMAIN } from '../utils/studentAccess';
 import {
     checkPasswordStrength,
     clearAuthCookie,
@@ -127,22 +128,57 @@ export const googleLogin = async (req: AuthRequest, res: Response): Promise<void
             return;
         }
 
-        // Only existing accounts can sign in: Google proves the email, the account must already be here
         const email = payload.email.toLowerCase();
-        const user = await User.findOne({ email });
+        let user = await User.findOne({ email });
+
+        // Students: the first sign-in with a university Google Workspace account creates their account,
+        // provided the email is on the student list (or the list is still empty)
+        const allowedStudent = isStudentGoogleAccount(email, payload.hd) && (await isStudentAllowed(email));
+        if (!user && allowedStudent) {
+            try {
+                user = await User.create({
+                    email,
+                    role: 'student',
+                    firstName: payload.given_name?.slice(0, 100) || email.split('@')[0].slice(0, 100),
+                    lastName: payload.family_name?.slice(0, 100) || '-',
+                });
+            } catch (error: any) {
+                // Two first sign-ins at once: the other request already created the account
+                if (error?.code !== 11000) throw error;
+                user = await User.findOne({ email });
+            }
+        }
+
         if (!user || !user.isActive) {
             res.status(403).json({
                 success: false,
-                message: "Aucun compte actif n'est associé à cette adresse Google",
+                message: user
+                    ? 'Ce compte est désactivé'
+                    : `Connexion réservée aux étudiants de l'ENSA Tétouan (adresse @${STUDENT_EMAIL_DOMAIN})`,
             });
             return;
         }
 
-        await ActivityLog.create({
-            userId: user._id,
-            action: 'LOGIN',
-            details: { email: user.email, ip: req.ip, method: 'google' },
-        });
+        // Existing student accounts are re-checked against the list at every sign-in
+        if (user.role === 'student' && !(await isStudentAllowed(user.email))) {
+            res.status(403).json({
+                success: false,
+                message: "Votre adresse ne figure pas dans la liste des étudiants de l'ENSA Tétouan",
+            });
+            return;
+        }
+
+        user.lastLoginAt = new Date();
+        await user.save();
+
+        // Staff logins go to the activity log; student logins would drown it out
+        if (user.role !== 'student') {
+            await ActivityLog.create({
+                userId: user._id,
+                action: 'LOGIN',
+                details: { email: user.email, ip: req.ip, method: 'google' },
+            });
+        }
 
         setAuthCookie(res, user._id.toString(), rememberMe === true);
         res.status(200).json({

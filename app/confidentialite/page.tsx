@@ -32,10 +32,9 @@ export default function ConfidentialitePage() {
             </section>
 
             <section>
-                <h2>Si vous consultez les documents</h2>
+                <h2>Si vous visitez le site</h2>
                 <p>
-                    La consultation et le téléchargement des documents sont libres et ne nécessitent aucun
-                    compte. Nous ne vous demandons aucune information personnelle.
+                    La page d&apos;accueil et les pages d&apos;information sont accessibles sans compte.
                 </p>
                 <ul>
                     <li>
@@ -53,7 +52,32 @@ export default function ConfidentialitePage() {
             </section>
 
             <section>
-                <h2>Si vous avez un compte (responsables et administrateurs)</h2>
+                <h2>Si vous êtes étudiant</h2>
+                <p>
+                    La consultation et le téléchargement des documents sont réservés aux étudiants de
+                    l&apos;ENSA Tétouan. Vous vous connectez avec votre compte Google universitaire
+                    (@etu.uae.ac.ma) ; votre compte ENSATE-SHARE est créé automatiquement à la première
+                    connexion. Nous conservons :
+                </p>
+                <ul>
+                    <li>Votre adresse email universitaire, votre nom et votre prénom, transmis par Google</li>
+                    <li>La date de votre dernière connexion</li>
+                    <li>Les parcours que vous choisissez d&apos;enregistrer (6 au maximum)</li>
+                </ul>
+                <p>
+                    Nous ne recevons jamais votre mot de passe Google, et nous n&apos;enregistrons pas les
+                    documents que vous consultez.
+                </p>
+                <p>
+                    Les adresses @etu.uae.ac.ma étant communes à tous les établissements de l&apos;Université
+                    Abdelmalek Essaâdi, l&apos;ADE peut enregistrer la liste des adresses universitaires des
+                    étudiants de l&apos;ENSA Tétouan. Dans ce cas, seules les adresses de cette liste peuvent se
+                    connecter.
+                </p>
+            </section>
+
+            <section>
+                <h2>Si vous êtes responsable ou administrateur</h2>
                 <p>
                     Seuls les responsables de filière et les administrateurs ont un compte. Les comptes sont
                     créés par un administrateur ; il n&apos;est pas possible de s&apos;inscrire soi-même.
@@ -84,8 +108,7 @@ export default function ConfidentialitePage() {
                 <p>
                     Si vous choisissez « Se connecter avec Google », Google nous transmet votre adresse email
                     et confirme qu&apos;elle est vérifiée. Nous l&apos;utilisons uniquement pour retrouver votre
-                    compte existant. Nous ne recevons jamais votre mot de passe Google, et aucune autre donnée
-                    de votre compte Google n&apos;est conservée.
+                    compte. Nous ne recevons jamais votre mot de passe Google.
                 </p>
                 <h3>Documents déposés</h3>
                 <p>
@@ -98,6 +121,8 @@ export default function ConfidentialitePage() {
             <section>
                 <h2>Pourquoi ces données sont utilisées</h2>
                 <ul>
+                    <li>Réserver l&apos;accès aux documents aux étudiants de l&apos;ENSA Tétouan</li>
+                    <li>Vous permettre d&apos;accéder directement à vos parcours enregistrés</li>
                     <li>Permettre aux responsables de se connecter et de gérer les documents de leur filière</li>
                     <li>Protéger la plateforme contre les accès non autorisés et les abus</li>
                     <li>Garder une trace des modifications pour pouvoir corriger une erreur ou un incident</li>
@@ -116,7 +141,7 @@ export default function ConfidentialitePage() {
                 </p>
                 <ul>
                     <li><strong>Vercel Inc.</strong> : hébergement du site et du serveur</li>
-                    <li><strong>MongoDB, Inc.</strong> (MongoDB Atlas) : base de données des comptes et du journal</li>
+                    <li><strong>MongoDB, Inc.</strong> (MongoDB Atlas) : base de données des comptes, des parcours enregistrés et du journal</li>
                     <li><strong>Google LLC</strong> : stockage des documents (Google Drive) et connexion avec Google</li>
                 </ul>
             </section>
@@ -124,11 +149,15 @@ export default function ConfidentialitePage() {
             <section>
                 <h2>Durée de conservation</h2>
                 <ul>
-                    <li>Données du compte : tant que le compte existe ; elles sont effacées quand le compte est supprimé</li>
+                    <li>
+                        Données du compte (étudiants, responsables et administrateurs) : tant que le compte existe ;
+                        elles sont effacées quand le compte est supprimé, sur simple demande
+                    </li>
                     <li>Tentatives de connexion échouées : 15 minutes</li>
                     <li>
-                        Session de connexion : jusqu&apos;à la fermeture du navigateur (24 heures maximum), ou
-                        30 jours si vous cochez « Rester connecté »
+                        Session de connexion : 30 jours pour les étudiants ; pour les responsables, jusqu&apos;à
+                        la fermeture du navigateur (24 heures maximum), ou 30 jours s&apos;ils cochent « Rester
+                        connecté »
                     </li>
                     <li>
                         Journal d&apos;activité : conservé pour la sécurité et la traçabilité du service ; vous
@@ -147,7 +176,7 @@ export default function ConfidentialitePage() {
                     est supprimé à la déconnexion.
                 </p>
                 <p>
-                    Sur la page de connexion, le bouton « Se connecter avec Google » est fourni par Google, qui
+                    Le bouton « Se connecter avec Google » est fourni par Google, qui
                     peut déposer ses propres cookies selon sa{' '}
                     <a href="https://policies.google.com/privacy?hl=fr" target="_blank" rel="noopener noreferrer">
                         politique de confidentialité

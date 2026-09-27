@@ -25,8 +25,11 @@ export default function ProtectedRoute({ children, allowedRoles }: ProtectedRout
         if (allowedRoles && user && !allowedRoles.includes(user.role)) {
             if (user.role === 'superadmin') {
                 router.replace('/dashboard/superadmin');
-            } else {
+            } else if (user.role === 'responsable') {
                 router.replace('/dashboard/responsable');
+            } else {
+                // Students have no dashboard
+                router.replace('/');
             }
         }
     }, [isInitialized, isAuthenticated, user, allowedRoles, router]);

@@ -71,6 +71,8 @@ export default function LogsPage() {
             delete_user: 'Suppression utilisateur',
             USER_DELETE: 'Suppression utilisateur',
             STRUCTURE_UPDATE: 'Modification structure',
+            STUDENT_LIST_IMPORT: 'Import liste étudiants',
+            STUDENT_LIST_DELETE: 'Retrait liste étudiants',
         };
         return labels[action] || action;
     };
@@ -100,6 +102,9 @@ export default function LogsPage() {
                 return 'bg-accent-100 text-accent-800';
             case 'FILE_UPDATE':
                 return 'bg-sky-100 text-sky-800';
+            case 'STUDENT_LIST_IMPORT':
+            case 'STUDENT_LIST_DELETE':
+                return 'bg-teal-100 text-teal-800';
             default:
                 return 'bg-cream-200 text-atlas-700';
         }
@@ -132,6 +137,8 @@ export default function LogsPage() {
                         <option value="USER_UPDATE">Modifications utilisateur</option>
                         <option value="USER_DELETE">Suppressions utilisateur</option>
                         <option value="STRUCTURE_UPDATE">Modifications structure</option>
+                        <option value="STUDENT_LIST_IMPORT">Imports liste étudiants</option>
+                        <option value="STUDENT_LIST_DELETE">Retraits liste étudiants</option>
                     </select>
                 </div>
             </div>
