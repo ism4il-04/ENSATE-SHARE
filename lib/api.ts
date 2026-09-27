@@ -11,29 +11,16 @@ const api = axios.create({
     },
 });
 
-// Add auth token to requests if available
-api.interceptors.request.use(
-    (config) => {
-        const token = localStorage.getItem('token') || sessionStorage.getItem('token');
-        if (token) {
-            config.headers.Authorization = `Bearer ${token}`;
-        }
-        return config;
-    },
-    (error) => {
-        return Promise.reject(error);
-    }
-);
+// Auth is carried by the httpOnly "token" cookie set by the API; JavaScript never sees the token.
 
 // Handle response errors
 api.interceptors.response.use(
     (response) => response,
     (error) => {
         if (error.response?.status === 401) {
-            // Clear auth state on 401
-            localStorage.removeItem('token');
-            sessionStorage.removeItem('token');
-            if (typeof window !== 'undefined' && !window.location.pathname.includes('/ensa-portal-9x7k')) {
+            const path = typeof window !== 'undefined' ? window.location.pathname : '';
+            // Only protected pages need to bounce back to home on an expired session
+            if (path.startsWith('/dashboard')) {
                 window.location.href = '/';
             }
         }
@@ -47,6 +34,8 @@ export default api;
 export const authAPI = {
     login: (email: string, password: string, rememberMe: boolean = false) =>
         api.post('/auth/login', { email, password, rememberMe }),
+    googleLogin: (credential: string, rememberMe: boolean = false) =>
+        api.post('/auth/google', { credential, rememberMe }),
     logout: () => api.post('/auth/logout'),
     getMe: () => api.get('/auth/me'),
     updateProfile: (data: any) => api.put('/auth/profile', data),

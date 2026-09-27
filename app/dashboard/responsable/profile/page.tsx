@@ -305,7 +305,7 @@ export default function ProfilePage() {
                                         value={newPassword}
                                         onChange={(e) => setNewPassword(e.target.value)}
                                         className="w-full px-4 py-2.5 pr-10 rounded-xl border border-cream-300 bg-white text-atlas-900 focus:outline-none focus:ring-2 focus:ring-accent-300 focus:border-accent-300 transition-all"
-                                        placeholder="Min. 6 caractères"
+                                        placeholder="Min. 10 caractères, majuscules, minuscules et chiffres"
                                     />
                                     <button
                                         type="button"

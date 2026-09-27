@@ -5,6 +5,7 @@ import { useRouter } from 'next/navigation';
 import { useAuthStore } from '@/store/authStore';
 import Link from 'next/link';
 import Image from 'next/image';
+import GoogleSignInButton from '@/components/GoogleSignInButton';
 
 const LOGIN_BG = '#192436';
 const LOGIN_GRADIENT_LIGHT = '#243247';
@@ -12,10 +13,19 @@ const LOGIN_GRADIENT_DARK = '#0f1622';
 
 export default function LoginPage() {
     const router = useRouter();
-    const { login, error, isLoading, clearError } = useAuthStore();
+    const { login, loginWithGoogle, error, isLoading, clearError } = useAuthStore();
     const [email, setEmail] = useState('');
     const [password, setPassword] = useState('');
     const [rememberMe, setRememberMe] = useState(false);
+
+    const goToDashboard = () => {
+        const user = useAuthStore.getState().user;
+        if (user?.role === 'superadmin') {
+            router.push('/dashboard/superadmin');
+        } else {
+            router.push('/dashboard/responsable');
+        }
+    };
 
     const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
@@ -23,12 +33,17 @@ export default function LoginPage() {
 
         try {
             await login(email, password, rememberMe);
-            const user = useAuthStore.getState().user;
-            if (user?.role === 'superadmin') {
-                router.push('/dashboard/superadmin');
-            } else {
-                router.push('/dashboard/responsable');
-            }
+            goToDashboard();
+        } catch (error) {
+            // Error is handled by the store
+        }
+    };
+
+    const handleGoogleCredential = async (credential: string) => {
+        clearError();
+        try {
+            await loginWithGoogle(credential, rememberMe);
+            goToDashboard();
         } catch (error) {
             // Error is handled by the store
         }
@@ -64,12 +79,24 @@ export default function LoginPage() {
                         <p className="text-white/70 text-sm tracking-wide">Connexion à votre espace</p>
                     </div>
 
-                    <form onSubmit={handleSubmit} className="space-y-5">
-                        {error && (
-                            <div className="bg-red-500/20 border border-red-400/40 text-red-200 px-4 py-3 rounded-xl text-sm">
-                                {error}
+                    {error && (
+                        <div className="bg-red-500/20 border border-red-400/40 text-red-200 px-4 py-3 rounded-xl text-sm mb-5">
+                            {error}
+                        </div>
+                    )}
+
+                    {process.env.NEXT_PUBLIC_GOOGLE_CLIENT_ID && (
+                        <>
+                            <GoogleSignInButton onCredential={handleGoogleCredential} />
+                            <div className="flex items-center gap-3 my-6">
+                                <div className="h-px flex-1 bg-white/15" />
+                                <span className="text-xs uppercase tracking-wider text-white/50">ou</span>
+                                <div className="h-px flex-1 bg-white/15" />
                             </div>
-                        )}
+                        </>
+                    )}
+
+                    <form onSubmit={handleSubmit} className="space-y-5">
 
                         <div>
                             <label htmlFor="email" className="block text-sm font-medium text-white/90 mb-2">
@@ -141,6 +168,15 @@ export default function LoginPage() {
                         >
                             ← Retour à l&apos;accueil
                         </Link>
+                        <p className="mt-4 text-xs text-white/40">
+                            <Link href="/confidentialite" className="hover:text-white/70 underline transition-colors">
+                                Politique de confidentialité
+                            </Link>
+                            {' · '}
+                            <Link href="/mentions-legales" className="hover:text-white/70 underline transition-colors">
+                                Mentions légales
+                            </Link>
+                        </p>
                     </div>
                 </div>
 

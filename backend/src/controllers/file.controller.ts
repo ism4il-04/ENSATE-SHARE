@@ -5,6 +5,7 @@ import ActivityLog from '../models/ActivityLog.model';
 import AcademicStructure from '../models/AcademicStructure.model';
 import { drive, FOLDER_ID } from '../config/drive'; // Import Google Drive config
 import { AuthRequest } from '../middleware/auth.middleware';
+import { isNonEmptyString } from '../utils/authHelpers';
 import path from 'path';
 import { Readable } from 'stream';
 
@@ -13,20 +14,19 @@ import { Readable } from 'stream';
 // @access  Public
 export const getFiles = async (req: AuthRequest, res: Response): Promise<void> => {
     try {
-        const { year, filiere, semester, module, fileCategory, search, page = 1, limit = 20 } = req.query;
+        const { search, page = '1', limit = '20' } = req.query;
 
-        // Build filter object
+        // Build filter object (plain string values only, so query operators can't be injected)
         const filter: any = {};
 
-        if (year) filter.year = year;
-        if (filiere) filter.filiere = filiere;
-        if (semester) filter.semester = semester;
-        if (module) filter.module = module;
-        if (fileCategory) filter.fileCategory = fileCategory;
+        for (const key of ['year', 'filiere', 'semester', 'module', 'fileCategory'] as const) {
+            const value = req.query[key];
+            if (typeof value === 'string' && value) filter[key] = value;
+        }
 
         // Text search on file names
-        if (search) {
-            filter.$text = { $search: search as string };
+        if (typeof search === 'string' && search) {
+            filter.$text = { $search: search.slice(0, 200) };
         }
 
         // If user is a responsable, filter by their assigned year/filiere
@@ -36,13 +36,13 @@ export const getFiles = async (req: AuthRequest, res: Response): Promise<void> =
         }
 
         // Pagination
-        const pageNum = parseInt(page as string);
-        const limitNum = parseInt(limit as string);
+        const pageNum = Math.max(1, parseInt(page as string) || 1);
+        const limitNum = Math.min(100, Math.max(1, parseInt(limit as string) || 20));
         const skip = (pageNum - 1) * limitNum;
 
         // Get files
         const files = await File.find(filter)
-            .populate('uploadedBy', 'firstName lastName email')
+            .populate('uploadedBy', 'firstName lastName')
             .sort({ createdAt: -1 })
             .skip(skip)
             .limit(limitNum);
@@ -79,7 +79,6 @@ export const getFiles = async (req: AuthRequest, res: Response): Promise<void> =
         res.status(500).json({
             success: false,
             message: 'Error fetching files',
-            error: error.message,
         });
     }
 };
@@ -89,10 +88,7 @@ export const getFiles = async (req: AuthRequest, res: Response): Promise<void> =
 // @access  Public
 export const getFileById = async (req: AuthRequest, res: Response): Promise<void> => {
     try {
-        const file = await File.findById(req.params.id).populate(
-            'uploadedBy',
-            'firstName lastName email'
-        );
+        const file = await File.findById(req.params.id).populate('uploadedBy', 'firstName lastName');
 
         if (!file) {
             res.status(404).json({
@@ -110,7 +106,6 @@ export const getFileById = async (req: AuthRequest, res: Response): Promise<void
         res.status(500).json({
             success: false,
             message: 'Error fetching file',
-            error: error.message,
         });
     }
 };
@@ -137,6 +132,13 @@ export const uploadFile = async (req: AuthRequest, res: Response): Promise<void>
         }
 
         const { semester, module, fileCategory = 'Autre', fileLabel } = req.body;
+
+        const invalidField = Object.entries({ semester, module, fileCategory, fileLabel, year: req.body.year, filiere: req.body.filiere })
+            .find(([, v]) => v !== undefined && v !== '' && !isNonEmptyString(v));
+        if (invalidField) {
+            res.status(400).json({ success: false, message: `Invalid ${invalidField[0]}` });
+            return;
+        }
 
         if (!semester) {
             res.status(400).json({
@@ -315,7 +317,6 @@ export const uploadFile = async (req: AuthRequest, res: Response): Promise<void>
         res.status(500).json({
             success: false,
             message: 'Error uploading file',
-            error: error.message,
         });
     }
 };
@@ -358,6 +359,18 @@ export const updateFile = async (req: AuthRequest, res: Response): Promise<void>
         // Update allowed fields
         const { fileName, semester, module, fileCategory, fileLabel } = req.body;
 
+        const textFields = { fileName, semester, module, fileCategory };
+        for (const [field, value] of Object.entries(textFields)) {
+            if (value !== undefined && value !== '' && !isNonEmptyString(value)) {
+                res.status(400).json({ success: false, message: `Invalid ${field}` });
+                return;
+            }
+        }
+        if (fileLabel !== undefined && fileLabel !== '' && !isNonEmptyString(fileLabel)) {
+            res.status(400).json({ success: false, message: 'Invalid fileLabel' });
+            return;
+        }
+
         if (fileName) {
             file.fileName = fileName;
             file.displayName = fileName; // Update display name too
@@ -387,7 +400,6 @@ export const updateFile = async (req: AuthRequest, res: Response): Promise<void>
         res.status(500).json({
             success: false,
             message: 'Error updating file',
-            error: error.message,
         });
     }
 };
@@ -487,7 +499,6 @@ export const deleteFile = async (req: AuthRequest, res: Response): Promise<void>
         res.status(500).json({
             success: false,
             message: 'Error deleting file',
-            error: error.message,
         });
     }
 };
@@ -525,7 +536,6 @@ export const downloadFile = async (req: AuthRequest, res: Response): Promise<voi
         res.status(500).json({
             success: false,
             message: 'Error downloading file',
-            error: error.message,
         });
     }
 };
@@ -534,12 +544,8 @@ export const downloadFile = async (req: AuthRequest, res: Response): Promise<voi
 // @route   GET /api/files/sync-thumbnails
 // @access  Private (Superadmin only) - for debugging/maintenance
 export const syncThumbnails = async (req: AuthRequest, res: Response): Promise<void> => {
-    const fs = require('fs');
-    const logPath = path.join(__dirname, '../../debug_sync.txt');
-    const log = (msg: string) => fs.appendFileSync(logPath, msg + '\n');
 
     try {
-        log('--- Sync triggered --- ' + new Date().toISOString());
 
         // Find files with driveId but no thumbnailLink
         const filesToSync = await File.find({
@@ -551,11 +557,9 @@ export const syncThumbnails = async (req: AuthRequest, res: Response): Promise<v
             ]
         }).limit(50); // Process in batches
 
-        log(`Found ${filesToSync.length} files to sync.`);
         const results = [];
 
         for (const file of filesToSync) {
-            log(`Syncing thumbnail for ${file.fileName} (${file.driveId})...`);
             try {
                 // Fetch file metadata from Drive
                 const driveFile = await drive.files.get({
@@ -563,20 +567,16 @@ export const syncThumbnails = async (req: AuthRequest, res: Response): Promise<v
                     fields: 'thumbnailLink, hasThumbnail, id, name, mimeType'
                 });
 
-                log(`Drive response for ${file.fileName}: ` + JSON.stringify(driveFile.data));
 
                 if (driveFile.data.thumbnailLink) {
                     file.thumbnailLink = driveFile.data.thumbnailLink;
                     await file.save();
                     results.push({ id: file._id, name: file.fileName, status: 'Updated', link: 'Found' });
-                    log('Updated DB with thumbnailLink.');
                 } else {
                     results.push({ id: file._id, name: file.fileName, status: 'Skipped', link: 'Not found in Drive' });
-                    log('No thumbnailLink in Drive response.');
                 }
             } catch (err: any) {
                 console.error(`Error syncing file ${file.fileName}:`, err.message);
-                log(`Error syncing ${file.fileName}: ${err.message}`);
                 results.push({ id: file._id, name: file.fileName, status: 'Error', error: err.message });
             }
         }
@@ -591,7 +591,6 @@ export const syncThumbnails = async (req: AuthRequest, res: Response): Promise<v
         res.status(500).json({
             success: false,
             message: 'Error syncing thumbnails',
-            error: error.message,
         });
     }
 };

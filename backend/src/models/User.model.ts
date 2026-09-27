@@ -10,6 +10,7 @@ export interface IUser extends Document {
     firstName: string;
     lastName: string;
     isActive: boolean;
+    passwordChangedAt?: Date;
     createdAt: Date;
     updatedAt: Date;
     comparePassword(candidatePassword: string): Promise<boolean>;
@@ -62,6 +63,10 @@ const userSchema = new Schema<IUser>(
             type: Boolean,
             default: true,
         },
+        // Tokens issued before this date are rejected (see auth.middleware)
+        passwordChangedAt: {
+            type: Date,
+        },
     },
     {
         timestamps: true,
@@ -77,6 +82,9 @@ userSchema.pre('save', async function (next) {
     try {
         const salt = await bcrypt.genSalt(10);
         this.password = await bcrypt.hash(this.password, salt);
+        if (!this.isNew) {
+            this.passwordChangedAt = new Date();
+        }
         next();
     } catch (error: any) {
         next(error);

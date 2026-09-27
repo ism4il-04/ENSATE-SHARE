@@ -27,7 +27,6 @@ export const getStructure = async (req: AuthRequest, res: Response): Promise<voi
         res.status(500).json({
             success: false,
             message: 'Error fetching academic structure',
-            error: error.message,
         });
     }
 };
@@ -165,7 +164,6 @@ export const updateStructure = async (req: AuthRequest, res: Response): Promise<
         res.status(500).json({
             success: false,
             message: 'Error updating academic structure',
-            error: error.message,
         });
     }
 };

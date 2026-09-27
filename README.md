@@ -112,8 +112,7 @@ npm run dev
 
 1. **Accès public**: Ouvrir http://localhost:3000
 2. **Connexion admin**: http://localhost:3000/login
-   - Email: admin@ensa.ac.ma
-   - Mot de passe: Admin@123 (à changer en production!)
+   - Les comptes sont créés par `npm run seed` à partir de `backend/src/config/users.ts` (non versionné, voir `users.example.ts`)
 
 ## 📁 Structure du Projet
 

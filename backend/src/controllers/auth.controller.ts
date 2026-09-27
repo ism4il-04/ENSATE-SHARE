@@ -1,27 +1,34 @@
 import { Response } from 'express';
-import jwt, { SignOptions } from 'jsonwebtoken';
+import bcrypt from 'bcryptjs';
+import jwt from 'jsonwebtoken';
+import { OAuth2Client, TokenPayload } from 'google-auth-library';
 import User from '../models/User.model';
 import ActivityLog from '../models/ActivityLog.model';
 import { AuthRequest } from '../middleware/auth.middleware';
+import { clearLoginFailures, getLoginBlock, recordLoginFailure } from '../utils/loginThrottle';
+import {
+    checkPasswordStrength,
+    clearAuthCookie,
+    isNonEmptyString,
+    isValidEmail,
+    setAuthCookie,
+} from '../utils/authHelpers';
 
-// Generate JWT Token
-const generateToken = (id: string, expiresIn: string = '24h'): string => {
-    const secret = process.env.JWT_SECRET;
-    if (!secret) {
-        throw new Error('JWT_SECRET is not defined in environment variables');
-    }
-    return jwt.sign({ id }, secret, { expiresIn } as SignOptions);
-};
+// Compared against when the email is unknown, so response time doesn't reveal which emails exist
+const DUMMY_HASH = '$2a$10$Vkk6tEqIZNBu3gP4.ipIMeEtPSZ3qggqm.IX75GQzKa05t83UIlee';
+
+// Verifies Google ID tokens (caches Google's public keys between calls)
+const googleClient = new OAuth2Client();
 
 // @desc    Login user
 // @route   POST /api/auth/login
 // @access  Public
 export const login = async (req: AuthRequest, res: Response): Promise<void> => {
     try {
-        const { email, password, rememberMe } = req.body;
+        const { email: rawEmail, password, rememberMe } = req.body;
 
-        // Validate input
-        if (!email || !password) {
+        // Strings only: blocks NoSQL operator injection like {"$ne": null}
+        if (!isNonEmptyString(rawEmail, 254) || !isNonEmptyString(password, 128)) {
             res.status(400).json({
                 success: false,
                 message: 'Please provide email and password',
@@ -29,10 +36,27 @@ export const login = async (req: AuthRequest, res: Response): Promise<void> => {
             return;
         }
 
-        // Check if user exists (include password for comparison)
+        const email = rawEmail.trim().toLowerCase();
+        const ip = req.ip || 'unknown';
+
+        const retryAfter = await getLoginBlock(ip, email);
+        if (retryAfter > 0) {
+            res.set('Retry-After', String(retryAfter));
+            res.status(429).json({
+                success: false,
+                message: `Trop de tentatives de connexion. Réessayez dans ${Math.ceil(retryAfter / 60)} minute(s).`,
+            });
+            return;
+        }
+
         const user = await User.findOne({ email }).select('+password');
+        const isPasswordMatch = user
+            ? await user.comparePassword(password)
+            : await bcrypt.compare(password, DUMMY_HASH);
 
-        if (!user) {
+        // Same response for unknown email, wrong password and inactive account
+        if (!user || !isPasswordMatch || !user.isActive) {
+            await recordLoginFailure(ip, email);
             res.status(401).json({
                 success: false,
                 message: 'Invalid credentials',
@@ -40,66 +64,104 @@ export const login = async (req: AuthRequest, res: Response): Promise<void> => {
             return;
         }
 
-        // Check if user is active
-        if (!user.isActive) {
-            res.status(401).json({
-                success: false,
-                message: 'Account is inactive',
-            });
-            return;
-        }
-
-        // Check password
-        const isPasswordMatch = await user.comparePassword(password);
-
-        if (!isPasswordMatch) {
-            res.status(401).json({
-                success: false,
-                message: 'Invalid credentials',
-            });
-            return;
-        }
-
-        // Generate token (30 days if rememberMe, else 24h)
-        const tokenExpiry = rememberMe ? '30d' : '24h';
-        const token = generateToken(user._id.toString(), tokenExpiry);
-        const cookieMaxAge = rememberMe ? 30 * 24 * 60 * 60 * 1000 : 24 * 60 * 60 * 1000;
+        await clearLoginFailures(email);
 
         // Log activity
         await ActivityLog.create({
             userId: user._id,
             action: 'LOGIN',
-            details: { email: user.email },
+            details: { email: user.email, ip },
         });
 
-        // Send response with cookie
-        res
-            .status(200)
-            .cookie('token', token, {
-                httpOnly: true,
-                secure: process.env.NODE_ENV === 'production',
-                sameSite: 'strict',
-                maxAge: cookieMaxAge,
-            })
-            .json({
-                success: true,
-                message: 'Login successful',
-                token,
-                user: {
-                    id: user._id,
-                    email: user.email,
-                    role: user.role,
-                    firstName: user.firstName,
-                    lastName: user.lastName,
-                    assignedYear: user.assignedYear,
-                    assignedFiliere: user.assignedFiliere,
-                },
-            });
+        // The token only travels in the httpOnly cookie, never in the response body
+        setAuthCookie(res, user._id.toString(), rememberMe === true);
+        res.status(200).json({
+            success: true,
+            message: 'Login successful',
+            user: {
+                id: user._id,
+                email: user.email,
+                role: user.role,
+                firstName: user.firstName,
+                lastName: user.lastName,
+                assignedYear: user.assignedYear,
+                assignedFiliere: user.assignedFiliere,
+            },
+        });
     } catch (error: any) {
         res.status(500).json({
             success: false,
             message: 'Server error during login',
-            error: error.message,
+        });
+    }
+};
+
+// @desc    Login with a Google ID token (from Google Identity Services on the login page)
+// @route   POST /api/auth/google
+// @access  Public
+export const googleLogin = async (req: AuthRequest, res: Response): Promise<void> => {
+    try {
+        const { credential, rememberMe } = req.body;
+        const clientId = process.env.GOOGLE_AUTH_CLIENT_ID;
+
+        if (!clientId) {
+            res.status(503).json({ success: false, message: 'Connexion Google non configurée' });
+            return;
+        }
+        if (!isNonEmptyString(credential, 4096)) {
+            res.status(400).json({ success: false, message: 'Google credential is required' });
+            return;
+        }
+
+        // Checks Google's signature, expiry, issuer, and that the token was issued for our client ID
+        let payload: TokenPayload | undefined;
+        try {
+            const ticket = await googleClient.verifyIdToken({ idToken: credential, audience: clientId });
+            payload = ticket.getPayload();
+        } catch {
+            payload = undefined;
+        }
+
+        if (!payload?.email || payload.email_verified !== true) {
+            res.status(401).json({ success: false, message: 'Connexion Google invalide' });
+            return;
+        }
+
+        // Only existing accounts can sign in: Google proves the email, the account must already be here
+        const email = payload.email.toLowerCase();
+        const user = await User.findOne({ email });
+        if (!user || !user.isActive) {
+            res.status(403).json({
+                success: false,
+                message: "Aucun compte actif n'est associé à cette adresse Google",
+            });
+            return;
+        }
+
+        await ActivityLog.create({
+            userId: user._id,
+            action: 'LOGIN',
+            details: { email: user.email, ip: req.ip, method: 'google' },
+        });
+
+        setAuthCookie(res, user._id.toString(), rememberMe === true);
+        res.status(200).json({
+            success: true,
+            message: 'Login successful',
+            user: {
+                id: user._id,
+                email: user.email,
+                role: user.role,
+                firstName: user.firstName,
+                lastName: user.lastName,
+                assignedYear: user.assignedYear,
+                assignedFiliere: user.assignedFiliere,
+            },
+        });
+    } catch (error: any) {
+        res.status(500).json({
+            success: false,
+            message: 'Server error during Google login',
         });
     }
 };
@@ -117,34 +179,28 @@ export const logout = async (req: AuthRequest, res: Response): Promise<void> => 
             });
         }
 
-        res
-            .status(200)
-            .cookie('token', '', {
-                httpOnly: true,
-                expires: new Date(0),
-            })
-            .json({
-                success: true,
-                message: 'Logout successful',
-            });
+        clearAuthCookie(res);
+        res.status(200).json({
+            success: true,
+            message: 'Logout successful',
+        });
     } catch (error: any) {
         res.status(500).json({
             success: false,
             message: 'Server error during logout',
-            error: error.message,
         });
     }
 };
 
-// @desc    Get current logged in user
+// @desc    Get current logged in user (user: null when there is no valid session)
 // @route   GET /api/auth/me
-// @access  Private
+// @access  Public
 export const getMe = async (req: AuthRequest, res: Response): Promise<void> => {
     try {
         if (!req.user) {
-            res.status(401).json({
-                success: false,
-                message: 'Not authorized',
+            res.status(200).json({
+                success: true,
+                user: null,
             });
             return;
         }
@@ -166,7 +222,6 @@ export const getMe = async (req: AuthRequest, res: Response): Promise<void> => {
         res.status(500).json({
             success: false,
             message: 'Server error',
-            error: error.message,
         });
     }
 };
@@ -188,10 +243,15 @@ export const updateProfile = async (req: AuthRequest, res: Response): Promise<vo
         }
 
         const { firstName, lastName, email, currentPassword, newPassword } = req.body;
+        const emailChanged =
+            req.user.role === 'superadmin' &&
+            email !== undefined &&
+            email !== '' &&
+            (typeof email !== 'string' || email.trim().toLowerCase() !== user.email);
 
-        // Password change: verify current password first
-        if (newPassword) {
-            if (!currentPassword) {
+        // Password and email changes both require the current password
+        if (newPassword || emailChanged) {
+            if (!isNonEmptyString(currentPassword, 128)) {
                 res.status(400).json({ success: false, message: 'Le mot de passe actuel est requis' });
                 return;
             }
@@ -200,23 +260,50 @@ export const updateProfile = async (req: AuthRequest, res: Response): Promise<vo
                 res.status(400).json({ success: false, message: 'Mot de passe actuel incorrect' });
                 return;
             }
-            if (newPassword.length < 6) {
-                res.status(400).json({ success: false, message: 'Le nouveau mot de passe doit contenir au moins 6 caractères' });
+        }
+
+        if (newPassword) {
+            const passwordError = checkPasswordStrength(newPassword);
+            if (passwordError) {
+                res.status(400).json({ success: false, message: passwordError });
                 return;
             }
             user.password = newPassword;
         }
 
         // Name updates (both roles)
-        if (firstName) user.firstName = firstName;
-        if (lastName) user.lastName = lastName;
+        for (const [field, value] of [['firstName', firstName], ['lastName', lastName]] as const) {
+            if (value === undefined || value === '') continue;
+            if (!isNonEmptyString(value, 100)) {
+                res.status(400).json({ success: false, message: 'Nom ou prénom invalide' });
+                return;
+            }
+            user[field] = value;
+        }
 
         // Email update (superadmin only)
-        if (email && req.user.role === 'superadmin') {
-            user.email = email;
+        if (emailChanged) {
+            if (!isValidEmail(email)) {
+                res.status(400).json({ success: false, message: 'Email invalide' });
+                return;
+            }
+            const normalizedEmail = email.trim().toLowerCase();
+            if (await User.exists({ email: normalizedEmail, _id: { $ne: user._id } })) {
+                res.status(400).json({ success: false, message: 'Cet email est déjà utilisé' });
+                return;
+            }
+            user.email = normalizedEmail;
         }
 
         await user.save();
+
+        // Changing the password invalidates older tokens, so issue a fresh one for this session
+        if (newPassword) {
+            const current = jwt.decode(req.cookies?.token || '') as { iat?: number; exp?: number } | null;
+            const wasRemembered =
+                !!current?.iat && !!current?.exp && current.exp - current.iat > 2 * 24 * 60 * 60;
+            setAuthCookie(res, user._id.toString(), wasRemembered);
+        }
 
         res.status(200).json({
             success: true,
@@ -232,6 +319,6 @@ export const updateProfile = async (req: AuthRequest, res: Response): Promise<vo
             },
         });
     } catch (error: any) {
-        res.status(500).json({ success: false, message: 'Erreur serveur', error: error.message });
+        res.status(500).json({ success: false, message: 'Erreur serveur' });
     }
 };

@@ -9,7 +9,7 @@ import { drive, FOLDER_ID } from '../config/drive';
 export const findOrCreateFolder = async (folderName: string, parentId: string): Promise<string> => {
     try {
         // Search for existing folder
-        const query = `mimeType='application/vnd.google-apps.folder' and name='${folderName.replace(/'/g, "\\'")}' and '${parentId}' in parents and trashed=false`;
+        const query = `mimeType='application/vnd.google-apps.folder' and name='${folderName.replace(/\\/g, '\\\\').replace(/'/g, "\\'")}' and '${parentId}' in parents and trashed=false`;
 
         const response = await drive.files.list({
             q: query,
@@ -45,7 +45,7 @@ export const findOrCreateFolder = async (folderName: string, parentId: string): 
  */
 export const findFolder = async (folderName: string, parentId: string): Promise<string | null> => {
     try {
-        const query = `mimeType='application/vnd.google-apps.folder' and name='${folderName.replace(/'/g, "\\'")}' and '${parentId}' in parents and trashed=false`;
+        const query = `mimeType='application/vnd.google-apps.folder' and name='${folderName.replace(/\\/g, '\\\\').replace(/'/g, "\\'")}' and '${parentId}' in parents and trashed=false`;
         const response = await drive.files.list({
             q: query,
             fields: 'files(id, name)',

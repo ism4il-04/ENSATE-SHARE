@@ -7,18 +7,15 @@ import { logger } from '../utils/logger';
 
 dotenv.config();
 
-import { users as exampleUsers } from '../config/users.example';
-
-let users = exampleUsers;
+// Accounts are only seeded from src/config/users.ts (gitignored), never from the public example
+let users: any[] = [];
 try {
-    // Try to load actual users config if it exists
     const config = require('../config/users');
     if (config.users) {
         users = config.users;
     }
 } catch (error) {
-    // Ignore error, use example users
-    // console.warn('Using example users for seeding. Create src/config/users.ts for custom users.');
+    logger.warn('No src/config/users.ts found, skipping account seeding.');
 }
 
 const seedDatabase = async () => {

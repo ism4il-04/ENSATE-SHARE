@@ -8,14 +8,14 @@ import {
     downloadFile,
     syncThumbnails,
 } from '../controllers/file.controller';
-import { requireAuth, optionalAuth } from '../middleware/auth.middleware';
+import { requireAuth, requireSuperadmin, optionalAuth } from '../middleware/auth.middleware';
 import upload from '../middleware/upload.middleware';
 
 const router = Router();
 
 // Public routes (optionalAuth populates req.user for responsable filtering)
 router.get('/', optionalAuth, getFiles);
-router.get('/sync-thumbnails', syncThumbnails); // Debug route
+router.get('/sync-thumbnails', requireSuperadmin, syncThumbnails);
 router.get('/:id', getFileById);
 router.get('/:id/download', downloadFile);
 

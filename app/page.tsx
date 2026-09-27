@@ -23,6 +23,7 @@ import Image from 'next/image';
 //import { useSavedParcours } from '@/hooks/useSavedParcours';
 import { SpeedInsights } from "@vercel/speed-insights/next"
 import { Analytics } from "@vercel/analytics/next"
+import LegalFooterLinks from '@/components/LegalFooterLinks';
 
 
 
@@ -420,6 +421,7 @@ function WelcomeContent() {
                             className="h-8 w-auto opacity-90 hover:opacity-100 transition-opacity"
                         />
                     </Link>
+                    <LegalFooterLinks />
                     <p className="text-atlas-600 text-sm">
                         © 2026 ENSATE-SHARE — École Nationale des Sciences Appliquées
                     </p>

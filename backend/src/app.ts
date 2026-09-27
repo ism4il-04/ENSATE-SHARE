@@ -8,6 +8,7 @@ import helmet from 'helmet';
 import cookieParser from 'cookie-parser';
 import connectDB from './config/database';
 import errorHandler from './middleware/errorHandler.middleware';
+import sanitizeRequest from './middleware/sanitize.middleware';
 
 // Import routes
 import authRoutes from './routes/auth.routes';
@@ -19,6 +20,11 @@ import statsRoutes from './routes/stats.routes';
 // Create Express app
 const app: Application = express();
 
+// Behind Vercel/Render's proxy: take the client IP from X-Forwarded-For (used by login rate limiting)
+app.set('trust proxy', 1);
+// Flat query strings only: ?year[$ne]=x stays a literal key instead of becoming a MongoDB operator
+app.set('query parser', 'simple');
+
 // Middleware
 app.use(helmet()); // Security headers
 app.use(
@@ -27,9 +33,10 @@ app.use(
         credentials: true,
     })
 );
-app.use(express.json()); // Parse JSON bodies
-app.use(express.urlencoded({ extended: true })); // Parse URL-encoded bodies
+app.use(express.json({ limit: '100kb' })); // Parse JSON bodies
+app.use(express.urlencoded({ extended: false, limit: '100kb' })); // Parse URL-encoded bodies
 app.use(cookieParser()); // Parse cookies
+app.use(sanitizeRequest); // Strip $-operators and prototype keys from body/params
 
 // Routes
 app.use('/api/auth', authRoutes);

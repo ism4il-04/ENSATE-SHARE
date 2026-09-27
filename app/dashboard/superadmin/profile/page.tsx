@@ -24,6 +24,8 @@ export default function ProfilePage() {
     const [firstName, setFirstName] = useState(user?.firstName || '');
     const [lastName, setLastName] = useState(user?.lastName || '');
     const [email, setEmail] = useState(user?.email || '');
+    const [infoPassword, setInfoPassword] = useState('');
+    const emailChanged = email.trim().toLowerCase() !== (user?.email || '');
 
     // Password editing
     const [isEditingPassword, setIsEditingPassword] = useState(false);
@@ -43,8 +45,14 @@ export default function ProfilePage() {
         setError('');
         setSuccess('');
         try {
-            const res = await authAPI.updateProfile({ firstName, lastName, email });
+            const res = await authAPI.updateProfile({
+                firstName,
+                lastName,
+                email,
+                ...(emailChanged && { currentPassword: infoPassword }),
+            });
             setUser(res.data.user);
+            setInfoPassword('');
             setSuccess('Informations mises à jour avec succès');
             setIsEditingInfo(false);
         } catch (err: any) {
@@ -81,6 +89,7 @@ export default function ProfilePage() {
         setFirstName(user?.firstName || '');
         setLastName(user?.lastName || '');
         setEmail(user?.email || '');
+        setInfoPassword('');
         setError('');
     };
 
@@ -183,10 +192,24 @@ export default function ProfilePage() {
                                 className="w-full px-4 py-2.5 rounded-xl border border-cream-300 bg-white text-atlas-900 focus:outline-none focus:ring-2 focus:ring-accent-300 focus:border-accent-300 transition-all"
                             />
                         </div>
+                        {emailChanged && (
+                            <div>
+                                <label className="block text-sm font-medium text-atlas-700 mb-1.5">
+                                    Mot de passe actuel (requis pour changer l&apos;email)
+                                </label>
+                                <input
+                                    type="password"
+                                    value={infoPassword}
+                                    onChange={(e) => setInfoPassword(e.target.value)}
+                                    autoComplete="current-password"
+                                    className="w-full px-4 py-2.5 rounded-xl border border-cream-300 bg-white text-atlas-900 focus:outline-none focus:ring-2 focus:ring-accent-300 focus:border-accent-300 transition-all"
+                                />
+                            </div>
+                        )}
                         <div className="flex items-center gap-3 pt-2">
                             <button
                                 onClick={handleSaveInfo}
-                                disabled={saving}
+                                disabled={saving || (emailChanged && !infoPassword)}
                                 className="inline-flex items-center gap-2 px-5 py-2.5 rounded-xl text-sm font-semibold text-white bg-accent-500 hover:bg-accent-600 disabled:opacity-50 transition-colors shadow-sm"
                             >
                                 <Save size={16} />
@@ -283,7 +306,7 @@ export default function ProfilePage() {
                                         value={newPassword}
                                         onChange={(e) => setNewPassword(e.target.value)}
                                         className="w-full px-4 py-2.5 pr-10 rounded-xl border border-cream-300 bg-white text-atlas-900 focus:outline-none focus:ring-2 focus:ring-accent-300 focus:border-accent-300 transition-all"
-                                        placeholder="Min. 6 caractères"
+                                        placeholder="Min. 10 caractères, majuscules, minuscules et chiffres"
                                     />
                                     <button
                                         type="button"

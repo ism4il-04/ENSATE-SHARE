@@ -13,7 +13,7 @@ export default function ProtectedRoute({ children, allowedRoles }: ProtectedRout
     const router = useRouter();
     const { user, isAuthenticated, isLoading, isInitialized } = useAuthStore();
 
-    // Wait until we've run the initial auth check (token from localStorage + getMe)
+    // Wait until we've run the initial auth check (session cookie checked via getMe)
     const authPending = !isInitialized || isLoading;
 
     useEffect(() => {

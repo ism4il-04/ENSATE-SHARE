@@ -2,6 +2,7 @@ import { Response } from 'express';
 import User from '../models/User.model';
 import ActivityLog from '../models/ActivityLog.model';
 import { AuthRequest } from '../middleware/auth.middleware';
+import { checkPasswordStrength, isNonEmptyString, isValidEmail } from '../utils/authHelpers';
 
 // @desc    Get all responsables
 // @route   GET /api/users
@@ -19,7 +20,6 @@ export const getUsers = async (req: AuthRequest, res: Response): Promise<void> =
         res.status(500).json({
             success: false,
             message: 'Error fetching users',
-            error: error.message,
         });
     }
 };
@@ -32,8 +32,11 @@ export const createUser = async (req: AuthRequest, res: Response): Promise<void>
         const { email, password, firstName, lastName, assignedYear, assignedFiliere } =
             req.body;
 
-        // Validate required fields
-        if (!email || !password || !firstName || !lastName || !assignedYear || !assignedFiliere) {
+        // Validate required fields (strings only)
+        if (
+            ![firstName, lastName, assignedYear, assignedFiliere].every((v) => isNonEmptyString(v)) ||
+            !isValidEmail(email)
+        ) {
             res.status(400).json({
                 success: false,
                 message: 'All fields are required',
@@ -41,8 +44,14 @@ export const createUser = async (req: AuthRequest, res: Response): Promise<void>
             return;
         }
 
+        const passwordError = checkPasswordStrength(password);
+        if (passwordError) {
+            res.status(400).json({ success: false, message: passwordError });
+            return;
+        }
+
         // Check if user already exists
-        const existingUser = await User.findOne({ email });
+        const existingUser = await User.findOne({ email: email.trim().toLowerCase() });
 
         if (existingUser) {
             res.status(400).json({
@@ -96,7 +105,6 @@ export const createUser = async (req: AuthRequest, res: Response): Promise<void>
         res.status(500).json({
             success: false,
             message: 'Error creating user',
-            error: error.message,
         });
     }
 };
@@ -128,24 +136,57 @@ export const updateUser = async (req: AuthRequest, res: Response): Promise<void>
         const { email, firstName, lastName, assignedYear, assignedFiliere, isActive, password } =
             req.body;
 
-        if (email) user.email = email;
-        if (firstName) user.firstName = firstName;
-        if (lastName) user.lastName = lastName;
-        if (assignedYear) user.assignedYear = assignedYear;
-        if (assignedFiliere) user.assignedFiliere = assignedFiliere;
-        if (typeof isActive !== 'undefined') user.isActive = isActive;
-        if (password) user.password = password; // Will be hashed by pre-save hook
+        const textFields = { firstName, lastName, assignedYear, assignedFiliere };
+        for (const [field, value] of Object.entries(textFields)) {
+            if (value === undefined || value === '') continue;
+            if (!isNonEmptyString(value)) {
+                res.status(400).json({ success: false, message: `Invalid ${field}` });
+                return;
+            }
+            user.set(field, value);
+        }
+
+        if (email !== undefined && email !== '') {
+            if (!isValidEmail(email)) {
+                res.status(400).json({ success: false, message: 'Invalid email' });
+                return;
+            }
+            const normalizedEmail = email.trim().toLowerCase();
+            if (await User.exists({ email: normalizedEmail, _id: { $ne: user._id } })) {
+                res.status(400).json({ success: false, message: 'User with this email already exists' });
+                return;
+            }
+            user.email = normalizedEmail;
+        }
+
+        if (typeof isActive !== 'undefined') {
+            if (typeof isActive !== 'boolean') {
+                res.status(400).json({ success: false, message: 'Invalid isActive' });
+                return;
+            }
+            user.isActive = isActive;
+        }
+
+        if (password) {
+            const passwordError = checkPasswordStrength(password);
+            if (passwordError) {
+                res.status(400).json({ success: false, message: passwordError });
+                return;
+            }
+            user.password = password; // Will be hashed by pre-save hook
+        }
 
         await user.save();
 
-        // Log activity
+        // Log activity (never the password itself)
         if (req.user) {
+            const { password: _omit, ...loggedChanges } = req.body;
             await ActivityLog.create({
                 userId: req.user._id,
                 action: 'USER_UPDATE',
                 targetId: user._id,
                 targetType: 'User',
-                details: req.body,
+                details: { ...loggedChanges, ...(password && { passwordChanged: true }) },
             });
         }
 
@@ -167,7 +208,6 @@ export const updateUser = async (req: AuthRequest, res: Response): Promise<void>
         res.status(500).json({
             success: false,
             message: 'Error updating user',
-            error: error.message,
         });
     }
 };
@@ -218,7 +258,6 @@ export const deleteUser = async (req: AuthRequest, res: Response): Promise<void>
         res.status(500).json({
             success: false,
             message: 'Error deleting user',
-            error: error.message,
         });
     }
 };

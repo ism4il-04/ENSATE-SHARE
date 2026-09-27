@@ -7,6 +7,43 @@ export interface AuthRequest extends Request {
     user?: IUser;
 }
 
+const getToken = (req: Request): string | undefined => {
+    if (req.cookies?.token) {
+        return req.cookies.token;
+    }
+    if (req.headers.authorization?.startsWith('Bearer ')) {
+        return req.headers.authorization.split(' ')[1];
+    }
+    return undefined;
+};
+
+// Returns the active user the token belongs to, or null if the token is invalid,
+// expired, issued before the last password change, or the account is inactive/deleted.
+const resolveUser = async (token: string): Promise<IUser | null> => {
+    const secret = process.env.JWT_SECRET;
+    if (!secret) {
+        throw new Error('JWT_SECRET is not defined in environment variables');
+    }
+
+    let decoded: { id: string; iat?: number };
+    try {
+        decoded = jwt.verify(token, secret, { algorithms: ['HS256'] }) as { id: string; iat?: number };
+    } catch {
+        return null;
+    }
+
+    const user = await User.findById(decoded.id).select('-password');
+    if (!user || !user.isActive) {
+        return null;
+    }
+
+    if (user.passwordChangedAt && (decoded.iat ?? 0) < Math.floor(user.passwordChangedAt.getTime() / 1000)) {
+        return null;
+    }
+
+    return user;
+};
+
 // Verify JWT token
 export const protect = async (
     req: AuthRequest,
@@ -14,17 +51,7 @@ export const protect = async (
     next: NextFunction
 ): Promise<void> => {
     try {
-        let token: string | undefined;
-
-        // Check for token in cookies or Authorization header
-        if (req.cookies && req.cookies.token) {
-            token = req.cookies.token;
-        } else if (
-            req.headers.authorization &&
-            req.headers.authorization.startsWith('Bearer')
-        ) {
-            token = req.headers.authorization.split(' ')[1];
-        }
+        const token = getToken(req);
 
         if (!token) {
             res.status(401).json({
@@ -34,49 +61,17 @@ export const protect = async (
             return;
         }
 
-        try {
-            // Verify token
-            const secret = process.env.JWT_SECRET;
-            if (!secret) {
-                res.status(500).json({
-                    success: false,
-                    message: 'Server configuration error',
-                });
-                return;
-            }
-
-            const decoded = jwt.verify(token, secret) as {
-                id: string;
-            };
-
-            // Get user from token
-            const user = await User.findById(decoded.id).select('-password');
-
-            if (!user) {
-                res.status(401).json({
-                    success: false,
-                    message: 'User not found',
-                });
-                return;
-            }
-
-            if (!user.isActive) {
-                res.status(401).json({
-                    success: false,
-                    message: 'User account is inactive',
-                });
-                return;
-            }
-
-            req.user = user;
-            next();
-        } catch (error) {
+        const user = await resolveUser(token);
+        if (!user) {
             res.status(401).json({
                 success: false,
-                message: 'Invalid token',
+                message: 'Invalid or expired session',
             });
             return;
         }
+
+        req.user = user;
+        next();
     } catch (error) {
         res.status(500).json({
             success: false,
@@ -115,20 +110,11 @@ export const optionalAuth = async (
     next: NextFunction
 ): Promise<void> => {
     try {
-        let token: string | undefined;
-        if (req.cookies?.token) {
-            token = req.cookies.token;
-        } else if (req.headers.authorization?.startsWith('Bearer')) {
-            token = req.headers.authorization.split(' ')[1];
-        }
+        const token = getToken(req);
         if (token) {
-            const secret = process.env.JWT_SECRET;
-            if (secret) {
-                const decoded = jwt.verify(token, secret) as { id: string };
-                const user = await User.findById(decoded.id).select('-password');
-                if (user && user.isActive) {
-                    req.user = user;
-                }
+            const user = await resolveUser(token);
+            if (user) {
+                req.user = user;
             }
         }
     } catch {

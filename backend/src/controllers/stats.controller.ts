@@ -59,7 +59,6 @@ export const getDashboardStats = async (
         res.status(500).json({
             success: false,
             message: 'Error fetching dashboard statistics',
-            error: error.message,
         });
     }
 };
@@ -93,7 +92,6 @@ export const getFilesByFiliere = async (
         res.status(500).json({
             success: false,
             message: 'Error fetching files distribution',
-            error: error.message,
         });
     }
 };
@@ -127,7 +125,6 @@ export const getFilesByYear = async (
         res.status(500).json({
             success: false,
             message: 'Error fetching files distribution by year',
-            error: error.message,
         });
     }
 };
@@ -169,7 +166,6 @@ export const getActivityLogs = async (
         res.status(500).json({
             success: false,
             message: 'Error fetching activity logs',
-            error: error.message,
         });
     }
 };

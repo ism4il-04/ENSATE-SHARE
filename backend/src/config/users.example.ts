@@ -1,20 +1,22 @@
+// Template only: copy to src/config/users.ts (gitignored) and fill in real values.
+// The seed script never creates accounts from this file.
 export const users = [
     {
         role: 'superadmin',
-        email: 'admin@ensa.ac.ma',
-        password: 'Admin@123',
-        firstName: 'Super',
-        lastName: 'Admin',
+        email: '',
+        password: '',
+        firstName: '',
+        lastName: '',
         isActive: true
     },
     {
         role: 'responsable',
-        email: 'responsable.gi1@etu.uae.ac.ma',
-        password: '12345678',
-        firstName: 'Responsable',
-        lastName: 'GI1',
-        assignedFiliere: 'Génie Informatique',
-        assignedYear: 'GI1',
+        email: '',
+        password: '',
+        firstName: '',
+        lastName: '',
+        assignedFiliere: '',
+        assignedYear: '',
         isActive: true
     }
 ];
