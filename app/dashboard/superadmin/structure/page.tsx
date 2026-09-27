@@ -9,16 +9,44 @@ import type { Cycle, YearLevel, Semester } from '@/types';
 
 type CycleWithOpen = Cycle & { _open?: boolean; _yearsOpen?: Record<number, boolean> };
 
+// The editor keeps module names as strings; each semester carries its modules' database ids in a
+// parallel list, so a renamed module keeps its files (new modules have no id yet).
+const fromIdTree = (tree: any) => ({
+    cycles: (tree?.cycles ?? []).map((c: any) => ({
+        ...c,
+        years: (c.years ?? []).map((y: any) => ({
+            ...y,
+            semesters: (y.semesters ?? []).map((sem: any) => ({
+                ...sem,
+                modules: (sem.modules ?? []).map((m: any) => (typeof m === 'string' ? m : m.name)),
+                moduleIds: (sem.modules ?? []).map((m: any) => (typeof m === 'string' ? undefined : m.id)),
+            })),
+        })),
+    })),
+});
+
+const toIdTree = (cycles: any[]) =>
+    cycles.map((c) => ({
+        ...c,
+        years: (c.years ?? []).map((y: any) => ({
+            ...y,
+            semesters: (y.semesters ?? []).map(({ moduleIds, ...sem }: any) => ({
+                ...sem,
+                modules: (sem.modules ?? []).map((name: string, i: number) => ({ id: moduleIds?.[i], name })),
+            })),
+        })),
+    }));
+
 export default function StructurePage() {
     const queryClient = useQueryClient();
     const [editMode, setEditMode] = useState(false);
     const [structureData, setStructureData] = useState<{ cycles: CycleWithOpen[] } | null>(null);
 
     const { data, isLoading } = useQuery({
-        queryKey: ['structure'],
+        queryKey: ['structure', 'withIds'],
         queryFn: async () => {
-            const response = await structureAPI.getStructure();
-            return response.data.structure;
+            const response = await structureAPI.getStructureWithIds();
+            return fromIdTree(response.data.structure);
         },
     });
 
@@ -34,7 +62,7 @@ export default function StructurePage() {
     }, [data, editMode]);
 
     const updateMutation = useMutation({
-        mutationFn: (payload: { cycles: Cycle[] }) => structureAPI.updateStructure(payload),
+        mutationFn: (payload: { cycles: unknown[] }) => structureAPI.updateStructure(payload),
         onSuccess: () => {
             queryClient.invalidateQueries({ queryKey: ['structure'] });
             setEditMode(false);
@@ -59,7 +87,7 @@ export default function StructurePage() {
     const handleSave = () => {
         if (!structureData) return;
         const cycles = structureData.cycles.map(({ _open, _yearsOpen, ...c }) => c);
-        updateMutation.mutate({ cycles });
+        updateMutation.mutate({ cycles: toIdTree(cycles) });
     };
 
     const toggleCycle = (cycleIndex: number) => {
@@ -143,15 +171,17 @@ export default function StructurePage() {
     // --- Module
     const addModule = (cycleIndex: number, yearIndex: number, semesterIndex: number) => {
         const cycles = [...structureData!.cycles];
-        const mods = cycles[cycleIndex].years[yearIndex].semesters[semesterIndex].modules;
-        cycles[cycleIndex].years[yearIndex].semesters[semesterIndex].modules = [...(mods || []), ''];
+        const sem = cycles[cycleIndex].years[yearIndex].semesters[semesterIndex] as any;
+        sem.modules = [...(sem.modules || []), ''];
+        sem.moduleIds = [...(sem.moduleIds || []), undefined];
         setStructureData({ ...structureData!, cycles });
     };
 
     const removeModule = (cycleIndex: number, yearIndex: number, semesterIndex: number, moduleIndex: number) => {
         const cycles = [...structureData!.cycles];
-        const mods = cycles[cycleIndex].years[yearIndex].semesters[semesterIndex].modules;
-        cycles[cycleIndex].years[yearIndex].semesters[semesterIndex].modules = mods.filter((_, i) => i !== moduleIndex);
+        const sem = cycles[cycleIndex].years[yearIndex].semesters[semesterIndex] as any;
+        sem.modules = sem.modules.filter((_: string, i: number) => i !== moduleIndex);
+        sem.moduleIds = (sem.moduleIds || []).filter((_: unknown, i: number) => i !== moduleIndex);
         setStructureData({ ...structureData!, cycles });
     };
 
@@ -233,6 +263,11 @@ export default function StructurePage() {
             </div>
 
             <div className="max-w-4xl mx-auto px-6 pb-8 sm:px-8 space-y-4">
+                {updateMutation.isError && (
+                    <div className="rounded-xl border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-600">
+                        {(updateMutation.error as any)?.response?.data?.message || "Erreur lors de l'enregistrement"}
+                    </div>
+                )}
                 {cycles.length === 0 && !editMode ? (
                     <div className="rounded-2xl bg-white/80 backdrop-blur border border-cream-300/80 shadow-sm p-12 text-center">
                         <GraduationCap className="w-14 h-14 text-atlas-300 mx-auto mb-4" />

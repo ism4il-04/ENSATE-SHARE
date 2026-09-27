@@ -64,6 +64,7 @@ export const usersAPI = {
 // Structure API
 export const structureAPI = {
     getStructure: () => api.get('/structure'),
+    getStructureWithIds: () => api.get('/structure', { params: { withIds: 1 } }),
     updateStructure: (data: { cycles: unknown[] }) => api.put('/structure', data),
 };
 
@@ -79,7 +80,7 @@ export const parcoursAPI = {
 export const studentsAPI = {
     getList: (params: { search?: string; page?: number }) => api.get('/students', { params }),
     importEmails: (emails: string[]) => api.post('/students/import', { emails }),
-    remove: (id: string) => api.delete(`/students/${id}`),
+    remove: (id: string) => api.delete(`/students/${encodeURIComponent(id)}`),
     clearAll: () => api.delete('/students', { params: { all: 'true' } }),
 };
 

@@ -1,6 +1,7 @@
 # Migration plan: Express + MongoDB → Next.js route handlers + Neon Postgres
 
-Status: **draft for review**, branch `neon-migration` (local only, not deployed).
+Status: **implemented on branch `neon-migration`** (local only, not deployed). Data imported into the Neon
+`dev` branch and verified against MongoDB; `npm run test:api` passes (60 checks). Remaining: switch day.
 
 ## Goal
 
