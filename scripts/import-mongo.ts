@@ -6,7 +6,7 @@
  *   npm run db:import-mongo -- --reset        → empties the dev tables first
  *   TARGET_DATABASE_URL=… npm run db:import-mongo -- --production [--reset]
  *
- * MONGODB_URI is read from backend/.env.
+ * MONGODB_URI is read from .env.development.local.
  */
 import { randomUUID } from 'crypto';
 import { config } from 'dotenv';
@@ -30,8 +30,8 @@ const date = (d: unknown) => (d instanceof Date ? d : d ? new Date(d as string) 
 
 (async () => {
     const { url } = resolveTarget(process.argv);
-    config({ path: 'backend/.env' });
-    if (!process.env.MONGODB_URI) throw new Error('MONGODB_URI missing from backend/.env');
+    config({ path: '.env.development.local' }); // MONGODB_URI (read-only source)
+    if (!process.env.MONGODB_URI) throw new Error('MONGODB_URI missing from .env.development.local');
 
     await mongoose.connect(process.env.MONGODB_URI);
     const mdb = mongoose.connection.db!;

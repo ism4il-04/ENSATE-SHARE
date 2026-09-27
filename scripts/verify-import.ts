@@ -10,7 +10,7 @@ import { resolveTarget } from './db-target';
 
 (async () => {
     const { url } = resolveTarget(process.argv);
-    config({ path: 'backend/.env' });
+    config({ path: '.env.development.local' }); // MONGODB_URI (read-only source)
     await mongoose.connect(process.env.MONGODB_URI as string);
     const mdb = mongoose.connection.db!;
     const sql = neon(url);
