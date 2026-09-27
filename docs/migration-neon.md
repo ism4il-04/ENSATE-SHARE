@@ -74,17 +74,19 @@ detected by id instead of by guessing from names. The public shape (module names
   and the time it was issued.
 - **Staff requests** (responsables, admins) are checked against the database on every request, as today:
   deactivation, email change and password change take effect immediately.
-- **Student requests** skip the database lookup: the token itself is trusted for **up to 12 hours**, then
-  the next request checks the account (active, still on the student list) and issues a fresh token. So
-  removing a student from the list or deactivating them takes effect within 12 hours instead of instantly.
-  This is the main thing that keeps the database asleep. *Decision for you: 12 h is a proposal.*
+- **Student requests** don't query the database. Instead they are checked against a small **access
+  snapshot** kept in the Next.js data cache (tag `student-access`): the ids of deactivated students and,
+  when the student list is active, the allowed emails. Removing a student from the list, emptying or
+  importing the list, or deactivating an account clears that cache, so the next request reloads the
+  snapshot once and the change applies **immediately**. The database is only touched when that list
+  actually changes. Emergency lever: changing `SESSION_SECRET` on Vercel ends every session at once.
 - All existing sessions end at the switch (new signing secret); everyone signs in again once.
 
 ## Neon compute budget
 
 The database runs from a query until 5 minutes after the last one. What wakes it after the migration:
 
-- **Wakes it:** sign-in, a student token older than 12 h, saving/removing a parcours, anything staff do
+- **Wakes it:** sign-in, the first request after the student list or an account status changed, saving/removing a parcours, anything staff do
   (uploads, admin pages), cache refresh after an upload or structure change.
 - **Doesn't wake it:** a signed-in student opening the home page, a parcours, a module's file list, a
   preview or a download (served from the Next.js cache and Google Drive).
@@ -124,9 +126,9 @@ Express/Mongoose/Cloudinary-era dependencies from the root `package.json`. The d
    - Smoke test: sign-in (student, responsable, admin), a parcours, a preview, a download, an upload.
    - Rollback if needed: revert the merge commit; MongoDB still has everything up to the switch.
 
-## Decisions needed from you
+## Decisions
 
-1. **Student check interval**: 12 h (proposed) between database checks for student sessions.
-2. **Neon setup**: create the project yourself (Neon console, region Europe, e.g. Frankfurt), or through
-   Vercel's Neon integration (which also adds `DATABASE_URL` to Vercel automatically).
-3. **Backups to Drive**: OK to create a private `_backups` folder in the ADE Drive?
+1. Student access checked on every request against a cached snapshot, so removals apply **immediately**.
+2. Neon project created in the Neon console (region AWS Europe, Frankfurt), branches `main` and `dev`,
+   compute capped at 0.25 CU. Vercel functions pinned to the Frankfurt region (`fra1`) to sit next to it.
+3. Daily JSON backup to a private `_backups` folder in the ADE Drive (last 30 kept).

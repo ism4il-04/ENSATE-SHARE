@@ -9,3 +9,7 @@ dist/
 uploads/
 .vercel/
 *.tsbuildinfo
+
+# All env files hold secrets (only examples are committed)
+.env*
+!.env.example
