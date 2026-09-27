@@ -200,7 +200,7 @@ export default function SuperadminDashboard() {
                         <div className="space-y-3">
                             {statsData.recentUploads.map((file: any) => {
                                 const categoryColors = getFileCategoryColor(file.fileCategory || 'Autre');
-                                const thumbnailUrl = generateThumbnailUrl(file.fileUrl, file.fileType, file.thumbnailLink);
+                                const thumbnailUrl = generateThumbnailUrl(file.thumbnailLink);
 
                                 return (
                                     <div key={file._id} className="flex items-start gap-3 p-3 bg-cream-50 rounded-lg hover:bg-cream-100 transition-colors border border-cream-300/40">

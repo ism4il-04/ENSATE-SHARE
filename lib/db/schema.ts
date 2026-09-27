@@ -86,12 +86,11 @@ export const users = pgTable(
         role: roleEnum().notNull(),
         firstName: text().notNull(),
         lastName: text().notNull(),
-        // Only staff accounts that still sign in with a password have one (bcrypt)
-        passwordHash: text(),
         // Responsables only: the year (and through it the filière) they manage
         assignedYearId: integer().references(() => years.id, { onDelete: 'restrict' }),
         isActive: boolean().notNull().default(true),
-        // Sessions issued before this date are rejected
+        // Sessions issued before this date are rejected (set when an admin changes the email).
+        // Named after the former password feature; kept to avoid a column rename.
         passwordChangedAt: timestamptz(),
         lastLoginAt: timestamptz(),
         createdAt: timestamptz().notNull().defaultNow(),
@@ -185,7 +184,7 @@ export const studentAllowlist = pgTable('student_allowlist', {
 });
 
 // ---------------------------------------------------------------------------
-// Security and audit
+// Audit
 // ---------------------------------------------------------------------------
 
 export const activityLogs = pgTable(
@@ -201,10 +200,3 @@ export const activityLogs = pgTable(
     },
     (t) => [index().on(t.createdAt), index().on(t.action, t.createdAt), index().on(t.userId)]
 );
-
-// Failed password logins, keyed "ip:<addr>" or "email:<addr>"
-export const loginAttempts = pgTable('login_attempts', {
-    key: text().primaryKey(),
-    count: integer().notNull().default(0),
-    expiresAt: timestamptz().notNull(),
-});

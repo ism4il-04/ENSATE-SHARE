@@ -23,7 +23,7 @@ interface FileCardProps {
 
 export function FileCard({ file, variant = 'default', animationDelay = 0, onPreview }: FileCardProps) {
     const categoryColors = getFileCategoryColor(file.fileCategory || 'Autre');
-    const thumbnailUrl = generateThumbnailUrl(file.fileUrl, file.fileType, file.thumbnailLink);
+    const thumbnailUrl = generateThumbnailUrl(file.thumbnailLink);
     const isPdf = file.fileType.toLowerCase() === 'pdf';
 
     const thumbHeight = variant === 'compact' ? 'h-28' : variant === 'featured' ? 'h-56' : 'h-44';

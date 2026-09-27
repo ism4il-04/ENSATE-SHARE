@@ -32,10 +32,7 @@ export default api;
 
 // Auth API
 export const authAPI = {
-    login: (email: string, password: string, rememberMe: boolean = false) =>
-        api.post('/auth/login', { email, password, rememberMe }),
-    googleLogin: (credential: string, rememberMe: boolean = false) =>
-        api.post('/auth/google', { credential, rememberMe }),
+    googleLogin: (credential: string) => api.post('/auth/google', { credential }),
     logout: () => api.post('/auth/logout'),
     getMe: () => api.get('/auth/me'),
     updateProfile: (data: any) => api.put('/auth/profile', data),

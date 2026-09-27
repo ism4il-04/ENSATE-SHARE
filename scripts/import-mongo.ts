@@ -6,7 +6,7 @@
  *   npm run db:import-mongo -- --reset        → empties the dev tables first
  *   TARGET_DATABASE_URL=… npm run db:import-mongo -- --production [--reset]
  *
- * MONGODB_URI is read from .env.development.local.
+ * MONGODB_URI is read from .env.local (or .env.development.local).
  */
 import { randomUUID } from 'crypto';
 import { config } from 'dotenv';
@@ -30,8 +30,8 @@ const date = (d: unknown) => (d instanceof Date ? d : d ? new Date(d as string) 
 
 (async () => {
     const { url } = resolveTarget(process.argv);
-    config({ path: '.env.development.local' }); // MONGODB_URI (read-only source)
-    if (!process.env.MONGODB_URI) throw new Error('MONGODB_URI missing from .env.development.local');
+    config({ path: ['.env.local', '.env.development.local'] }); // MONGODB_URI (read-only source)
+    if (!process.env.MONGODB_URI) throw new Error('MONGODB_URI missing from .env.local');
 
     await mongoose.connect(process.env.MONGODB_URI);
     const mdb = mongoose.connection.db!;
@@ -56,7 +56,7 @@ const date = (d: unknown) => (d instanceof Date ? d : d ? new Date(d as string) 
             if (reset) {
                 await tx.execute(sql`truncate table
                     activity_logs, saved_parcours, pending_uploads, files, users, student_allowlist,
-                    login_attempts, modules, semesters, years, filieres restart identity cascade`);
+                    modules, semesters, years, filieres restart identity cascade`);
             }
 
             // Academic structure
@@ -93,7 +93,6 @@ const date = (d: unknown) => (d instanceof Date ? d : d ? new Date(d as string) 
                     role: u.role,
                     firstName: u.firstName,
                     lastName: u.lastName,
-                    passwordHash: u.password || null,
                     assignedYearId: assignedYearId ?? null,
                     isActive: u.isActive !== false,
                     passwordChangedAt: date(u.passwordChangedAt) ?? null,

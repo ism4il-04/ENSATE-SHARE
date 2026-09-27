@@ -20,8 +20,7 @@ export interface AuthUser {
 }
 
 const COOKIE = 'token';
-const LONG_SESSION = 30 * 24 * 60 * 60; // seconds
-const SHORT_SESSION = 24 * 60 * 60;
+const SESSION_SECONDS = 30 * 24 * 60 * 60;
 
 const secret = () => {
     const value = process.env.SESSION_SECRET;
@@ -30,17 +29,15 @@ const secret = () => {
 };
 
 /**
- * Signs the session and sets the httpOnly cookie. Persistent sessions (students, "Rester connecté")
- * last 30 days; others are a browser-session cookie with a 24 h token. Names travel in the token so
+ * Signs the session (30 days) and sets the httpOnly cookie. Names travel in the token so
  * student requests never need the database.
  */
-export async function setSessionCookie(res: NextResponse, user: AuthUser, persistent: boolean): Promise<void> {
-    const lifetime = persistent ? LONG_SESSION : SHORT_SESSION;
+export async function setSessionCookie(res: NextResponse, user: AuthUser): Promise<void> {
     const token = await new SignJWT({ role: user.role, email: user.email, fn: user.firstName, ln: user.lastName })
         .setProtectedHeader({ alg: 'HS256' })
         .setSubject(user.id)
         .setIssuedAt()
-        .setExpirationTime(`${lifetime}s`)
+        .setExpirationTime(`${SESSION_SECONDS}s`)
         .sign(secret());
 
     res.cookies.set(COOKIE, token, {
@@ -48,7 +45,7 @@ export async function setSessionCookie(res: NextResponse, user: AuthUser, persis
         secure: process.env.NODE_ENV === 'production',
         sameSite: 'strict',
         path: '/',
-        ...(persistent && { maxAge: lifetime }),
+        maxAge: SESSION_SECONDS,
     });
 }
 
@@ -62,20 +59,8 @@ export function clearSessionCookie(res: NextResponse): void {
     });
 }
 
-// Whether the current session was persistent (kept when a password change re-issues it)
-export async function sessionIsPersistent(req: NextRequest): Promise<boolean> {
-    const token = req.cookies.get(COOKIE)?.value;
-    if (!token) return false;
-    try {
-        const { payload } = await jwtVerify(token, secret(), { algorithms: ['HS256'] });
-        return !!payload.iat && !!payload.exp && payload.exp - payload.iat > 2 * 24 * 60 * 60;
-    } catch {
-        return false;
-    }
-}
-
 // Staff account with its assignment, straight from the database
-export async function loadUser(id: string): Promise<(AuthUser & { passwordChangedAt: Date | null }) | null> {
+export async function loadUser(id: string): Promise<(AuthUser & { sessionsRevokedAt: Date | null }) | null> {
     const [row] = await db
         .select({
             id: users.id,
@@ -84,7 +69,7 @@ export async function loadUser(id: string): Promise<(AuthUser & { passwordChange
             firstName: users.firstName,
             lastName: users.lastName,
             isActive: users.isActive,
-            passwordChangedAt: users.passwordChangedAt,
+            sessionsRevokedAt: users.passwordChangedAt,
             assignedYearId: users.assignedYearId,
             assignedYear: years.code,
             assignedFiliere: filieres.name,
@@ -99,7 +84,7 @@ export async function loadUser(id: string): Promise<(AuthUser & { passwordChange
 /**
  * The signed-in user, or null (no/invalid/expired session, account revoked).
  * - Students: checked against the cached access snapshot, no database query.
- * - Staff: checked against the database on every request (active, role, password changes).
+ * - Staff: checked against the database on every request (active, role, sessions revoked on an email change).
  */
 export async function getAuthUser(req: NextRequest): Promise<AuthUser | null> {
     const token = req.cookies.get(COOKIE)?.value;
@@ -129,10 +114,10 @@ export async function getAuthUser(req: NextRequest): Promise<AuthUser | null> {
 
     const user = await loadUser(id);
     if (!user || !user.isActive) return null;
-    if (user.passwordChangedAt && (payload.iat ?? 0) < Math.floor(user.passwordChangedAt.getTime() / 1000)) {
+    if (user.sessionsRevokedAt && (payload.iat ?? 0) < Math.floor(user.sessionsRevokedAt.getTime() / 1000)) {
         return null;
     }
-    const { passwordChangedAt: _, ...authUser } = user;
+    const { sessionsRevokedAt: _, ...authUser } = user;
     return authUser;
 }
 

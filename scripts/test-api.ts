@@ -12,7 +12,7 @@ import { eq, like, or } from 'drizzle-orm';
 import { SignJWT } from 'jose';
 import * as s from '../lib/db/schema';
 
-config({ path: '.env.development.local' });
+config({ path: ['.env.local', '.env.development.local'] });
 const BASE = process.env.TEST_BASE_URL ?? 'http://localhost:3000';
 const db = drizzle(neon(process.env.DATABASE_URL!), { schema: s, casing: 'snake_case' });
 
@@ -51,7 +51,6 @@ async function call(method: string, path: string, body?: unknown, cookie?: strin
 
 async function cleanup() {
     await db.delete(s.users).where(or(like(s.users.email, 'zz%'), like(s.users.email, 'zz.%')));
-    await db.delete(s.loginAttempts).where(like(s.loginAttempts.key, '%zz%'));
     await db.delete(s.studentAllowlist).where(like(s.studentAllowlist.email, 'zz%'));
 }
 
@@ -79,14 +78,10 @@ async function cleanup() {
     check('me as student (no DB lookup) -> student', r.json.user?.role === 'student' && r.json.user.email === student.email);
     r = await call('GET', '/auth/me', undefined, R);
     check('me as responsable -> assignment', r.json.user?.assignedYear === 'GI1' && r.json.user.assignedFiliere === 'Génie Informatique', JSON.stringify(r.json.user?.assignedYear));
-    r = await call('POST', '/auth/login', { email: { $ne: null }, password: { $ne: null } });
-    check('login with objects -> 400', r.status === 400);
-    for (let i = 0; i < 5; i++) r = await call('POST', '/auth/login', { email: 'zz-nobody@test.local', password: 'wrong' + i });
-    check('wrong passwords -> 401', r.status === 401, r.json.message);
-    r = await call('POST', '/auth/login', { email: 'zz-nobody@test.local', password: 'x' });
-    check('6th attempt -> 429', r.status === 429, r.json.message);
-    r = await call('POST', '/auth/login', { email: student.email, password: 'anything12' });
-    check('password login refused for a student', r.status === 401);
+    r = await call('POST', '/auth/login', { email: admin.email, password: 'anything12' });
+    check('password sign-in no longer exists', r.status === 404 || r.status === 405, `${r.status}`);
+    r = await call('POST', '/auth/google', { credential: { $ne: null } });
+    check('Google sign-in with an object -> 400', r.status === 400 || r.status === 503, `${r.status}`);
     r = await call('POST', '/auth/google', { credential: 'abc.def.ghi' });
     check('garbage Google token refused', r.status === 401 || r.status === 503, `${r.status}`);
     r = await call('GET', '/auth/me', undefined, 'token=forged.jwt.value');

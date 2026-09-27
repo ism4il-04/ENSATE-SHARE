@@ -208,7 +208,7 @@ export default function FilesPage() {
                                 <tbody>
                                     {filesData.files.map((file: any) => {
                                         const categoryColors = getFileCategoryColor(file.fileCategory || 'Autre');
-                                        const thumbnailUrl = generateThumbnailUrl(file.fileUrl, file.fileType, file.thumbnailLink);
+                                        const thumbnailUrl = generateThumbnailUrl(file.thumbnailLink);
 
 
 

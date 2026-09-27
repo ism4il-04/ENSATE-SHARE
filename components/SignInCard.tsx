@@ -1,36 +1,19 @@
 'use client';
 
-import { useState } from 'react';
 import Link from 'next/link';
-import { ChevronDown, GraduationCap } from 'lucide-react';
+import { GraduationCap } from 'lucide-react';
 import { useAuthStore } from '@/store/authStore';
 import GoogleSignInButton from '@/components/GoogleSignInButton';
 
 // The only sign-in on the site, shown in place of the parcours picker until the visitor signs in.
-// Students, responsables and admins all use Google; the password form stays available for
-// staff accounts that can't use Google yet.
+// Students, responsables and admins all sign in with Google.
 export default function SignInCard() {
-    const { login, loginWithGoogle, error, isLoading, clearError } = useAuthStore();
-    const [showPasswordForm, setShowPasswordForm] = useState(false);
-    const [email, setEmail] = useState('');
-    const [password, setPassword] = useState('');
-    const [rememberMe, setRememberMe] = useState(false);
+    const { loginWithGoogle, error, isLoading, clearError } = useAuthStore();
 
     const handleCredential = async (credential: string) => {
         clearError();
         try {
-            // Google sessions last 30 days
-            await loginWithGoogle(credential, true);
-        } catch {
-            // Error message is shown from the store
-        }
-    };
-
-    const handlePasswordSubmit = async (e: React.FormEvent) => {
-        e.preventDefault();
-        clearError();
-        try {
-            await login(email, password, rememberMe);
+            await loginWithGoogle(credential);
         } catch {
             // Error message is shown from the store
         }
@@ -71,58 +54,6 @@ export default function SignInCard() {
                     </Link>
                     .
                 </p>
-            </div>
-
-            <div className="mt-6 pt-5 border-t border-cream-200">
-                <button
-                    type="button"
-                    onClick={() => {
-                        setShowPasswordForm((v) => !v);
-                        clearError();
-                    }}
-                    aria-expanded={showPasswordForm}
-                    className="inline-flex items-center gap-1 text-xs text-atlas-500 hover:text-atlas-700 transition-colors"
-                >
-                    Accès équipe : connexion par mot de passe
-                    <ChevronDown size={14} className={`transition-transform ${showPasswordForm ? 'rotate-180' : ''}`} />
-                </button>
-
-                {showPasswordForm && (
-                    <form onSubmit={handlePasswordSubmit} className="mt-4 space-y-3 text-left">
-                        <input
-                            type="email"
-                            value={email}
-                            onChange={(e) => setEmail(e.target.value)}
-                            required
-                            autoComplete="username"
-                            placeholder="Email"
-                            aria-label="Email"
-                            className="input-field w-full"
-                        />
-                        <input
-                            type="password"
-                            value={password}
-                            onChange={(e) => setPassword(e.target.value)}
-                            required
-                            autoComplete="current-password"
-                            placeholder="Mot de passe"
-                            aria-label="Mot de passe"
-                            className="input-field w-full"
-                        />
-                        <label className="flex items-center gap-2 text-sm text-atlas-600 cursor-pointer select-none">
-                            <input
-                                type="checkbox"
-                                checked={rememberMe}
-                                onChange={(e) => setRememberMe(e.target.checked)}
-                                className="w-4 h-4 rounded border-cream-300 text-accent-500 focus:ring-accent-300"
-                            />
-                            Rester connecté
-                        </label>
-                        <button type="submit" disabled={isLoading} className="btn-primary w-full disabled:opacity-50">
-                            {isLoading ? 'Connexion en cours…' : 'Se connecter'}
-                        </button>
-                    </form>
-                )}
             </div>
         </div>
     );

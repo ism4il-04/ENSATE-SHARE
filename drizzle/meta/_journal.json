@@ -8,6 +8,13 @@
       "when": 1790534043986,
       "tag": "0000_initial_schema",
       "breakpoints": true
+    },
+    {
+      "idx": 1,
+      "version": "7",
+      "when": 1790545093470,
+      "tag": "0001_remove_password_login",
+      "breakpoints": true
     }
   ]
 }

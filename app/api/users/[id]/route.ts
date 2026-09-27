@@ -53,10 +53,9 @@ export const PUT = handler(async (req: NextRequest, { params }: Params) => {
         const normalized = email.trim().toLowerCase();
         if (normalized !== user.email) {
             newEmail = normalized;
-            // New address = new owner: the old password stops working and open sessions end.
+            // New address = new owner: sessions opened with the old address end.
             // The responsable now signs in with Google using the new address.
             changes.email = normalized;
-            changes.passwordHash = null;
             changes.passwordChangedAt = new Date();
         }
     }

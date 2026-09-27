@@ -13,7 +13,7 @@ const googleClient = new OAuth2Client();
 
 // Sign-in with a Google ID token (Google Identity Services button)
 export const POST = handler(async (req: NextRequest) => {
-    const { credential, rememberMe } = await readBody(req);
+    const { credential } = await readBody(req);
     const clientId = process.env.GOOGLE_AUTH_CLIENT_ID;
 
     if (!clientId) return fail(503, 'Connexion Google non configurée');
@@ -69,7 +69,6 @@ export const POST = handler(async (req: NextRequest) => {
     }
 
     const res = json({ success: true, message: 'Login successful', user: publicUser(user) });
-    // Students always stay signed in (30 days); staff choose with "Rester connecté"
-    await setSessionCookie(res, user, user.role === 'student' || rememberMe === true);
+    await setSessionCookie(res, user);
     return res;
 }, 'Server error during Google login');

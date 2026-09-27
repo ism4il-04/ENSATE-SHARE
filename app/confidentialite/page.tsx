@@ -90,13 +90,11 @@ export default function ConfidentialitePage() {
                     <li>Nom, prénom et adresse email</li>
                     <li>Année et filière dont vous êtes responsable</li>
                     <li>La date de votre dernière connexion avec Google</li>
-                    <li>
-                        Mot de passe, uniquement pour les comptes qui se connectent encore par mot de passe :
-                        il est stocké sous forme chiffrée (hachage bcrypt) et n&apos;est jamais lisible, même par
-                        les administrateurs. Les responsables se connectent normalement avec Google et
-                        n&apos;ont pas de mot de passe.
-                    </li>
                 </ul>
+                <p>
+                    Comme les étudiants, vous vous connectez avec Google : ENSATE-SHARE ne crée et ne conserve
+                    aucun mot de passe.
+                </p>
                 <h3>Journal d&apos;activité</h3>
                 <p>
                     Pour la sécurité et la traçabilité du service, les actions effectuées depuis un compte
@@ -105,12 +103,6 @@ export default function ConfidentialitePage() {
                     structure des filières, et gestion de la liste des étudiants autorisés. Ce journal
                     n&apos;est consultable que par les administrateurs. Les connexions des étudiants n&apos;y
                     sont pas enregistrées.
-                </p>
-                <h3>Tentatives de connexion échouées</h3>
-                <p>
-                    Pour bloquer les tentatives de piratage, l&apos;adresse email saisie et l&apos;adresse IP
-                    sont enregistrées après un échec de connexion par mot de passe. Ces données sont supprimées automatiquement
-                    au bout de 15 minutes.
                 </p>
                 <h3>Connexion avec Google</h3>
                 <p>
@@ -156,8 +148,8 @@ export default function ConfidentialitePage() {
                 <ul>
                     <li><strong>Vercel Inc.</strong> : hébergement du site et du serveur</li>
                     <li>
-                        <strong>MongoDB, Inc.</strong> (MongoDB Atlas) : base de données des comptes, des
-                        parcours enregistrés, de la liste des étudiants autorisés et du journal
+                        <strong>Neon, Inc.</strong> (Neon Postgres, hébergé en Europe) : base de données des
+                        comptes, des parcours enregistrés, de la liste des étudiants autorisés et du journal
                     </li>
                     <li><strong>Google LLC</strong> : stockage des documents (Google Drive) et connexion avec Google</li>
                 </ul>
@@ -170,16 +162,15 @@ export default function ConfidentialitePage() {
                         Données du compte (étudiants, responsables et administrateurs) : tant que le compte existe ;
                         elles sont effacées quand le compte est supprimé, sur simple demande
                     </li>
-                    <li>Tentatives de connexion échouées : 15 minutes</li>
                     <li>Informations d&apos;un upload en cours : jusqu&apos;à l&apos;enregistrement du document, 24 heures au maximum</li>
                     <li>
                         Liste des étudiants autorisés : tant qu&apos;elle est utilisée pour réserver
                         l&apos;accès ; elle est mise à jour par l&apos;ADE, par exemple à chaque rentrée
                     </li>
+                    <li>Session de connexion : 30 jours, ou jusqu&apos;à la déconnexion</li>
                     <li>
-                        Session de connexion : 30 jours pour les étudiants ; pour les responsables, jusqu&apos;à
-                        la fermeture du navigateur (24 heures maximum), ou 30 jours s&apos;ils cochent « Rester
-                        connecté »
+                        Sauvegardes : une copie de la base est enregistrée chaque jour dans un dossier Google
+                        Drive privé de l&apos;ADE ; les 30 dernières sont conservées
                     </li>
                     <li>
                         Journal d&apos;activité : conservé pour la sécurité et la traçabilité du service ; vous
@@ -209,10 +200,10 @@ export default function ConfidentialitePage() {
             <section>
                 <h2>Sécurité</h2>
                 <p>
-                    Les échanges avec le site sont chiffrés (HTTPS). La connexion se fait principalement avec
-                    Google ; les éventuels mots de passe sont hachés et les tentatives de connexion sont
-                    limitées. Chaque dépôt de document est vérifié avant d&apos;être enregistré, et l&apos;accès
-                    aux fonctions d&apos;administration est réservé aux comptes autorisés.
+                    Les échanges avec le site sont chiffrés (HTTPS). La connexion se fait uniquement avec Google,
+                    sans mot de passe propre à ENSATE-SHARE. Chaque dépôt de document est vérifié avant
+                    d&apos;être enregistré, et l&apos;accès aux fonctions d&apos;administration est réservé aux
+                    comptes autorisés.
                 </p>
             </section>
 

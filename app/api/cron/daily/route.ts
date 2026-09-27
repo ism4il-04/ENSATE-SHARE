@@ -6,7 +6,6 @@ import * as schema from '@/lib/db/schema';
 import { db, pendingUploads } from '@/lib/db';
 import { drive } from '@/lib/server/drive';
 import { fail, handler, json } from '@/lib/server/http';
-import { purgeExpiredLoginAttempts } from '@/lib/server/rate-limit';
 
 const BACKUP_FOLDER = '_backups';
 const BACKUPS_KEPT = 30;
@@ -36,11 +35,10 @@ async function backupFolderId(): Promise<string> {
     return created.data.id!;
 }
 
-// Daily: purge expired rows, then back up every table as JSON to Drive (Neon Free keeps only 6 h of history)
+// Daily: purge abandoned uploads, then back up every table as JSON to Drive (Neon Free keeps only 6 h of history)
 export const GET = handler(async (req: NextRequest) => {
     if (!isAuthorizedCron(req)) return fail(401, 'Unauthorized');
 
-    await purgeExpiredLoginAttempts();
     await db.delete(pendingUploads).where(lt(pendingUploads.expiresAt, new Date()));
 
     const tables = {

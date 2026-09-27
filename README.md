@@ -24,7 +24,7 @@ classés par filière, année, semestre et module. Projet de l'Association Des E
 Prérequis : Node.js 22+.
 
 1. `npm install`
-2. Créer `.env.development.local` à partir de `.env.example`. `DATABASE_URL` doit pointer vers la branche
+2. Créer `.env.local` à partir de `.env.example`. `DATABASE_URL` doit pointer vers la branche
    **dev** de Neon (chaîne *pooled*), jamais vers la production.
 3. `npm run db:migrate` pour créer ou mettre à jour les tables.
 4. `npm run dev`, puis ouvrir http://localhost:3000
@@ -53,9 +53,9 @@ docs/           Plan de migration Neon
 
 ## Sécurité (résumé)
 
+- Connexion uniquement avec Google (aucun mot de passe sur la plateforme).
 - Session dans un cookie httpOnly signé ; comptes staff revérifiés à chaque requête, étudiants via une liste
   en cache vidée à chaque changement (retrait immédiat).
-- Connexion par mot de passe (secours staff) limitée : 5 échecs par email, 20 par IP, sur 15 minutes.
 - Chaque dépôt est autorisé puis vérifié côté serveur (dossier, taille, identifiant d'upload).
 - Sauvegarde quotidienne de la base en JSON dans un dossier privé `_backups` du Drive (30 dernières).
 

@@ -12,8 +12,7 @@ interface AuthState {
     error: string | null;
     justSignedIn: boolean; // true right after an explicit sign-in, until acknowledged (not on session restore)
     acknowledgeSignIn: () => void;
-    login: (email: string, password: string, rememberMe?: boolean) => Promise<void>;
-    loginWithGoogle: (credential: string, rememberMe?: boolean) => Promise<void>;
+    loginWithGoogle: (credential: string) => Promise<void>;
     logout: () => Promise<void>;
     checkAuth: () => Promise<void>;
     setUser: (user: User | null) => void;
@@ -22,7 +21,7 @@ interface AuthState {
 
 type SetState = (partial: Partial<AuthState>) => void;
 
-// Shared by password and Google login: the API sets the session cookie and returns the user
+// The API sets the session cookie and returns the user
 const signIn = async (set: SetState, request: () => Promise<{ data: { user: User } }>) => {
     set({ isLoading: true, error: null });
     try {
@@ -55,12 +54,8 @@ export const useAuthStore = create<AuthState>((set) => ({
 
     acknowledgeSignIn: () => set({ justSignedIn: false }),
 
-    login: async (email: string, password: string, rememberMe: boolean = false) => {
-        await signIn(set, () => authAPI.login(email, password, rememberMe));
-    },
-
-    loginWithGoogle: async (credential: string, rememberMe: boolean = false) => {
-        await signIn(set, () => authAPI.googleLogin(credential, rememberMe));
+    loginWithGoogle: async (credential: string) => {
+        await signIn(set, () => authAPI.googleLogin(credential));
     },
 
     logout: async () => {

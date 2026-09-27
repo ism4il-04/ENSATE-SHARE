@@ -10,7 +10,7 @@ import { resolveTarget } from './db-target';
 
 (async () => {
     const { url } = resolveTarget(process.argv);
-    config({ path: '.env.development.local' }); // MONGODB_URI (read-only source)
+    config({ path: ['.env.local', '.env.development.local'] }); // MONGODB_URI (read-only source)
     await mongoose.connect(process.env.MONGODB_URI as string);
     const mdb = mongoose.connection.db!;
     const sql = neon(url);
@@ -40,17 +40,17 @@ import { resolveTarget } from './db-target';
     const [pSize] = await sql`select coalesce(sum(file_size),0)::bigint as t from files`;
     compare('total size (bytes)', new Map([['total', mSize?.t ?? 0]]), new Map([['total', pSize.t]]));
 
-    // Accounts: role, active, assignment, has password
+    // Accounts: role, active, assignment
     const mUsers = new Map<string, string>();
     for (const u of await mdb.collection('users').find().toArray()) {
-        mUsers.set(String(u.email).toLowerCase(), [u.role, u.isActive !== false, u.role === 'responsable' ? `${u.assignedFiliere}/${String(u.assignedYear).trim()}` : '-', !!u.password].join(' '));
+        mUsers.set(String(u.email).toLowerCase(), [u.role, u.isActive !== false, u.role === 'responsable' ? `${u.assignedFiliere}/${String(u.assignedYear).trim()}` : '-'].join(' '));
     }
     const pUsers = new Map<string, string>();
-    for (const u of await sql`select u.email, u.role, u.is_active, f.name as filiere, y.code, u.password_hash is not null as has_pw
+    for (const u of await sql`select u.email, u.role, u.is_active, f.name as filiere, y.code
         from users u left join years y on y.id = u.assigned_year_id left join filieres f on f.id = y.filiere_id`) {
-        pUsers.set(u.email, [u.role, u.is_active, u.role === 'responsable' ? `${u.filiere}/${u.code}` : '-', u.has_pw].join(' '));
+        pUsers.set(u.email, [u.role, u.is_active, u.role === 'responsable' ? `${u.filiere}/${u.code}` : '-'].join(' '));
     }
-    compare('accounts (role, active, assignment, password)', mUsers, pUsers);
+    compare('accounts (role, active, assignment)', mUsers, pUsers);
 
     // Uploaders per file (by Drive id)
     const mEmailById = new Map((await mdb.collection('users').find().toArray()).map((u) => [String(u._id), String(u.email).toLowerCase()]));

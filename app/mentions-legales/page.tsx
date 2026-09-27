@@ -39,7 +39,7 @@ export default function MentionsLegalesPage() {
                 </p>
                 <p>Services techniques utilisés par la plateforme :</p>
                 <ul>
-                    <li>Base de données : MongoDB Atlas (MongoDB, Inc.)</li>
+                    <li>Base de données : Neon Postgres (Neon, Inc.), hébergée en Europe</li>
                     <li>Stockage des documents : Google Drive (Google LLC)</li>
                     <li>Connexion avec Google : Google Identity Services (Google LLC)</li>
                 </ul>
