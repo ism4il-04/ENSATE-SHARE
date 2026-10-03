@@ -22,13 +22,14 @@ export const GET = handler(async (req: NextRequest) => {
     const [[{ total }], [{ allowlistCount }], [{ registeredStudents }], [{ outside }], entries] = await Promise.all([
         db.select({ total: count() }).from(studentAllowlist).where(filter),
         db.select({ allowlistCount: count() }).from(studentAllowlist),
-        db.select({ registeredStudents: count() }).from(users).where(eq(users.role, 'student')),
+        // University student accounts (temporary access-code accounts are counted per code)
+        db.select({ registeredStudents: count() }).from(users).where(and(eq(users.role, 'student'), isNull(users.accessCodeId))),
         // Student accounts not on the list: blocked while the list is active
         db
             .select({ outside: count() })
             .from(users)
             .leftJoin(studentAllowlist, eq(studentAllowlist.email, users.email))
-            .where(and(eq(users.role, 'student'), isNull(studentAllowlist.email))),
+            .where(and(eq(users.role, 'student'), isNull(users.accessCodeId), isNull(studentAllowlist.email))),
         db
             .select({
                 email: studentAllowlist.email,

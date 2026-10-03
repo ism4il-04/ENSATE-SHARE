@@ -11,7 +11,7 @@ const CONTACT_EMAIL = 'ade.ensa.tetouan@uae.ac.ma';
 
 export default function ConditionsPage() {
     return (
-        <LegalPage title="Conditions d'utilisation" lastUpdated="27 septembre 2026">
+        <LegalPage title="Conditions d'utilisation" lastUpdated="3 octobre 2026">
             <section>
                 <h2>À quoi sert ENSATE-SHARE</h2>
                 <p>
@@ -46,6 +46,11 @@ export default function ConditionsPage() {
                     <li>
                         Les responsables (délégués chargés du dépôt) et les administrateurs sont désignés par
                         l&apos;ADE.
+                    </li>
+                    <li>
+                        Les étudiants qui n&apos;ont pas encore d&apos;adresse universitaire peuvent recevoir un code
+                        d&apos;accès temporaire. Ce code est réservé à leur promotion et ne doit pas être diffusé
+                        ailleurs ; l&apos;accès prend fin à son expiration.
                     </li>
                     <li>
                         Votre compte est personnel : ne partagez pas votre accès et ne vous connectez pas pour

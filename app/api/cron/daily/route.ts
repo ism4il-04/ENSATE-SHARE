@@ -4,6 +4,7 @@ import { NextRequest } from 'next/server';
 import { Readable } from 'stream';
 import * as schema from '@/lib/db/schema';
 import { db, pendingUploads } from '@/lib/db';
+import { deleteExpiredCodes } from '@/lib/server/access-codes';
 import { drive } from '@/lib/server/drive';
 import { fail, handler, json } from '@/lib/server/http';
 
@@ -35,11 +36,13 @@ async function backupFolderId(): Promise<string> {
     return created.data.id!;
 }
 
-// Daily: purge abandoned uploads, then back up every table as JSON to Drive (Neon Free keeps only 6 h of history)
+// Daily: purge abandoned uploads and expired access codes, then back up every table as JSON to Drive (Neon Free keeps only 6 h of history)
 export const GET = handler(async (req: NextRequest) => {
     if (!isAuthorizedCron(req)) return fail(401, 'Unauthorized');
 
     await db.delete(pendingUploads).where(lt(pendingUploads.expiresAt, new Date()));
+    // Expired access codes go, and with them the temporary accounts they created
+    const expiredCodes = await deleteExpiredCodes();
 
     const tables = {
         filieres: schema.filieres,
@@ -50,6 +53,7 @@ export const GET = handler(async (req: NextRequest) => {
         files: schema.files,
         saved_parcours: schema.savedParcours,
         student_allowlist: schema.studentAllowlist,
+        access_codes: schema.accessCodes,
         activity_logs: schema.activityLogs,
     };
     const dump: Record<string, unknown[]> = {};
@@ -76,5 +80,5 @@ export const GET = handler(async (req: NextRequest) => {
         await drive().files.delete({ fileId: old.id! });
     }
 
-    return json({ success: true, backup: name, rows: Object.fromEntries(Object.entries(dump).map(([k, v]) => [k, v.length])) });
+    return json({ success: true, expiredCodes, backup: name, rows: Object.fromEntries(Object.entries(dump).map(([k, v]) => [k, v.length])) });
 }, 'Daily job failed');

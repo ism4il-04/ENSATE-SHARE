@@ -12,7 +12,7 @@ interface AuthState {
     error: string | null;
     justSignedIn: boolean; // true right after an explicit sign-in, until acknowledged (not on session restore)
     acknowledgeSignIn: () => void;
-    loginWithGoogle: (credential: string) => Promise<void>;
+    loginWithGoogle: (credential: string, accessCode?: string) => Promise<void>;
     logout: () => Promise<void>;
     checkAuth: () => Promise<void>;
     setUser: (user: User | null) => void;
@@ -54,8 +54,8 @@ export const useAuthStore = create<AuthState>((set) => ({
 
     acknowledgeSignIn: () => set({ justSignedIn: false }),
 
-    loginWithGoogle: async (credential: string) => {
-        await signIn(set, () => authAPI.googleLogin(credential));
+    loginWithGoogle: async (credential: string, accessCode?: string) => {
+        await signIn(set, () => authAPI.googleLogin(credential, accessCode));
     },
 
     logout: async () => {

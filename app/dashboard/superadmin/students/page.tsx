@@ -3,6 +3,7 @@
 import { useMemo, useRef, useState } from 'react';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { studentsAPI } from '@/lib/api';
+import AccessCodesPanel from '@/components/AccessCodesPanel';
 import {
     AlertTriangle,
     CheckCircle,
@@ -168,6 +169,8 @@ export default function StudentsPage() {
                     </div>
                 </div>
             )}
+
+            <AccessCodesPanel />
 
             {/* Import */}
             <div className="card border border-cream-300/60 mb-6">

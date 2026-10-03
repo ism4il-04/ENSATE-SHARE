@@ -5,7 +5,7 @@
     "description": "ENSA-SHARE platform - Backend & Frontend",
     "scripts": {
         "dev": "next dev",
-        "build": "next build",
+        "build": "tsx scripts/db-migrate-deploy.ts && next build",
         "start": "next start",
         "lint": "next lint",
         "db:generate": "drizzle-kit generate",

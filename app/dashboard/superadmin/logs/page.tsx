@@ -73,6 +73,8 @@ export default function LogsPage() {
             STRUCTURE_UPDATE: 'Modification structure',
             STUDENT_LIST_IMPORT: 'Import liste étudiants',
             STUDENT_LIST_DELETE: 'Retrait liste étudiants',
+            ACCESS_CODE_CREATE: "Création code d'accès",
+            ACCESS_CODE_DELETE: "Suppression code d'accès",
         };
         return labels[action] || action;
     };

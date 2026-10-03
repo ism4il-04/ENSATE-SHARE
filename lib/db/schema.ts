@@ -78,6 +78,17 @@ export const modules = pgTable(
 // Accounts
 // ---------------------------------------------------------------------------
 
+// Temporary access for students without a university address yet (e.g. first-years):
+// with an active code, any Google account can get a student account. Deleting the code, or its
+// expiry (daily cron), deletes the accounts created with it.
+export const accessCodes = pgTable('access_codes', {
+    id: serial().primaryKey(),
+    code: text().notNull().unique(), // stored uppercase
+    label: text().notNull(),
+    expiresAt: timestamptz().notNull(),
+    createdAt: timestamptz().notNull().defaultNow(),
+});
+
 export const users = pgTable(
     'users',
     {
@@ -89,6 +100,8 @@ export const users = pgTable(
         // Responsables only: the year (and through it the filière) they manage
         assignedYearId: integer().references(() => years.id, { onDelete: 'restrict' }),
         isActive: boolean().notNull().default(true),
+        // Temporary student account created with an access code (deleted with the code)
+        accessCodeId: integer().references(() => accessCodes.id, { onDelete: 'cascade' }),
         // Sessions issued before this date are rejected (set when an admin changes the email).
         // Named after the former password feature; kept to avoid a column rename.
         passwordChangedAt: timestamptz(),

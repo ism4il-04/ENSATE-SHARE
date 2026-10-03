@@ -11,7 +11,7 @@ const CONTACT_EMAIL = 'ade.ensa.tetouan@uae.ac.ma';
 
 export default function ConfidentialitePage() {
     return (
-        <LegalPage title="Politique de confidentialité" lastUpdated="27 septembre 2026">
+        <LegalPage title="Politique de confidentialité" lastUpdated="3 octobre 2026">
             <section>
                 <p>
                     Cette politique explique quelles données personnelles ENSATE-SHARE collecte, pourquoi,
@@ -74,6 +74,15 @@ export default function ConfidentialitePage() {
                     Abdelmalek Essaâdi, l&apos;ADE peut enregistrer la liste des adresses universitaires des
                     étudiants de l&apos;ENSA Tétouan. Dans ce cas, seules les adresses de cette liste peuvent se
                     connecter.
+                </p>
+                <h3>Accès temporaire (sans adresse universitaire)</h3>
+                <p>
+                    Les étudiants qui n&apos;ont pas encore d&apos;adresse @etu.uae.ac.ma (par exemple en première
+                    année) peuvent se connecter avec un compte Google personnel et un code d&apos;accès fourni par
+                    l&apos;ADE. Nous conservons alors les mêmes informations (adresse email, nom, prénom, date de
+                    dernière connexion, parcours enregistrés). Ce compte temporaire est supprimé automatiquement à
+                    l&apos;expiration ou à la suppression du code, ou dès que vous vous connectez avec votre adresse
+                    universitaire depuis le même navigateur (vos parcours enregistrés sont alors repris).
                 </p>
             </section>
 
@@ -163,6 +172,10 @@ export default function ConfidentialitePage() {
                         elles sont effacées quand le compte est supprimé, sur simple demande
                     </li>
                     <li>Informations d&apos;un upload en cours : jusqu&apos;à l&apos;enregistrement du document, 24 heures au maximum</li>
+                    <li>
+                        Comptes temporaires (code d&apos;accès) : jusqu&apos;à l&apos;expiration ou la suppression du
+                        code, au plus tard un an
+                    </li>
                     <li>
                         Liste des étudiants autorisés : tant qu&apos;elle est utilisée pour réserver
                         l&apos;accès ; elle est mise à jour par l&apos;ADE, par exemple à chaque rentrée

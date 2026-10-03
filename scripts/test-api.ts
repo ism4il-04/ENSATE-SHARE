@@ -46,10 +46,11 @@ async function call(method: string, path: string, body?: unknown, cookie?: strin
     } catch {
         json = text;
     }
-    return { status: res.status, json, location: res.headers.get('location') };
+    return { status: res.status, json, location: res.headers.get('location'), cookie: (res.headers.get('set-cookie') ?? '').split(';')[0] };
 }
 
 async function cleanup() {
+    await db.delete(s.accessCodes).where(like(s.accessCodes.label, 'zz%'));
     await db.delete(s.users).where(or(like(s.users.email, 'zz%'), like(s.users.email, 'zz.%')));
     await db.delete(s.studentAllowlist).where(like(s.studentAllowlist.email, 'zz%'));
 }
@@ -57,7 +58,12 @@ async function cleanup() {
 (async () => {
     await cleanup();
     const [admin] = await db.select().from(s.users).where(eq(s.users.role, 'superadmin')).limit(1);
-    const [resp] = await db.select().from(s.users).where(eq(s.users.email, 'responsable.gi1@etu.uae.ac.ma'));
+    const [{ users: resp }] = await db
+        .select()
+        .from(s.users)
+        .innerJoin(s.years, eq(s.years.id, s.users.assignedYearId))
+        .where(eq(s.years.code, 'GI1'))
+        .limit(1);
     const [student] = await db
         .insert(s.users)
         .values({ email: 'zz.student@etu.uae.ac.ma', role: 'student', firstName: 'Zz', lastName: 'Student' })
@@ -223,6 +229,74 @@ async function cleanup() {
     check('activity logs', r.status === 200 && r.json.logs.length === 5 && 'timestamp' in r.json.logs[0], `total=${r.json.total}`);
     r = await call('GET', '/stats/logs?action=STRUCTURE_UPDATE&limit=3', undefined, A);
     check('logs filtered by action', r.json.logs.every((l: any) => l.action === 'STRUCTURE_UPDATE'));
+
+    // ---------------- Temporary access codes ----------------
+    // Needs the dev server started with ALLOW_TEST_GOOGLE_TOKENS=1 (fake Google tokens, dev only)
+    const google = (email: string, extra: Record<string, unknown> = {}, cookie?: string, accessCode?: string) =>
+        call('POST', '/auth/google', { credential: JSON.stringify({ email, email_verified: true, given_name: 'Zz', family_name: 'Test', ...extra }), accessCode }, cookie);
+    const activeCodes = await db.select().from(s.accessCodes);
+    if (activeCodes.some((c) => c.expiresAt.getTime() > Date.now())) {
+        console.log('SKIP  access-code tests: a real code is active on this database');
+    } else {
+        r = await google('zz.first@gmail.com');
+        check('no active code: Gmail refused without code field', r.status === 403 && !r.json.needsAccessCode, r.json.message);
+
+        const tomorrow = new Date(Date.now() + 86400000).toISOString();
+        r = await call('POST', '/access-codes', { label: 'zz first years', expiresAt: tomorrow, code: 'zz-test-code' }, A);
+        check('admin creates a code', r.status === 201 && r.json.code.code === 'ZZ-TEST-CODE', r.json.message);
+        const codeId = r.json.code?.id;
+        check('responsable cannot create codes', (await call('POST', '/access-codes', { label: 'zz x', expiresAt: tomorrow }, R)).status === 403);
+
+        r = await google('zz.first@gmail.com');
+        check('active code: Gmail asked for the code', r.status === 403 && r.json.needsAccessCode === true);
+        r = await google('zz.first@gmail.com', {}, undefined, 'WRONG-CODE');
+        check('wrong code refused', r.status === 403 && r.json.needsAccessCode === true, r.json.message);
+        r = await google('zz.first@gmail.com', {}, undefined, ' zz-test-code ');
+        const guest = r.cookie;
+        check('right code (any case/spaces): temporary student account', r.status === 200 && r.json.user?.role === 'student' && guest.startsWith('token='), r.json.message);
+        check('temporary account can read documents', (await call('GET', '/files?limit=1', undefined, guest)).status === 200);
+        r = await google('zz.first@gmail.com');
+        check('temporary account signs in again without the code', r.status === 200);
+
+        r = await google('zz.uni@etu.uae.ac.ma', { hd: 'etu.uae.ac.ma' });
+        check('university students unaffected by codes', r.status === 200 && r.json.user?.role === 'student');
+
+        await call('POST', '/students/import', { emails: ['zz.listed@etu.uae.ac.ma'] }, A);
+        check('student list active: temporary account still allowed', (await call('GET', '/files?limit=1', undefined, guest)).status === 200);
+        await call('DELETE', `/students/${encodeURIComponent('zz.listed@etu.uae.ac.ma')}`, undefined, A);
+
+        // Same browser: temporary account, then the real university account -> parcours moved, temporary account deleted
+        const firstSemester = tree.cycles[0].years[0].semesters[0];
+        await call('POST', '/parcours', { cycle: tree.cycles[0].cycle, filiere: tree.cycles[0].name, year: tree.cycles[0].years[0].code, semester: firstSemester.name }, guest);
+        r = await google('zz.upgrade@etu.uae.ac.ma', { hd: 'etu.uae.ac.ma' }, guest);
+        const upgraded = r.cookie;
+        const [oldGuest] = await db.select().from(s.users).where(eq(s.users.email, 'zz.first@gmail.com'));
+        check('upgrade deletes the temporary account', r.status === 200 && !oldGuest);
+        check('upgrade keeps saved parcours', (await call('GET', '/parcours', undefined, upgraded)).json.parcours?.length === 1);
+        check('old temporary session no longer works', (await call('GET', '/files?limit=1', undefined, guest)).status === 401);
+
+        r = await google('zz.second@gmail.com', {}, undefined, 'ZZ-TEST-CODE');
+        const guest2 = r.cookie;
+        r = await call('GET', '/access-codes', undefined, A);
+        check('admin sees accounts per code', r.json.codes?.find((c: any) => c.id === codeId)?.accounts === 1);
+        r = await call('DELETE', `/access-codes/${codeId}`, undefined, A);
+        const [deletedGuest] = await db.select().from(s.users).where(eq(s.users.email, 'zz.second@gmail.com'));
+        check('deleting the code deletes its accounts', r.status === 200 && !deletedGuest);
+        check('their session stops at once', (await call('GET', '/files?limit=1', undefined, guest2)).status === 401);
+        r = await google('zz.third@gmail.com', {}, undefined, 'ZZ-TEST-CODE');
+        check('no code anymore: back to the normal refusal, no field', r.status === 403 && !r.json.needsAccessCode);
+
+        // Expiry: access ends at the expiry time, before the nightly cleanup
+        r = await call('POST', '/access-codes', { label: 'zz expiring', expiresAt: tomorrow, code: 'ZZ-EXPIRING' }, A);
+        const expiringId = r.json.code?.id;
+        const guest3 = (await google('zz.fourth@gmail.com', {}, undefined, 'ZZ-EXPIRING')).cookie;
+        await db.update(s.accessCodes).set({ expiresAt: new Date(Date.now() - 1000) }).where(eq(s.accessCodes.id, expiringId));
+        check('expired code: session refused at once', (await call('GET', '/files?limit=1', undefined, guest3)).status === 401);
+        r = await google('zz.fourth@gmail.com');
+        check('expired code: sign-in refused', r.status === 403 && /expiré/.test(r.json.message), r.json.message);
+        r = await google('zz.fifth@gmail.com', {}, undefined, 'ZZ-EXPIRING');
+        check('expired code cannot create accounts', r.status === 403 && !r.json.needsAccessCode);
+    }
 
     // ---------------- Profile ----------------
     r = await call('PUT', '/auth/profile', { lastName: admin.lastName + 'x' }, A);

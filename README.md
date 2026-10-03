@@ -36,7 +36,7 @@ Prérequis : Node.js 22+.
 | `npm run dev` / `npm run build` | Serveur de développement / build de production |
 | `npm run db:generate` | Génère une migration SQL après une modification de `lib/db/schema.ts` |
 | `npm run db:migrate` | Applique les migrations (branche dev ; production : `TARGET_DATABASE_URL=… npm run db:migrate -- --production`) |
-| `npm run test:api` | Tests de bout en bout de l'API (serveur de dev lancé, branche dev) |
+| `npm run test:api` | Tests de bout en bout de l'API, sur la branche dev, avec un serveur lancé par `ALLOW_TEST_GOOGLE_TOKENS=1 npm run dev` (accepte de faux jetons Google, en local uniquement) |
 | `npm run db:import-mongo` / `db:verify-import` | Migration ponctuelle depuis l'ancienne base MongoDB, puis vérification |
 
 ## Organisation
@@ -61,5 +61,6 @@ docs/           Plan de migration Neon
 
 ## Déploiement
 
-Vercel déploie la branche `main`. Variables à définir sur Vercel : voir `.env.example`
+Vercel déploie la branche `main`. Le build applique d'abord les migrations en attente (`drizzle/`) à la base de
+`DATABASE_URL`, puis construit le site. Variables à définir sur Vercel : voir `.env.example`
 (`DATABASE_URL` de la branche **main** de Neon, `SESSION_SECRET` et `CRON_SECRET` propres à la production).

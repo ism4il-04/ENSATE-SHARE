@@ -32,7 +32,7 @@ export default api;
 
 // Auth API
 export const authAPI = {
-    googleLogin: (credential: string) => api.post('/auth/google', { credential }),
+    googleLogin: (credential: string, accessCode?: string) => api.post('/auth/google', { credential, accessCode }),
     logout: () => api.post('/auth/logout'),
     getMe: () => api.get('/auth/me'),
     updateProfile: (data: any) => api.put('/auth/profile', data),
@@ -79,6 +79,13 @@ export const studentsAPI = {
     importEmails: (emails: string[]) => api.post('/students/import', { emails }),
     remove: (id: string) => api.delete(`/students/${encodeURIComponent(id)}`),
     clearAll: () => api.delete('/students', { params: { all: 'true' } }),
+};
+
+// Temporary access codes (Superadmin only)
+export const accessCodesAPI = {
+    list: () => api.get('/access-codes'),
+    create: (data: { label: string; expiresAt: string; code?: string }) => api.post('/access-codes', data),
+    remove: (id: number) => api.delete(`/access-codes/${id}`),
 };
 
 // Stats API (Superadmin only)
