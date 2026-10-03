@@ -51,6 +51,7 @@ async function call(method: string, path: string, body?: unknown, cookie?: strin
 
 async function cleanup() {
     await db.delete(s.accessCodes).where(like(s.accessCodes.label, 'zz%'));
+    await db.delete(s.codeAttempts).where(like(s.codeAttempts.key, '%zz%'));
     await db.delete(s.users).where(or(like(s.users.email, 'zz%'), like(s.users.email, 'zz.%')));
     await db.delete(s.studentAllowlist).where(like(s.studentAllowlist.email, 'zz%'));
 }
@@ -73,6 +74,10 @@ async function cleanup() {
         .values({ email: 'zz.other@etu.uae.ac.ma', role: 'student', firstName: 'Zz', lastName: 'Other' })
         .returning();
     const A = await cookieFor(admin);
+    // Students were inserted directly in the database: refresh the server's cached student list
+    // (adding then removing a list entry clears that cache)
+    await call('POST', '/students/import', { emails: ['zz.cache@etu.uae.ac.ma'] }, A);
+    await call('DELETE', `/students/${encodeURIComponent('zz.cache@etu.uae.ac.ma')}`, undefined, A);
     const R = await cookieFor(resp);
     const S = await cookieFor(student);
     const S2 = await cookieFor(student2);
@@ -99,6 +104,18 @@ async function cleanup() {
     check('student cannot list users', (await call('GET', '/users', undefined, S)).status === 403);
     check('responsable cannot list users', (await call('GET', '/users', undefined, R)).status === 403);
     check('cron refuses without secret', (await call('GET', '/cron/daily')).status === 401);
+
+    // ---------------- Cross-site requests (CSRF) ----------------
+    const raw = (method: string, path: string, headers: Record<string, string>, body?: string) =>
+        fetch(BASE + '/api' + path, { method, headers: { Cookie: S, ...headers }, body });
+    let x = await raw('POST', '/parcours', { Origin: 'https://evil.example', 'Content-Type': 'application/json' }, '{}');
+    check('request from another site refused', x.status === 403, `${x.status}`);
+    x = await raw('POST', '/parcours', { Origin: BASE, 'Content-Type': 'text/plain' }, '{"cycle":"CI"}');
+    check('non-JSON body refused', x.status === 415, `${x.status}`);
+    x = await raw('DELETE', '/parcours/1', { Origin: 'https://evil.example' });
+    check('cross-site delete refused', x.status === 403, `${x.status}`);
+    x = await raw('POST', '/auth/logout', { Origin: BASE });
+    check('logout without body still works', x.status === 200, `${x.status}`);
 
     // ---------------- Files ----------------
     r = await call('GET', '/files?year=GI1&limit=5', undefined, S);
@@ -274,6 +291,14 @@ async function cleanup() {
         check('upgrade deletes the temporary account', r.status === 200 && !oldGuest);
         check('upgrade keeps saved parcours', (await call('GET', '/parcours', undefined, upgraded)).json.parcours?.length === 1);
         check('old temporary session no longer works', (await call('GET', '/files?limit=1', undefined, guest)).status === 401);
+
+        // Brute force: 5 wrong codes, then even the right code is refused for a while
+        for (let i = 0; i < 5; i++) r = await google('zz.brute@gmail.com', {}, undefined, `WRONG-${i}-CODE`);
+        check('5 wrong codes refused', r.status === 403 && r.json.needsAccessCode === true);
+        r = await google('zz.brute@gmail.com', {}, undefined, 'ZZ-TEST-CODE');
+        check('6th attempt blocked, even with the right code', r.status === 429 && r.json.needsAccessCode === true, r.json.message);
+        r = await call('POST', '/access-codes', { label: 'zz short', expiresAt: tomorrow, code: 'ABC-123' }, A);
+        check('custom code shorter than 8 refused', r.status === 400, r.json.message);
 
         r = await google('zz.second@gmail.com', {}, undefined, 'ZZ-TEST-CODE');
         const guest2 = r.cookie;

@@ -4,7 +4,7 @@ import { NextRequest } from 'next/server';
 import { Readable } from 'stream';
 import * as schema from '@/lib/db/schema';
 import { db, pendingUploads } from '@/lib/db';
-import { deleteExpiredCodes } from '@/lib/server/access-codes';
+import { deleteExpiredCodes, purgeExpiredCodeAttempts } from '@/lib/server/access-codes';
 import { drive } from '@/lib/server/drive';
 import { fail, handler, json } from '@/lib/server/http';
 
@@ -43,6 +43,7 @@ export const GET = handler(async (req: NextRequest) => {
     await db.delete(pendingUploads).where(lt(pendingUploads.expiresAt, new Date()));
     // Expired access codes go, and with them the temporary accounts they created
     const expiredCodes = await deleteExpiredCodes();
+    await purgeExpiredCodeAttempts();
 
     const tables = {
         filieres: schema.filieres,

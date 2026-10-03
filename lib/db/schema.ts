@@ -89,6 +89,13 @@ export const accessCodes = pgTable('access_codes', {
     createdAt: timestamptz().notNull().defaultNow(),
 });
 
+// Wrong access-code attempts, keyed "ip:<addr>" or "email:<addr>" (brute-force limit)
+export const codeAttempts = pgTable('code_attempts', {
+    key: text().primaryKey(),
+    count: integer().notNull().default(0),
+    expiresAt: timestamptz().notNull(),
+});
+
 export const users = pgTable(
     'users',
     {

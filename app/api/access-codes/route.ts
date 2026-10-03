@@ -45,7 +45,7 @@ export const POST = handler(async (req: NextRequest) => {
     if (expiry.getTime() > Date.now() + MAX_DAYS * 24 * 60 * 60 * 1000) return fail(400, `Durée maximale : ${MAX_DAYS} jours`);
 
     const value = code === undefined || code === '' ? generateCode() : isNonEmptyString(code, 40) ? normalizeCode(code) : '';
-    if (!/^[A-Z0-9-]{6,40}$/.test(value)) return fail(400, 'Le code doit contenir au moins 6 lettres, chiffres ou tirets');
+    if (!/^[A-Z0-9-]{8,40}$/.test(value)) return fail(400, 'Le code doit contenir au moins 8 lettres, chiffres ou tirets');
 
     const [created] = await db
         .insert(accessCodes)

@@ -2,7 +2,7 @@ import { and, count, eq } from 'drizzle-orm';
 import { OAuth2Client, TokenPayload } from 'google-auth-library';
 import { NextRequest } from 'next/server';
 import { accessCodes, db, savedParcours, users } from '@/lib/db';
-import { findActiveCode, hasActiveCode } from '@/lib/server/access-codes';
+import { clearCodeAttempts, findActiveCode, getCodeAttemptBlock, hasActiveCode, recordWrongCode } from '@/lib/server/access-codes';
 import { logActivity } from '@/lib/server/activity';
 import { clientIp, fail, handler, json, readBody } from '@/lib/server/http';
 import { invalidateSavedParcours, MAX_SAVED_PARCOURS } from '@/lib/server/parcours';
@@ -84,10 +84,22 @@ export const POST = handler(async (req: NextRequest) => {
                     403
                 );
             }
+            const ip = clientIp(req);
+            const retryAfter = await getCodeAttemptBlock(ip, email);
+            if (retryAfter > 0) {
+                const res = json(
+                    { success: false, needsAccessCode: true, message: `Trop d'essais. Réessayez dans ${Math.ceil(retryAfter / 60)} minute(s).` },
+                    429
+                );
+                res.headers.set('Retry-After', String(retryAfter));
+                return res;
+            }
             const code = await findActiveCode(accessCode);
             if (!code) {
+                await recordWrongCode(ip, email);
                 return json({ success: false, needsAccessCode: true, message: "Code d'accès invalide ou expiré" }, 403);
             }
+            await clearCodeAttempts(email);
             accessCodeId = code.id;
         } else {
             return fail(403, `Connexion réservée aux étudiants de l'ENSA Tétouan (adresse @${STUDENT_EMAIL_DOMAIN})`);
