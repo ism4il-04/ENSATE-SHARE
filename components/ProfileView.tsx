@@ -57,9 +57,9 @@ export default function ProfileView() {
     );
 
     return (
-        <div className="p-6 sm:p-8 max-w-3xl">
+        <div className="md:p-8 max-w-3xl">
             <div className="mb-8">
-                <h1 className="text-3xl font-bold text-atlas-800">Mon profil</h1>
+                <h1 className="text-2xl sm:text-3xl font-bold text-atlas-800">Mon profil</h1>
                 <p className="text-atlas-500 mt-1">Gérer vos informations personnelles</p>
             </div>
 

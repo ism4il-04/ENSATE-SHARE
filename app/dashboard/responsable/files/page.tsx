@@ -8,6 +8,7 @@ import { useAuthStore } from '@/store/authStore';
 import { FileText, Download, Edit, Trash2, Search, X, Image as ImageIcon } from 'lucide-react';
 import { generateThumbnailUrl, getFileCategoryColor } from '@/lib/utils/fileHelpers';
 import DocumentPreviewModal from '@/components/DocumentPreviewModal';
+import FileListMobile from '@/components/FileListMobile';
 
 export default function FilesPage() {
     const queryClient = useQueryClient();
@@ -118,7 +119,7 @@ export default function FilesPage() {
         <div className="space-y-6">
             {/* Header */}
             <div className="mb-8">
-                <h1 className="text-3xl font-bold text-atlas-800">Mes fichiers</h1>
+                <h1 className="text-2xl sm:text-3xl font-bold text-atlas-800">Mes fichiers</h1>
                 <p className="text-atlas-600 mt-2">
                     Gérer vos ressources pour {user?.assignedYear} - {user?.assignedFiliere}
                 </p>
@@ -192,7 +193,14 @@ export default function FilesPage() {
                     </div>
                 ) : filesData?.files && filesData.files.length > 0 ? (
                     <>
-                        <div className="overflow-x-auto">
+                        <FileListMobile
+                            files={filesData.files}
+                            onPreview={(f) => setPreviewFile({ id: f._id, name: f.displayName || f.fileName, url: f.fileUrl, type: f.fileType })}
+                            onEdit={(f) => handleEdit(f)}
+                            onDelete={(f) => handleDelete(f._id, f.displayName || f.fileName)}
+                            deleting={deleteMutation.isPending}
+                        />
+                        <div className="hidden md:block overflow-x-auto">
                             <table className="w-full">
                                 <thead>
                                     <tr className="border-b border-cream-300 bg-cream-50/80">
@@ -312,7 +320,7 @@ export default function FilesPage() {
 
                         {/* Pagination */}
                         {filesData.pages > 1 && (
-                            <div className="flex justify-center gap-2 mt-6">
+                            <div className="flex items-center justify-center gap-2 mt-6 text-sm">
                                 <button
                                     onClick={() => setPage((p) => Math.max(1, p - 1))}
                                     disabled={page === 1}
@@ -320,8 +328,8 @@ export default function FilesPage() {
                                 >
                                     Précédent
                                 </button>
-                                <span className="px-4 py-2">
-                                    Page {page} sur {filesData.pages}
+                                <span className="px-2 py-2 whitespace-nowrap">
+                                    {page} / {filesData.pages}
                                 </span>
                                 <button
                                     onClick={() => setPage((p) => Math.min(filesData.pages, p + 1))}

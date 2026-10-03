@@ -131,10 +131,10 @@ export default function UploadPage() {
     };
 
     return (
-        <div className="p-8 max-w-4xl mx-auto">
+        <div className="md:p-8 max-w-4xl mx-auto">
 {/* Header */}
             <div className="mb-8">
-                <h1 className="text-3xl font-bold text-atlas-800">Uploader un fichier</h1>
+                <h1 className="text-2xl sm:text-3xl font-bold text-atlas-800">Uploader un fichier</h1>
                 <p className="text-atlas-600 mt-2">
                     Ajouter une ressource pour {user?.assignedYear} - {user?.assignedFiliere}
                 </p>
@@ -149,7 +149,7 @@ export default function UploadPage() {
 
                     <div
                         {...getRootProps()}
-                        className={`border-2 border-dashed rounded-xl p-12 text-center cursor-pointer transition-colors ${isDragActive
+                        className={`border-2 border-dashed rounded-xl p-6 sm:p-12 text-center cursor-pointer transition-colors ${isDragActive
                             ? 'border-accent-500 bg-accent-50'
                             : selectedFiles.length
                                 ? 'border-green-500 bg-green-50'
@@ -220,10 +220,17 @@ export default function UploadPage() {
                             <div>
                                 <Upload className="mx-auto text-atlas-400 mb-4" size={48} />
                                 <p className="text-lg font-medium text-atlas-900 mb-2">
-                                    {isDragActive ? 'Déposez le fichier ici' : 'Glissez-déposez un fichier'}
+                                    {isDragActive ? (
+                                        'Déposez le fichier ici'
+                                    ) : (
+                                        <>
+                                            <span className="sm:hidden">Touchez pour choisir des fichiers</span>
+                                            <span className="hidden sm:inline">Glissez-déposez un fichier</span>
+                                        </>
+                                    )}
                                 </p>
                                 <p className="text-sm text-atlas-600">
-                                    ou cliquez pour sélectionner
+                                    <span className="hidden sm:inline">ou cliquez pour sélectionner</span>
                                 </p>
                                 <p className="text-xs text-atlas-500 mt-2">
                                     PDF, DOCX, PPTX, XLS, XLSX, ZIP, Images (max 50MB)

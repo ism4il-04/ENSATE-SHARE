@@ -26,7 +26,8 @@ export function FileCard({ file, variant = 'default', animationDelay = 0, onPrev
     const thumbnailUrl = generateThumbnailUrl(file.thumbnailLink);
     const isPdf = file.fileType.toLowerCase() === 'pdf';
 
-    const thumbHeight = variant === 'compact' ? 'h-28' : variant === 'featured' ? 'h-56' : 'h-44';
+    // Shorter previews on phones (two cards per row)
+    const thumbHeight = variant === 'compact' ? 'h-24 sm:h-28' : variant === 'featured' ? 'h-40 sm:h-56' : 'h-28 sm:h-44';
 
     const mainTitle = file.fileLabel || file.displayName || file.fileName;
     const secondaryTitle =
@@ -78,16 +79,16 @@ export function FileCard({ file, variant = 'default', animationDelay = 0, onPrev
                 <div className="absolute inset-0 bg-gradient-to-t from-atlas-900/60 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
                 {/* Category pill */}
                 <span
-                    className={`absolute top-3 right-3 inline-flex items-center px-2.5 py-1 rounded-full text-xs font-medium shadow-md ${categoryColors.bg} ${categoryColors.text}`}
+                    className={`absolute top-2 right-2 sm:top-3 sm:right-3 inline-flex items-center px-2 sm:px-2.5 py-0.5 sm:py-1 rounded-full text-[11px] sm:text-xs font-medium shadow-md ${categoryColors.bg} ${categoryColors.text}`}
                 >
                     {file.fileCategory || 'Autre'}
                 </span>
             </div>
 
             {/* Content */}
-            <div className="p-4">
+            <div className="p-3 sm:p-4">
                 <h3
-                    className="font-semibold text-atlas-900 truncate pr-8 group-hover:text-atlas-800"
+                    className="text-sm sm:text-base font-semibold text-atlas-900 line-clamp-2 sm:line-clamp-1 break-words group-hover:text-atlas-800"
                     title={mainTitle}
                 >
                     {mainTitle}
@@ -97,17 +98,20 @@ export function FileCard({ file, variant = 'default', animationDelay = 0, onPrev
                         {secondaryTitle}
                     </p>
                 )}
-                <div className="flex items-center justify-between mt-3 gap-2">
+                <div className="flex items-center justify-between mt-2 sm:mt-3 gap-2">
                     <span className="text-xs text-atlas-500">{formatFileSize(file.fileSize)}</span>
                     <a
                         href={downloadHref}
                         target="_blank"
                         rel="noopener noreferrer"
-                        className="inline-flex items-center gap-1.5 px-3 py-2 rounded-xl bg-accent-500 text-white text-sm font-medium
+                        // The card itself opens the preview: a tap here should only download
+                        onClick={(e) => e.stopPropagation()}
+                        aria-label="Télécharger"
+                        className="inline-flex items-center gap-1.5 px-2.5 sm:px-3 py-2 rounded-xl bg-accent-500 text-white text-sm font-medium
                                        hover:bg-accent-600 hover:shadow-glow active:scale-95 transition-all duration-200"
                     >
                         <Download size={16} className="shrink-0" />
-                        <span>Télécharger</span>
+                        <span className="hidden sm:inline">Télécharger</span>
                     </a>
                 </div>
             </div>

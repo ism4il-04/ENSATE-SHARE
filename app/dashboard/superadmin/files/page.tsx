@@ -7,6 +7,7 @@ import { filesAPI, structureAPI } from '@/lib/api';
 import { FileText, Download, Trash2, Search, Filter } from 'lucide-react';
 import { generateThumbnailUrl, getFileCategoryColor } from '@/lib/utils/fileHelpers';
 import DocumentPreviewModal from '@/components/DocumentPreviewModal';
+import FileListMobile from '@/components/FileListMobile';
 
 export default function FilesPage() {
     const queryClient = useQueryClient();
@@ -85,7 +86,7 @@ export default function FilesPage() {
         <div className="space-y-6">
             {/* Header */}
             <div className="mb-8">
-                <h1 className="text-3xl font-bold text-atlas-800">Tous les fichiers</h1>
+                <h1 className="text-2xl sm:text-3xl font-bold text-atlas-800">Tous les fichiers</h1>
                 <p className="text-atlas-600 mt-2">Gestion globale et modération des fichiers</p>
             </div>
 
@@ -200,7 +201,15 @@ export default function FilesPage() {
                     </div>
                 ) : filesData?.files && filesData.files.length > 0 ? (
                     <>
-                        <div className="overflow-x-auto">
+                        <FileListMobile
+                            files={filesData.files}
+                            onPreview={(f) => setPreviewFile({ id: f._id, name: f.displayName || f.fileName, url: f.fileUrl, type: f.fileType })}
+                            onDelete={(f) => handleDelete(f._id, f.displayName || f.fileName)}
+                            deleting={deleteMutation.isPending}
+                            showPlace
+                            showUploader
+                        />
+                        <div className="hidden md:block overflow-x-auto">
                             <table className="w-full">
                                 <thead>
                                     <tr className="border-b border-cream-300 bg-cream-50/80">

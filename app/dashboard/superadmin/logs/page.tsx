@@ -113,9 +113,9 @@ export default function LogsPage() {
     };
 
     return (
-        <div className="p-8">
+        <div className="md:p-8">
             <div className="mb-8">
-                <h1 className="text-3xl font-bold text-atlas-800">Logs d'activité</h1>
+                <h1 className="text-2xl sm:text-3xl font-bold text-atlas-800">Logs d'activité</h1>
                 <p className="text-atlas-600 mt-2">Historique de toutes les actions sur la plateforme</p>
             </div>
 
@@ -152,7 +152,28 @@ export default function LogsPage() {
                     </div>
                 ) : logsData?.logs && logsData.logs.length > 0 ? (
                     <>
-                        <div className="overflow-x-auto">
+                        {/* Phones: one card per entry */}
+                        <ul className="md:hidden divide-y divide-cream-200">
+                            {logsData.logs.map((log: any) => {
+                                const details = typeof log.details === 'string' ? log.details : log.details ? JSON.stringify(log.details) : '';
+                                return (
+                                    <li key={log._id} className="py-3">
+                                        <div className="flex flex-wrap items-center gap-2">
+                                            {getActionIcon(log.action)}
+                                            <span className={`inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium ${getActionColor(log.action)}`}>
+                                                {getActionLabel(log.action)}
+                                            </span>
+                                            <span className="ml-auto text-xs text-atlas-500">{formatDate(log.timestamp || log.createdAt)}</span>
+                                        </div>
+                                        <p className="mt-1 text-sm text-atlas-800">
+                                            {log.userId ? `${log.userId.firstName} ${log.userId.lastName}` : 'Système / compte supprimé'}
+                                        </p>
+                                        {details && <p className="mt-0.5 text-xs text-atlas-500 line-clamp-2 break-all">{details}</p>}
+                                    </li>
+                                );
+                            })}
+                        </ul>
+                        <div className="hidden md:block overflow-x-auto">
                             <table className="w-full">
                                 <thead>
                                     <tr className="border-b border-cream-300 bg-cream-50/80">

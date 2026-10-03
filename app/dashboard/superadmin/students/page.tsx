@@ -130,9 +130,9 @@ export default function StudentsPage() {
     };
 
     return (
-        <div className="p-8">
+        <div className="md:p-8">
             <div className="mb-8">
-                <h1 className="text-3xl font-bold text-atlas-800">Étudiants autorisés</h1>
+                <h1 className="text-2xl sm:text-3xl font-bold text-atlas-800">Étudiants autorisés</h1>
                 <p className="text-atlas-600 mt-2">
                     Liste des adresses universitaires autorisées à se connecter et à consulter les documents
                 </p>
@@ -278,7 +278,35 @@ export default function StudentsPage() {
                     </div>
                 ) : data && data.entries.length > 0 ? (
                     <>
-                        <div className="overflow-x-auto">
+                        {/* Phones: one card per address */}
+                        <ul className="md:hidden divide-y divide-cream-200">
+                            {data.entries.map((entry) => (
+                                <li key={entry.id} className="py-3 flex items-start gap-3">
+                                    <div className="min-w-0 flex-1">
+                                        <p className="text-sm text-atlas-800 font-mono break-all">{entry.email}</p>
+                                        <p className="text-xs text-atlas-500">
+                                            {entry.account
+                                                ? `${entry.account.firstName} ${entry.account.lastName} · dernière connexion ${formatDate(entry.account.lastLoginAt) || '—'}`
+                                                : 'Jamais connecté'}
+                                        </p>
+                                    </div>
+                                    <button
+                                        type="button"
+                                        onClick={() => {
+                                            if (confirm(`Retirer ${entry.email} de la liste ? Cet étudiant n'aura plus accès.`)) {
+                                                removeMutation.mutate(entry.id);
+                                            }
+                                        }}
+                                        disabled={removeMutation.isPending}
+                                        aria-label={`Retirer ${entry.email}`}
+                                        className="p-2 rounded-lg text-atlas-400 hover:text-red-600 hover:bg-red-50 disabled:opacity-50"
+                                    >
+                                        <Trash2 size={16} />
+                                    </button>
+                                </li>
+                            ))}
+                        </ul>
+                        <div className="hidden md:block overflow-x-auto">
                             <table className="w-full">
                                 <thead className="bg-cream-50/50">
                                     <tr>

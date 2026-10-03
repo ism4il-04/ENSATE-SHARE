@@ -43,9 +43,9 @@ export default function StatsPage() {
     const maxFiliereCount = Math.max(...(filiereDistribution?.map((f: any) => f.count) || [1]));
 
     return (
-        <div className="p-8">
+        <div className="md:p-8">
             <div className="mb-8">
-                <h1 className="text-3xl font-bold text-atlas-800">Statistiques détaillées</h1>
+                <h1 className="text-2xl sm:text-3xl font-bold text-atlas-800">Statistiques détaillées</h1>
                 <p className="text-atlas-600 mt-2">Analyse et visualisation des données</p>
             </div>
 

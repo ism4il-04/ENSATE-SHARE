@@ -5,6 +5,7 @@ import { useAuthStore } from '@/store/authStore';
 import { filesAPI, statsAPI } from '@/lib/api';
 import { Upload, FileText, HardDrive, TrendingUp } from 'lucide-react';
 import Link from 'next/link';
+import FileListMobile from '@/components/FileListMobile';
 import { generateThumbnailUrl, getFileCategoryColor } from '@/lib/utils/fileHelpers';
 
 export default function ResponsableDashboard() {
@@ -40,10 +41,10 @@ export default function ResponsableDashboard() {
     };
 
     return (
-        <div className="p-8">
+        <div className="md:p-8">
             {/* Header */}
             <div className="mb-8">
-                <h1 className="text-3xl font-bold text-atlas-800">Tableau de bord</h1>
+                <h1 className="text-2xl sm:text-3xl font-bold text-atlas-800">Tableau de bord</h1>
                 <p className="text-atlas-600 mt-2">
                     Bienvenue, {user?.firstName} {user?.lastName}
                 </p>
@@ -54,14 +55,14 @@ export default function ResponsableDashboard() {
             </div>
 
             {/* Stats Cards */}
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mb-8">
+            <div className="grid grid-cols-3 gap-3 sm:gap-6 mb-8">
                 <div className="card border border-cream-300/60 shadow-sm">
                     <div className="flex items-center justify-between">
                         <div>
-                            <p className="text-sm text-atlas-600">Total fichiers</p>
-                            <p className="text-3xl font-bold text-atlas-800 mt-1">{totalFiles}</p>
+                            <p className="text-xs sm:text-sm text-atlas-600">Total fichiers</p>
+                            <p className="text-xl sm:text-3xl font-bold text-atlas-800 mt-1">{totalFiles}</p>
                         </div>
-                        <div className="bg-accent-100 p-3 rounded-xl">
+                        <div className="hidden sm:block bg-accent-100 p-3 rounded-xl">
                             <FileText className="text-accent-600" size={24} />
                         </div>
                     </div>
@@ -70,12 +71,12 @@ export default function ResponsableDashboard() {
                 <div className="card border border-cream-300/60 shadow-sm">
                     <div className="flex items-center justify-between">
                         <div>
-                            <p className="text-sm text-atlas-600">Espace utilisé</p>
-                            <p className="text-3xl font-bold text-atlas-800 mt-1">
+                            <p className="text-xs sm:text-sm text-atlas-600">Espace utilisé</p>
+                            <p className="text-xl sm:text-3xl font-bold text-atlas-800 mt-1">
                                 {formatFileSize(totalSize)}
                             </p>
                         </div>
-                        <div className="bg-atlas-100 p-3 rounded-xl">
+                        <div className="hidden sm:block bg-atlas-100 p-3 rounded-xl">
                             <HardDrive className="text-atlas-600" size={24} />
                         </div>
                     </div>
@@ -84,12 +85,12 @@ export default function ResponsableDashboard() {
                 <div className="card border border-cream-300/60 shadow-sm">
                     <div className="flex items-center justify-between">
                         <div>
-                            <p className="text-sm text-atlas-600">Ce mois</p>
-                            <p className="text-3xl font-bold text-atlas-800 mt-1">
+                            <p className="text-xs sm:text-sm text-atlas-600">Ce mois</p>
+                            <p className="text-xl sm:text-3xl font-bold text-atlas-800 mt-1">
                                 {thisMonthCount}
                             </p>
                         </div>
-                        <div className="bg-green-100 p-3 rounded-xl">
+                        <div className="hidden sm:block bg-green-100 p-3 rounded-xl">
                             <TrendingUp className="text-green-600" size={24} />
                         </div>
                     </div>
@@ -133,7 +134,9 @@ export default function ResponsableDashboard() {
                 </div>
 
                 {recentFiles.length > 0 ? (
-                    <div className="overflow-x-auto">
+                    <>
+                    <FileListMobile files={recentFiles} onPreview={(f) => window.open(f.fileUrl, '_blank', 'noopener')} />
+                    <div className="hidden md:block overflow-x-auto">
                         <table className="w-full">
                             <thead>
                                 <tr className="border-b border-cream-300 bg-cream-50/80">
@@ -153,20 +156,20 @@ export default function ResponsableDashboard() {
                                     return (
                                         <tr key={file._id} className="border-b border-cream-200 hover:bg-cream-50/50">
                                             <td className="py-3 px-4">
-                                                {file.fileType === 'pdf' ? (
-                                                    <img
-                                                        src={thumbnailUrl}
-                                                        alt="Preview"
-                                                        className="w-12 h-12 object-cover rounded border border-cream-300"
-                                                        onError={(e) => {
-                                                            (e.target as HTMLImageElement).style.display = 'none';
-                                                        }}
-                                                    />
-                                                ) : (
-                                                    <div className="w-12 h-12 bg-cream-100 rounded flex items-center justify-center border border-cream-300">
-                                                        <FileText size={24} className="text-atlas-400" />
-                                                    </div>
-                                                )}
+                                                {/* File icon, covered by the Drive thumbnail when there is one */}
+                                                <div className="relative w-12 h-12 bg-cream-100 rounded flex items-center justify-center overflow-hidden border border-cream-300">
+                                                    <FileText size={24} className="text-atlas-400" />
+                                                    {thumbnailUrl && (
+                                                        <img
+                                                            src={thumbnailUrl}
+                                                            alt=""
+                                                            className="absolute inset-0 w-full h-full object-cover"
+                                                            onError={(e) => {
+                                                                (e.target as HTMLImageElement).style.display = 'none';
+                                                            }}
+                                                        />
+                                                    )}
+                                                </div>
                                             </td>
                                             <td className="py-3 px-4">
                                                 <div className="flex flex-col gap-1">
@@ -197,6 +200,7 @@ export default function ResponsableDashboard() {
                             </tbody>
                         </table>
                     </div>
+                    </>
                 ) : (
                     <div className="text-center py-12">
                         <FileText className="mx-auto text-atlas-300 mb-4" size={48} />

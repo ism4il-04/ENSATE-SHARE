@@ -158,7 +158,7 @@ function ResourcesContent() {
                     <h2 className="text-xl font-semibold text-atlas-800">Modules</h2>
                 </div>
 
-                <div className="flex flex-wrap gap-2 mb-8">
+                <div className="-mx-4 px-4 flex gap-2 overflow-x-auto pb-2 mb-6 md:mx-0 md:px-0 md:flex-wrap md:overflow-visible md:pb-0 md:mb-8">
                     {modules.map((mod) => (
                         <button
                             key={mod}
@@ -167,7 +167,7 @@ function ResourcesContent() {
                                 setSelectedModule(mod);
                                 replaceUrl(mod);
                             }}
-                            className={`rounded-xl px-4 py-3 text-sm font-medium transition-all ${selectedModule === mod
+                            className={`shrink-0 max-w-[75vw] md:max-w-none rounded-xl px-4 py-2.5 md:py-3 text-sm font-medium text-left transition-all ${selectedModule === mod
                                 ? 'bg-atlas-700 text-cream-50 shadow-lg'
                                 : 'glass-card text-atlas-700 hover:bg-atlas-100/80'
                                 }`}
@@ -207,7 +207,7 @@ function ResourcesContent() {
                                                 </span>
                                             </div>
                                         </div>
-                                        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 md:gap-5">
+                                        <div className="grid grid-cols-2 lg:grid-cols-3 gap-3 md:gap-5">
                                             {categoryFiles.map((file: FileType, index: number) => (
                                                 <div
                                                     key={file._id}

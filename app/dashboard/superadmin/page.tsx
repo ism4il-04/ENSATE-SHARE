@@ -51,24 +51,24 @@ export default function SuperadminDashboard() {
     }
 
     return (
-        <div className="p-8">
+        <div className="md:p-8">
             {/* Header */}
             <div className="mb-8">
-                <h1 className="text-3xl font-bold text-atlas-800">Tableau de bord Superadmin</h1>
+                <h1 className="text-2xl sm:text-3xl font-bold text-atlas-800">Tableau de bord Superadmin</h1>
                 <p className="text-atlas-600 mt-2">Vue d'ensemble de la plateforme ENSATE-SHARE</p>
             </div>
 
             {/* Stats Cards */}
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
+            <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-6 mb-8">
                 <div className="card border border-cream-300/60 shadow-sm">
                     <div className="flex items-center justify-between">
                         <div>
                             <p className="text-sm text-atlas-600">Total fichiers</p>
-                            <p className="text-3xl font-bold text-atlas-800 mt-1">
+                            <p className="text-2xl sm:text-3xl font-bold text-atlas-800 mt-1">
                                 {statsData?.totalFiles || 0}
                             </p>
                         </div>
-                        <div className="bg-accent-100 p-3 rounded-xl">
+                        <div className="hidden sm:block bg-accent-100 p-3 rounded-xl">
                             <FileText className="text-accent-600" size={24} />
                         </div>
                     </div>
@@ -78,11 +78,11 @@ export default function SuperadminDashboard() {
                     <div className="flex items-center justify-between">
                         <div>
                             <p className="text-sm text-atlas-600">Responsables</p>
-                            <p className="text-3xl font-bold text-atlas-800 mt-1">
+                            <p className="text-2xl sm:text-3xl font-bold text-atlas-800 mt-1">
                                 {statsData?.totalResponsables || 0}
                             </p>
                         </div>
-                        <div className="bg-atlas-100 p-3 rounded-xl">
+                        <div className="hidden sm:block bg-atlas-100 p-3 rounded-xl">
                             <Users className="text-atlas-600" size={24} />
                         </div>
                     </div>
@@ -92,11 +92,11 @@ export default function SuperadminDashboard() {
                     <div className="flex items-center justify-between">
                         <div>
                             <p className="text-sm text-atlas-600">Stockage total</p>
-                            <p className="text-3xl font-bold text-atlas-800 mt-1">
+                            <p className="text-2xl sm:text-3xl font-bold text-atlas-800 mt-1">
                                 {formatFileSize(statsData?.totalStorage || 0)}
                             </p>
                         </div>
-                        <div className="bg-purple-100 p-3 rounded-xl">
+                        <div className="hidden sm:block bg-purple-100 p-3 rounded-xl">
                             <HardDrive className="text-purple-600" size={24} />
                         </div>
                     </div>
@@ -106,11 +106,11 @@ export default function SuperadminDashboard() {
                     <div className="flex items-center justify-between">
                         <div>
                             <p className="text-sm text-atlas-600">Ce mois</p>
-                            <p className="text-3xl font-bold text-atlas-800 mt-1">
+                            <p className="text-2xl sm:text-3xl font-bold text-atlas-800 mt-1">
                                 {statsData?.filesThisMonth || 0}
                             </p>
                         </div>
-                        <div className="bg-green-100 p-3 rounded-xl">
+                        <div className="hidden sm:block bg-green-100 p-3 rounded-xl">
                             <TrendingUp className="text-green-600" size={24} />
                         </div>
                     </div>
@@ -204,20 +204,20 @@ export default function SuperadminDashboard() {
 
                                 return (
                                     <div key={file._id} className="flex items-start gap-3 p-3 bg-cream-50 rounded-lg hover:bg-cream-100 transition-colors border border-cream-300/40">
-                                        {file.fileType === 'pdf' ? (
-                                            <img
-                                                src={thumbnailUrl}
-                                                alt="Preview"
-                                                className="w-16 h-16 object-cover rounded border border-cream-300 flex-shrink-0"
-                                                onError={(e) => {
-                                                    (e.target as HTMLImageElement).style.display = 'none';
-                                                }}
-                                            />
-                                        ) : (
-                                            <div className="w-16 h-16 bg-white rounded flex items-center justify-center border border-cream-300 flex-shrink-0">
-                                                <FileText size={28} className="text-atlas-400" />
-                                            </div>
-                                        )}
+                                        {/* File icon, covered by the Drive thumbnail when there is one */}
+                                        <div className="relative w-14 h-14 sm:w-16 sm:h-16 bg-white rounded flex items-center justify-center overflow-hidden border border-cream-300 flex-shrink-0">
+                                            <FileText size={26} className="text-atlas-400" />
+                                            {thumbnailUrl && (
+                                                <img
+                                                    src={thumbnailUrl}
+                                                    alt=""
+                                                    className="absolute inset-0 w-full h-full object-cover"
+                                                    onError={(e) => {
+                                                        (e.target as HTMLImageElement).style.display = 'none';
+                                                    }}
+                                                />
+                                            )}
+                                        </div>
                                         <div className="flex-1 min-w-0">
                                             <div className="flex items-start justify-between gap-2 mb-1">
                                                 <p className="text-sm font-medium text-atlas-800 truncate">
@@ -235,7 +235,7 @@ export default function SuperadminDashboard() {
                                             <p className="text-xs text-atlas-600">
                                                 {file.year} - {file.filiere} - {file.module}
                                             </p>
-                                            <div className="flex items-center gap-2 mt-1">
+                                            <div className="flex flex-wrap items-center gap-x-2 gap-y-0.5 mt-1">
                                                 <p className="text-xs text-atlas-500">
                                                     Par {file.uploadedBy?.firstName} {file.uploadedBy?.lastName}
                                                 </p>

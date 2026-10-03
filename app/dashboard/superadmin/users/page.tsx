@@ -181,11 +181,11 @@ export default function UsersPage() {
         !!editingUser && formData.email.trim().toLowerCase() !== (editingUser.email || '').toLowerCase();
 
     return (
-        <div className="p-8">
+        <div className="md:p-8">
             {/* Header */}
-            <div className="flex items-center justify-between mb-8">
+            <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between mb-8">
                 <div>
-                    <h1 className="text-3xl font-bold text-atlas-800">Gestion des utilisateurs</h1>
+                    <h1 className="text-2xl sm:text-3xl font-bold text-atlas-800">Gestion des utilisateurs</h1>
                     <p className="text-atlas-600 mt-2">Gérer les comptes responsables</p>
                 </div>
                 <button onClick={openCreateModal} className="btn-primary flex items-center gap-2">
@@ -243,8 +243,8 @@ export default function UsersPage() {
                 ) : Object.keys(groupedUsers).length > 0 ? (
                     Object.entries(groupedUsers).map(([filiere, users]: [string, any]) => (
                         <div key={filiere} className="card border border-cream-300/60 overflow-hidden">
-                            <div className="bg-cream-50/80 px-6 py-3 border-b border-cream-300/60 flex justify-between items-center">
-                                <h3 className="font-semibold text-atlas-800 flex items-center gap-2">
+                            <div className="bg-cream-50/80 px-3 sm:px-6 py-3 border-b border-cream-300/60 flex justify-between items-center">
+                                <h3 className="font-semibold text-atlas-800 flex flex-wrap items-center gap-2">
                                     <span className="w-2 h-8 bg-accent-500 rounded-full inline-block" />
                                     {filiere}
                                     <span className="text-xs font-normal text-atlas-600 bg-white px-2 py-1 rounded-full border border-cream-300 ml-2">
@@ -252,7 +252,49 @@ export default function UsersPage() {
                                     </span>
                                 </h3>
                             </div>
-                            <div className="overflow-x-auto">
+                            {/* Phones: one card per responsable, every action visible */}
+                            <ul className="md:hidden divide-y divide-cream-200">
+                                {users.map((user: any) => (
+                                    <li key={user._id} className="py-3">
+                                        <div className="flex items-start gap-3">
+                                            <span className="inline-flex items-center justify-center px-2 py-1 rounded-md text-xs font-bold bg-atlas-100 text-atlas-800 min-w-[3rem]">
+                                                {user.assignedYear}
+                                            </span>
+                                            <div className="min-w-0 flex-1">
+                                                <p className="font-medium text-atlas-900">{user.firstName} {user.lastName}</p>
+                                                <p className="text-xs text-atlas-600 font-mono break-all">{user.email}</p>
+                                            </div>
+                                        </div>
+                                        <div className="mt-2 flex flex-wrap items-center gap-2 pl-[60px]">
+                                            <button
+                                                type="button"
+                                                onClick={() => handleToggleActive(user)}
+                                                disabled={updateMutation.isPending && (updateMutation.variables as { id: string })?.id === user._id}
+                                                className={`inline-flex items-center px-2.5 py-1 rounded-full text-xs font-medium disabled:opacity-60 ${user.isActive ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'}`}
+                                            >
+                                                <span className={`w-1.5 h-1.5 rounded-full mr-1.5 ${user.isActive ? 'bg-green-600' : 'bg-red-600'}`} />
+                                                {user.isActive ? 'Actif' : 'Inactif'}
+                                            </button>
+                                            <button
+                                                onClick={() => openEditModal(user)}
+                                                className="inline-flex items-center gap-1.5 rounded-lg border border-cream-300 px-3 py-1 text-xs font-medium text-atlas-700"
+                                            >
+                                                <Edit size={14} />
+                                                Modifier
+                                            </button>
+                                            <button
+                                                onClick={() => handleDelete(user)}
+                                                disabled={deleteMutation.isPending}
+                                                className="inline-flex items-center gap-1.5 rounded-lg border border-red-200 px-3 py-1 text-xs font-medium text-red-600 disabled:opacity-50"
+                                            >
+                                                <Trash2 size={14} />
+                                                Supprimer
+                                            </button>
+                                        </div>
+                                    </li>
+                                ))}
+                            </ul>
+                            <div className="hidden md:block overflow-x-auto">
                                 <table className="w-full">
                                     <thead className="bg-cream-50/50">
                                         <tr>

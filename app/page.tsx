@@ -238,17 +238,17 @@ function WelcomeContent() {
                     <p className="mt-4 text-lg sm:text-xl text-cream-200/90 max-w-2xl leading-relaxed">
                         Les délégués déposent cours, TD, TP et examens ; vous les retrouvez par parcours et module, puis vous consultez et téléchargez en un clic.
                     </p>
-                    <div className="mt-6 flex flex-wrap items-center gap-3 text-cream-300/90 text-sm">
+                    <div className="mt-6 flex flex-col items-center gap-2 sm:flex-row sm:flex-wrap sm:gap-3 text-cream-300/90 text-sm">
                         <span className="inline-flex items-center gap-1.5">
                             <Upload size={16} />
                             Dépôt par les délégués
                         </span>
-                        <span className="text-cream-500/80" aria-hidden>·</span>
+                        <span className="hidden sm:inline text-cream-500/80" aria-hidden>·</span>
                         <span className="inline-flex items-center gap-1.5">
                             <Library size={16} />
                             Parcours & modules
                         </span>
-                        <span className="text-cream-500/80" aria-hidden>·</span>
+                        <span className="hidden sm:inline text-cream-500/80" aria-hidden>·</span>
                         <span className="inline-flex items-center gap-1.5">
                             <Download size={16} />
                             Consultation & téléchargement
